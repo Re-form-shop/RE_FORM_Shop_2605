@@ -177,7 +177,7 @@ CREATE TABLE manner_review
 CREATE TABLE chat_room
 (
     chat_id    BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-    trade_id   BIGINT             NOT NULL UNIQUE,
+    trade_id   BIGINT             NOT NULL,
     buyer_id   BIGINT             NOT NULL,
     seller_id  BIGINT             NOT NULL,
     created_at DATETIME           NOT NULL DEFAULT CURRENT_TIMESTAMP,
