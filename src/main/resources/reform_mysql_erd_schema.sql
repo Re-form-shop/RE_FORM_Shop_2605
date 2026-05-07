@@ -25,7 +25,7 @@ CREATE TABLE member
     status            ENUM ('ACTIVE', 'SUSPENDED', 'WITHDRAWN') NOT NULL DEFAULT 'ACTIVE' COMMENT '활동 상태(활성화 / 정지 / 탈퇴)',
     warning_count     INT                                       NOT NULL DEFAULT 0 COMMENT '누적 경고 횟수',
     email_event       BOOLEAN                                   NOT NULL DEFAULT FALSE COMMENT '이벤트 이메일 수신 여부',
-    created_at        DATETIME                                  NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '가입일',
+    created_at        DATETIME                                  NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '가입일'
 ) ENGINE = InnoDB;
 
 
