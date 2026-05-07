@@ -2,7 +2,13 @@ CREATE DATABASE IF NOT EXISTS reform_shop_2605
     DEFAULT CHARACTER SET utf8mb4
     DEFAULT COLLATE utf8mb4_unicode_ci;
 
-USE reform_shop_2605;
+CREATE USER IF NOT EXISTS `admin`@`%` IDENTIFIED BY '0507';
+GRANT ALL PRIVILEGES ON `reform_shop_2605`.* TO `admin`@`%`;
+
+FLUSH PRIVILEGES;
+
+USE `reform_shop_2605`;
+
 
 -- 1. 일반 회원가입 회원
 -- PK : member_id
@@ -362,7 +368,3 @@ CREATE TABLE notification
     #     created_at  DATETIME                    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     #     KEY idx_risk_analysis_target (target_type, target_id)
     # ) ENGINE = InnoDB;
-
-
-CREATE USER IF NOT EXISTS `admin`@`%` IDENTIFIED BY '0507';
-GRANT ALL PRIVILEGES ON `reform_shop_2605`.* TO `admin`@`%`;
