@@ -2,8 +2,8 @@ CREATE DATABASE IF NOT EXISTS reform_shop_2605
     DEFAULT CHARACTER SET utf8mb4
     DEFAULT COLLATE utf8mb4_unicode_ci;
 
-CREATE USER IF NOT EXISTS `admin`@`%` IDENTIFIED BY '0507';
-GRANT ALL PRIVILEGES ON `reform_shop_2605`.* TO `admin`@`%`;
+CREATE USER IF NOT EXISTS `admin`@`localhost` IDENTIFIED BY '0507';
+GRANT ALL PRIVILEGES ON `reform_shop_2605`.* TO `admin`@`localhost`;
 
 FLUSH PRIVILEGES;
 
