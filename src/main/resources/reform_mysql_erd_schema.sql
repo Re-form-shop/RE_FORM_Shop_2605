@@ -177,7 +177,7 @@ CREATE TABLE manner_review
 CREATE TABLE chat_room
 (
     chat_id    BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-    trade_id   BIGINT             NOT NULL UNIQUE,
+    trade_id   BIGINT             NOT NULL,
     buyer_id   BIGINT             NOT NULL,
     seller_id  BIGINT             NOT NULL,
     created_at DATETIME           NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -230,7 +230,6 @@ CREATE TABLE point_wallet
     balance      INT                NOT NULL DEFAULT 0 COMMENT '회원별 보유 포인트',
     withdrawable INT                NOT NULL DEFAULT 0 COMMENT '출금 가능 포인트',
     pending      INT                NOT NULL DEFAULT 0 COMMENT '출금 대기 포인트',
-    UNIQUE KEY uk_point_wallet_member (member_id),
     CONSTRAINT fk_point_wallet_member FOREIGN KEY (member_id) REFERENCES member (member_id)
 ) ENGINE = InnoDB;
 
@@ -259,14 +258,14 @@ CREATE TABLE point_history
 -- IDX : member_id, status
 CREATE TABLE point_request
 (
-    withdraw_id    BIGINT PRIMARY KEY                                    NOT NULL AUTO_INCREMENT,
-    member_id      BIGINT                                                NOT NULL,
-    request_amount INT                                                   NOT NULL COMMENT '출금 요청 금액',
-    bank_name      VARCHAR(50)                                           NULL COMMENT '은행명',
-    account_number VARCHAR(30)                                           NULL COMMENT '계좌번호',
-    status         ENUM ('PENDING', 'APPROVED', 'REJECTED', 'COMPLETED') NOT NULL COMMENT '출금 처리 상태',
-    reject_reason  VARCHAR(300)                                          NULL COMMENT '반려 사유',
-    created_at     DATETIME                                              NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    withdraw_id    BIGINT PRIMARY KEY                       NOT NULL AUTO_INCREMENT,
+    member_id      BIGINT                                   NOT NULL,
+    request_amount INT                                      NOT NULL COMMENT '출금 요청 금액',
+    bank_name      VARCHAR(50)                              NULL COMMENT '은행명',
+    account_number VARCHAR(30)                              NULL COMMENT '계좌번호',
+    status         ENUM ('PENDING', 'APPROVED', 'REJECTED') NOT NULL COMMENT '출금 처리 상태',
+    reject_reason  VARCHAR(300)                             NULL COMMENT '반려 사유',
+    created_at     DATETIME                                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY idx_point_request_member_id (member_id),
     KEY idx_point_request_status (status),
     CONSTRAINT fk_point_request_member FOREIGN KEY (member_id) REFERENCES member (member_id)
@@ -341,13 +340,13 @@ CREATE TABLE report
 -- IDX : member_id, type
 CREATE TABLE notification
 (
-    noti_id    BIGINT PRIMARY KEY                                       NOT NULL AUTO_INCREMENT,
-    member_id  BIGINT                                                   NOT NULL COMMENT '수신자',
-    type       ENUM ('TRADE', 'CHAT', 'PRICE_DROP', 'REVIEW', 'SYSTEM') NOT NULL COMMENT '알림 분류',
-    content    VARCHAR(300)                                             NOT NULL COMMENT '알림 내용',
-    link_url   VARCHAR(300)                                             NULL COMMENT '클릭 시 경로',
-    is_read    BOOLEAN                                                  NOT NULL DEFAULT FALSE COMMENT '읽음 여부',
-    created_at DATETIME                                                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    noti_id        BIGINT PRIMARY KEY                                       NOT NULL AUTO_INCREMENT,
+    member_id      BIGINT                                                   NOT NULL COMMENT '수신자',
+    type           ENUM ('TRADE', 'CHAT', 'PRICE_DROP', 'REVIEW', 'SYSTEM') NOT NULL COMMENT '알림 분류',
+    report_content VARCHAR(300)                                             NOT NULL COMMENT '알림 내용',
+    link_url       VARCHAR(300)                                             NULL COMMENT '클릭 시 경로',
+    is_read        BOOLEAN                                                  NOT NULL DEFAULT FALSE COMMENT '읽음 여부',
+    created_at     DATETIME                                                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY idx_notification_member_id (member_id),
     KEY idx_notification_type (type),
     CONSTRAINT fk_notification_member FOREIGN KEY (member_id) REFERENCES member (member_id)

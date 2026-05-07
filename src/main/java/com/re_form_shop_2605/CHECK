@@ -1,0 +1,17 @@
+1. 구조 역할
+|     Client
+|       ↕  DTO (요청/응답)
+|     Controller
+|       ↕  DTO
+|     Service
+|       ↕  Entity + Repository (JPA 단순 CRUD)
+|       ↕  VO (MyBatis 복잡한 JOIN 조회)
+|     DB
+
+
+2. 백-프론트 주의사항
+- URL 변경 시 즉시 공유
+- DTO 변경 시 즉시 공유
+- 응답 형식 반드시 협의
+- HTTP 상태코드 변경 시 합의
+- @Transactional 범위 변경 시 롤백 시나리오 재검토
