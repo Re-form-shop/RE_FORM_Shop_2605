@@ -4,15 +4,16 @@ import com.re_form_shop_2605.entity.BaseEntity;
 import com.re_form_shop_2605.entity.Enum.PointHistoryType;
 import com.re_form_shop_2605.entity.trade.Trade;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 
 @Entity
 @Table(name = "point_history")
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class PointHistory extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
