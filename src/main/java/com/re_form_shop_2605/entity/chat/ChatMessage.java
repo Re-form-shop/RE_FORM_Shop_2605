@@ -25,7 +25,7 @@ public class ChatMessage extends BaseEntity {
     private ChatRoom chatRoom; // 어느 채팅방의 메시지인지
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
+    @JoinColumn(name = "sender_id", nullable = false)
     private Member member; // 보낸 사람
 
     @Column(name = "content", columnDefinition = "TEXT")
