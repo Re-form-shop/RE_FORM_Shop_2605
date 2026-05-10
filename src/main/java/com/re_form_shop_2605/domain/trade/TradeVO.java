@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class Trade {
+public class TradeVO {
     private Long tradeId; // 거래 id
     private Long postId; // 게시글 id
     private Long buyerId; // 판매자 id

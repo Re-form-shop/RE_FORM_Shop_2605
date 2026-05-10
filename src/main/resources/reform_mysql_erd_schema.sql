@@ -75,7 +75,7 @@ CREATE TABLE post
     seller_id     BIGINT                                                             NOT NULL COMMENT '판매자 member id',
     title         VARCHAR(200)                                                       NOT NULL COMMENT '제목',
     content       TEXT                                                               NOT NULL COMMENT '본문',
-    sport         ENUM ('SOCCER', 'BASEBALL', 'BASKETBALL', 'VOLLEYBALL', 'ESPORTS') NOT NULL COMMENT '종목',
+    sport         ENUM ('BASEBALL', 'SOCCER', 'BASKETBALL', 'VOLLEYBALL', 'ESPORTS', 'ETC') NOT NULL COMMENT '종목',
     team          VARCHAR(50)                                                        NOT NULL COMMENT '구단명',
     uniform_name  VARCHAR(200)                                                       NOT NULL COMMENT '유니폼명',
     grade         ENUM ('S', 'A', 'B', 'C')                                          NOT NULL COMMENT '유니폼 상태 등급',

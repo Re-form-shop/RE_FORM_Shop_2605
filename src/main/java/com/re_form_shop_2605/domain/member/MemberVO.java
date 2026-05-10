@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class Member {
+public class MemberVO {
     private Long member_id; // 회원 id
     private String email; // 회원 이메일
     private String password; // 회원 비밀번호

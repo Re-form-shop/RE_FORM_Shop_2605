@@ -7,7 +7,7 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostImage {
+public class PostImageVO {
     private Long imageId; // 이미지 id
     private Long postId; // 게시글 id
     private String imageUrl; // 이미지 url

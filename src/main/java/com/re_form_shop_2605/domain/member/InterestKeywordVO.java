@@ -7,7 +7,7 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class InterestKeyword {
+public class InterestKeywordVO {
     private Long keywordId; // id
     private Long memberId; // 회원 ID
     private String keyword; // 관심 키워드

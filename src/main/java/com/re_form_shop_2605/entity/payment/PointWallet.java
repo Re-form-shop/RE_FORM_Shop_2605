@@ -56,7 +56,7 @@ public class PointWallet {
 
     // 4) 출금 시
     public void withdraw(int amount) {
-        if (this.withdrawable < pending) {
+        if (this.withdrawable < amount) {
             throw new IllegalStateException("출금 가능 포인트가 부족합니다.");
         }
         this.withdrawable -= amount;

@@ -6,8 +6,10 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Getter
+@Builder
 @ToString
 @NoArgsConstructor
+@AllArgsConstructor
 public class NotificationVO {
     private Long notiId;
     private Long memberId; // 수신자 회원 ID

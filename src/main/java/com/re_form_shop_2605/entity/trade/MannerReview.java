@@ -1,8 +1,10 @@
-package com.re_form_shop_2605.entity.member;
+package com.re_form_shop_2605.entity.trade;
 
 import com.re_form_shop_2605.entity.BaseEntity;
-import com.re_form_shop_2605.entity.trade.Trade;
+import com.re_form_shop_2605.entity.member.Member;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.*;
 
 @Getter
@@ -43,6 +45,10 @@ public class MannerReview extends BaseEntity {
             foreignKey = @ForeignKey(name = "fk_manner_review_seller_member")
     )
     private Member seller;
+
+    @Column(name = "score", nullable = false)
+    @Min(1) @Max(5)
+    private double score;
 
     @Lob
     @Column(name = "content")

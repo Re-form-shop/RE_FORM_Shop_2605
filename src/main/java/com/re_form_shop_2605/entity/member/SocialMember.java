@@ -19,7 +19,7 @@ public class SocialMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "social_id")
-    private int socialId; // 소셜 id
+    private Long socialId; // 소셜 id
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(

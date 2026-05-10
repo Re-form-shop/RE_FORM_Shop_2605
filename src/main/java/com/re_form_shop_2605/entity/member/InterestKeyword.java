@@ -9,7 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "Interest_keyword", uniqueConstraints = {
+@Table(name = "interest_keyword", uniqueConstraints = {
         @UniqueConstraint(name = "uk_interest_keyword_member_keyword", columnNames = {"member_id", "keyword"})
 })
 public class InterestKeyword {

@@ -1,7 +1,7 @@
 package com.re_form_shop_2605.entity.community;
 
 import com.re_form_shop_2605.entity.BaseEntity;
-import com.re_form_shop_2605.entity.Enum.SportCategory;
+import com.re_form_shop_2605.entity.Enum.Sport;
 import com.re_form_shop_2605.entity.Enum.CommunityPostStatus;
 import com.re_form_shop_2605.entity.member.Member;
 import jakarta.persistence.*;
@@ -25,7 +25,7 @@ public class CommunityPost extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "sport_category", nullable = false)
-    private SportCategory sportCategory; // 종목
+    private Sport sportCategory; // 종목
 
     @Column(name = "team_category", length = 50)
     private String teamCategory; // 구단명

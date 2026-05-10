@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class Wish {
+public class WishVO {
     private Long wishId; // 찜 id
     private Long memberId; // 회원 id
     private Long postId; // 게시글 id

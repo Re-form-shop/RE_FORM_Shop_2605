@@ -8,8 +8,10 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Getter
+@Builder
 @ToString
 @NoArgsConstructor
+@AllArgsConstructor
 public class ReportVO {
     private Long reportId;
     private Long reporterId; // 신고자 member id

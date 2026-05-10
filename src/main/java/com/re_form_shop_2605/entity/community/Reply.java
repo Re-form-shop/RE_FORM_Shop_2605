@@ -2,7 +2,6 @@ package com.re_form_shop_2605.entity.community;
 
 import com.re_form_shop_2605.entity.BaseEntity;
 import com.re_form_shop_2605.entity.member.Member;
-import com.re_form_shop_2605.entity.trade.Post;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,7 +19,7 @@ public class Reply extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
-    private Post postId;
+    private CommunityPost postId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)

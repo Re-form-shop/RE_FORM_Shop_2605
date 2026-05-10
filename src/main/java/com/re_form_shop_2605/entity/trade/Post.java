@@ -5,6 +5,7 @@ import com.re_form_shop_2605.entity.Enum.*;
 import com.re_form_shop_2605.entity.member.Member;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -41,8 +42,8 @@ public class Post extends BaseEntity {
     @Column(name = "sport",nullable = false)
     private Sport sport; // 종목
 
-    @Column(name = "team", nullable = false, length = 50)
-    private Sport team; // 구단명
+    @Column(name = "team", nullable = false)
+    private String team; // 구단명
 
     @Column(name = "uniform_name",length = 200, nullable = false)
     private String uniformName; // 유니폼명
@@ -78,7 +79,8 @@ public class Post extends BaseEntity {
     @Column(name = "risk_level")
     private RiskLevel riskLevel;
 
-    @Column(name = "updated_at", nullable = false)
+    @UpdateTimestamp
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
@@ -89,5 +91,33 @@ public class Post extends BaseEntity {
 
     @OneToOne(mappedBy = "post", fetch = FetchType.LAZY)
     private Trade trade;
+
+    public void changePost(String title, String content, Grade grade, String size, Boolean marking, Integer price, DeliveryType deliveryType) {
+        if (title != null) {
+            this.title = title;
+        }
+        if (content != null) {
+            this.content = content;
+        }
+        if (grade != null) {
+            this.grade = grade;
+        }
+        if (size != null) {
+            this.size = size;
+        }
+        if (marking != null) {
+            this.marking = marking;
+        }
+        if (price != null) {
+            this.price = price;
+        }
+        if (deliveryType != null) {
+            this.deliveryType = deliveryType;
+        }
+    }
+
+    public void markDeleted() {
+        this.status = PostStatus.DELETED;
+    }
 
 }

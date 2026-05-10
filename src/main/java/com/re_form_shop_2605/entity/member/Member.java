@@ -5,6 +5,7 @@ import com.re_form_shop_2605.entity.Enum.MemberStatus;
 import com.re_form_shop_2605.entity.Enum.Role;
 import jakarta.persistence.*;
 import lombok.*;
+import org.jspecify.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ public class Member extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "member_id", nullable = false)
-    private Long member_id; // 회원 id
+    private Long memberId; // 회원 id
 
     @Column(name = "email", nullable = false, unique = true,  length = 100)
     private String email; // 회원 이메일
@@ -45,10 +46,12 @@ public class Member extends BaseEntity {
     @Column(name = "role", nullable = false, length = 20)
     private Role role = Role.USER; // 사용자 분류(유저, 관리자)
 
+    @Setter
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private MemberStatus status = MemberStatus.ACTIVE; // 활동상태 (활성화/정지/탈퇴)
 
+    @Setter
     @Column(name = "warning_count" , nullable = false)
     private int warningCount = 0; // 누적 경고 횟수
 
@@ -64,5 +67,20 @@ public class Member extends BaseEntity {
     @OneToOne(mappedBy = "member", fetch = FetchType.LAZY)
     private InterestSetting interestSetting;
 
+    public void setPassword(@Nullable String encode) {
+        this.password = encode;
+    }
+
+    public void changeProfile(
+            String nickname, String profileImageUrl, String bio
+    ) {
+        this.nickname = nickname;
+        this.profileImageUrl = profileImageUrl;
+        this.bio = bio;
+    }
+
+    public void changeEmailEvent(boolean emailEvent) {
+        this.emailEvent = emailEvent;
+    }
 }
 
