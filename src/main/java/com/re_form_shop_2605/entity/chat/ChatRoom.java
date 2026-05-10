@@ -24,7 +24,7 @@ public class ChatRoom extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trade_id", updatable = false)
-    private Trade trade; // 거래 ID (거래 요청 후 연결)
+    private Trade trade; // 거래 ID (거래 요청 후 연결 시 채워짐)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="buyer_id", nullable = false)
