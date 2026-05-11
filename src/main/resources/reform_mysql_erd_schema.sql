@@ -188,6 +188,7 @@ CREATE TABLE chat_room
     CONSTRAINT fk_chat_room_trade FOREIGN KEY (trade_id) REFERENCES trade(trade_id)
 ) ENGINE = InnoDB;
 
+
 -- 11. 채팅 기록
 CREATE TABLE chat_message
 (
@@ -204,6 +205,7 @@ CREATE TABLE chat_message
     CONSTRAINT fk_chat_message_room FOREIGN KEY (chat_id) REFERENCES chat_room (chat_id),
     CONSTRAINT fk_chat_message_sender FOREIGN KEY (sender_id) REFERENCES member (member_id)
 ) ENGINE = InnoDB;
+
 
 -- 12. 결제 기록 0
 -- PK : payment_id   |  FK : trade_id
