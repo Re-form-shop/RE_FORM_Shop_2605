@@ -13,7 +13,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     // 채팅방 메시지 이력 페이징 조회
     Page<ChatMessage> findByChatRoom_ChatIdOrderByCreatedAtDesc(Long chatId, Pageable pageable);
 
-    // 읽지 않은 메시지 수 (채팅방 목록 배지용)
+    // 내 아이디가 아니면서 / 읽지 않은 메시지 수 (채팅방 목록 배지용)
     long countByChatRoom_ChatIdAndIsReadFalseAndMember_MemberIdNot(Long chatId, Long myId);
 
     // 채팅방 입장 시 미읽음 메세지 읽음 처리
