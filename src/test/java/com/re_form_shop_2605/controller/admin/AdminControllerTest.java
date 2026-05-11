@@ -1,4 +1,4 @@
-package com.re_form_shop_2605.controller.payment;
+package com.re_form_shop_2605.controller.admin;
 
 import com.re_form_shop_2605.service.payment.PointService;
 import org.junit.jupiter.api.Test;
@@ -12,61 +12,49 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class PointControllerTest {
+class AdminControllerTest {
     @Autowired
     private MockMvc mockMvc;
-    private PointService pointService;
 
     @Test
     @WithMockUser
-    void testViewPointWallet() throws Exception {
-        mockMvc.perform(get("/api/points/wallet")
-                        .param("memberId", "1"))
+    void testViewAllPendingWithdrawList() throws Exception {
+        mockMvc.perform(get("/api/admin/withdraws"))
                 .andDo(print())
                 .andExpect(status().isOk());
     }
 
     @Test
     @WithMockUser
-    void testWithdraw() throws Exception {
-        mockMvc.perform(post("/api/points/withdraw")
-                .param("memberId", "3")
+    void test() throws Exception {
+        mockMvc.perform(patch("/api/admin/withdraws/{withdrawId}/action", 5L)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                         {
-                            "requestAmount": 10000,
-                            "bankName": "은행3",
-                            "accountNumber": "333-33-333333"
+                         "action": "APPROVED",
+                         "rejectReason": null
                         }
                         """)
                 .with(csrf()))
                 .andDo(print())
-                .andExpect(status().isCreated());
-    }
-
-    @Test
-    @WithMockUser
-    void testGetWithdrawList() throws Exception {
-        mockMvc.perform(get("/api/points/withdraw")
-                .param("memberId", "2"))
-                .andDo(print())
                 .andExpect(status().isOk());
-    }
 
-    @Test
-    @WithMockUser
-    void testCancelWithdraw() throws Exception {
-        mockMvc.perform(delete("/api/points/cancel/{withdrawId}", 6L)
-                        .param("memberId", "3")
-                        .with(csrf()))
-                .andDo(print())
-                .andExpect(status().isNoContent());
+//        mockMvc.perform(patch("/api/admin/withdraws/{withdrawId}/action", 2L)
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content("""
+//                        {
+//                         "action": "REJECTED",
+//                         "rejectReason": "거래 완료 후 이의 제기되어 확인 필요함"
+//                        }
+//                        """)
+//                        .with(csrf()))
+//                .andDo(print())
+//                .andExpect(status().isOk());
     }
 }

@@ -62,4 +62,9 @@ public class PointRequest extends BaseEntity {
         this.status = PointRequestStatus.REJECTED;
         this.rejectReason = reason;
     }
+
+    // 4) 취소
+    public void cancel() {
+        this.status = PointRequestStatus.CANCELED;
+    }
 }
