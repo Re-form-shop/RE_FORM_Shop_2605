@@ -71,24 +71,24 @@ CREATE TABLE interest_keyword
 -- IDX : seller_id, status
 CREATE TABLE post
 (
-    post_id       BIGINT PRIMARY KEY                                                 NOT NULL AUTO_INCREMENT COMMENT '게시글 번호',
-    seller_id     BIGINT                                                             NOT NULL COMMENT '판매자 member id',
-    title         VARCHAR(200)                                                       NOT NULL COMMENT '제목',
-    content       TEXT                                                               NOT NULL COMMENT '본문',
+    post_id       BIGINT PRIMARY KEY                                                        NOT NULL AUTO_INCREMENT COMMENT '게시글 번호',
+    seller_id     BIGINT                                                                    NOT NULL COMMENT '판매자 member id',
+    title         VARCHAR(200)                                                              NOT NULL COMMENT '제목',
+    content       TEXT                                                                      NOT NULL COMMENT '본문',
     sport         ENUM ('BASEBALL', 'SOCCER', 'BASKETBALL', 'VOLLEYBALL', 'ESPORTS', 'ETC') NOT NULL COMMENT '종목',
-    team          VARCHAR(50)                                                        NOT NULL COMMENT '구단명',
-    uniform_name  VARCHAR(200)                                                       NOT NULL COMMENT '유니폼명',
-    grade         ENUM ('S', 'A', 'B', 'C')                                          NOT NULL COMMENT '유니폼 상태 등급',
-    size          VARCHAR(10)                                                        NULL COMMENT '유니폼 사이즈 (85 ~120)',
-    marking       BOOLEAN                                                            NULL     DEFAULT FALSE COMMENT '마킹 여부',
-    price         INT                                                                NOT NULL COMMENT '희망 가격',
-    delivery_type ENUM ('DIRECT', 'DELIVERY', 'BOTH')                                NOT NULL COMMENT '수령 방법',
-    status        ENUM ('ON_SALE', 'RESERVED', 'SOLD', 'HIDDEN', 'DELETED')          NOT NULL DEFAULT 'ON_SALE' COMMENT '거래 상태',
-    view_count    INT                                                                NOT NULL DEFAULT 0 COMMENT '조회수',
-    wish_count    INT                                                                NOT NULL DEFAULT 0 COMMENT '찜 수',
-    risk_level    ENUM ('LOW', 'MID', 'HIGH')                                        NULL COMMENT '위험 탐지 등급',
-    created_at    DATETIME                                                           NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '게시글 등록일',
-    updated_at    DATETIME                                                           NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '게시글 수정일',
+    team          VARCHAR(50)                                                               NOT NULL COMMENT '구단명',
+    uniform_name  VARCHAR(200)                                                              NOT NULL COMMENT '유니폼명',
+    grade         ENUM ('S', 'A', 'B', 'C')                                                 NOT NULL COMMENT '유니폼 상태 등급',
+    size          VARCHAR(10)                                                               NULL COMMENT '유니폼 사이즈 (85 ~120)',
+    marking       BOOLEAN                                                                   NULL     DEFAULT FALSE COMMENT '마킹 여부',
+    price         INT                                                                       NOT NULL COMMENT '희망 가격',
+    delivery_type ENUM ('DIRECT', 'DELIVERY', 'BOTH')                                       NOT NULL COMMENT '수령 방법',
+    status        ENUM ('ON_SALE', 'RESERVED', 'SOLD', 'HIDDEN', 'DELETED')                 NOT NULL DEFAULT 'ON_SALE' COMMENT '거래 상태',
+    view_count    INT                                                                       NOT NULL DEFAULT 0 COMMENT '조회수',
+    wish_count    INT                                                                       NOT NULL DEFAULT 0 COMMENT '찜 수',
+    risk_level    ENUM ('LOW', 'MID', 'HIGH')                                               NULL COMMENT '위험 탐지 등급',
+    created_at    DATETIME                                                                  NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '게시글 등록일',
+    updated_at    DATETIME                                                                  NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '게시글 수정일',
     KEY idx_post_seller_id (seller_id),
     KEY idx_post_status (status),
     CONSTRAINT fk_post_member FOREIGN KEY (seller_id) REFERENCES member (member_id)
@@ -183,9 +183,9 @@ CREATE TABLE chat_room
     post_id    BIGINT             NOT NULL COMMENT '게시글 ID',
     created_at DATETIME           NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '채팅방 생성일',
     CONSTRAINT uk_chat_room_post_buyer UNIQUE (post_id, buyer_id),
-    CONSTRAINT fk_chat_room_post  FOREIGN KEY (post_id)  REFERENCES post(post_id),
-    CONSTRAINT fk_chat_room_buyer FOREIGN KEY (buyer_id) REFERENCES member(member_id),
-    CONSTRAINT fk_chat_room_trade FOREIGN KEY (trade_id) REFERENCES trade(trade_id)
+    CONSTRAINT fk_chat_room_post FOREIGN KEY (post_id) REFERENCES post (post_id),
+    CONSTRAINT fk_chat_room_buyer FOREIGN KEY (buyer_id) REFERENCES member (member_id),
+    CONSTRAINT fk_chat_room_trade FOREIGN KEY (trade_id) REFERENCES trade (trade_id)
 ) ENGINE = InnoDB;
 
 -- 11. 채팅 기록
@@ -274,14 +274,14 @@ CREATE TABLE point_history
 -- IDX : member_id, status
 CREATE TABLE point_request
 (
-    withdraw_id    BIGINT PRIMARY KEY                       NOT NULL AUTO_INCREMENT,
-    member_id      BIGINT                                   NOT NULL,
-    request_amount INT                                      NOT NULL COMMENT '출금 요청 금액',
-    bank_name      VARCHAR(50)                              NULL COMMENT '은행명',
-    account_number VARCHAR(30)                              NULL COMMENT '계좌번호',
-    status         ENUM ('PENDING', 'APPROVED', 'REJECTED') NOT NULL COMMENT '출금 처리 상태',
-    reject_reason  VARCHAR(300)                             NULL COMMENT '반려 사유',
-    created_at     DATETIME                                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    withdraw_id    BIGINT PRIMARY KEY                                   NOT NULL AUTO_INCREMENT,
+    member_id      BIGINT                                               NOT NULL,
+    request_amount INT                                                  NOT NULL COMMENT '출금 요청 금액',
+    bank_name      VARCHAR(50)                                          NULL COMMENT '은행명',
+    account_number VARCHAR(30)                                          NULL COMMENT '계좌번호',
+    status         ENUM ('PENDING', 'APPROVED', 'REJECTED', 'CANCELED') NOT NULL COMMENT '출금 처리 상태',
+    reject_reason  VARCHAR(300)                                         NULL COMMENT '반려 사유',
+    created_at     DATETIME                                             NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY idx_point_request_member_id (member_id),
     KEY idx_point_request_status (status),
     CONSTRAINT fk_point_request_member FOREIGN KEY (member_id) REFERENCES member (member_id)

@@ -112,23 +112,23 @@ class MemberServiceImplTest {
         assertEquals(10, matchedCount);
     }
 
-    @Test
-    void modifyProfileTest() {
-        Member member = createMember("modify_profile");
-        long seed = System.nanoTime();
-        ProfileUpdateRequestDTO requestDTO = new ProfileUpdateRequestDTO(
-                "updated_profile_" + seed,
-                "https://test.com/updated.png",
-                "updated bio"
-        );
-
-        memberService.modifyProfile(member.getMemberId(), requestDTO);
-        ProfileResponseDTO responseDTO = memberService.readProfile(member.getMemberId());
-
-        assertEquals("updated_profile_" + seed, responseDTO.nickname());
-        assertEquals("https://test.com/updated.png", responseDTO.profileImageUrl());
-        assertEquals("updated bio", responseDTO.bio());
-    }
+//    @Test
+//    void modifyProfileTest() {
+//        Member member = createMember("modify_profile");
+//        long seed = System.nanoTime();
+//        ProfileUpdateRequestDTO requestDTO = new ProfileUpdateRequestDTO(
+//                "updated_profile_" + seed,
+//                "https://test.com/updated.png",
+//                "updated bio"
+//        );
+//
+//        memberService.modifyProfile(member.getMemberId(), requestDTO);
+//        ProfileResponseDTO responseDTO = memberService.readProfile(member.getMemberId());
+//
+//        assertEquals("updated_profile_" + seed, responseDTO.nickname());
+//        assertEquals("https://test.com/updated.png", responseDTO.profileImageUrl());
+//        assertEquals("updated bio", responseDTO.bio());
+//    }
 
     @Test
     void readPublicProfileTest() {

@@ -2,15 +2,15 @@ package com.re_form_shop_2605.controller.payment;
 
 import com.re_form_shop_2605.dto.payment.PointHistoryItemDTO;
 import com.re_form_shop_2605.dto.payment.PointWalletResponseDTO;
+import com.re_form_shop_2605.dto.payment.WithdrawRequestDTO;
+import com.re_form_shop_2605.dto.payment.WithdrawResponseDTO;
 import com.re_form_shop_2605.service.payment.PointService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -47,5 +47,24 @@ public class PointController {
         List<PointHistoryItemDTO> pointHistory = pointService.getPointHistory(memberId);
 
         return ResponseEntity.ok(pointHistory);
+    }
+
+    /* 3. 출금 요청 */
+    @PostMapping("/withdraw")
+    public ResponseEntity<WithdrawResponseDTO> askWithdraw(
+            @RequestParam("memberId") Long memberId,
+            @RequestBody WithdrawRequestDTO request
+    ) {
+        WithdrawResponseDTO response = pointService.requestWithdraw(memberId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /* 4. 내 출금 요청 목록 */
+    @GetMapping("/withdraw")
+    public ResponseEntity<List<WithdrawResponseDTO>> viewRequestWithdraw(
+            @RequestParam("memberId") Long memberId
+    ) {
+        List<WithdrawResponseDTO> request = pointService.getRequestWithdrawList(memberId);
+        return ResponseEntity.ok(request);
     }
 }

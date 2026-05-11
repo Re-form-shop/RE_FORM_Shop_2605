@@ -6,6 +6,7 @@ public enum PointRequestStatus {
     - PENDING : 보류
     - APPROVED : 승인
     - REJECTED : 반려
+    - CANCELED : 고객 취소
      */
-    PENDING, APPROVED, REJECTED
+    PENDING, APPROVED, REJECTED, CANCELED
 }
