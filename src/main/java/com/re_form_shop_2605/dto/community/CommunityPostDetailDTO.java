@@ -2,14 +2,14 @@ package com.re_form_shop_2605.dto.community;
 
 import com.re_form_shop_2605.dto.chat.MemberBriefDTO;
 import com.re_form_shop_2605.entity.Enum.CommunityPostStatus;
-import com.re_form_shop_2605.entity.Enum.SportCategory;
+import com.re_form_shop_2605.entity.Enum.Sport;
 
 import java.time.LocalDateTime;
 
 // GET /api/community/{commId}
 public record CommunityPostDetailDTO(
         Long commId,
-        SportCategory sportCategory,
+        Sport sport,
         String teamCategory,
         String commTitle,
         String commContent,

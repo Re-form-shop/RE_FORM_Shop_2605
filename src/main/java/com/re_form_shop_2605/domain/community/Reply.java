@@ -1,6 +1,5 @@
 package com.re_form_shop_2605.domain.community;
 
-import com.re_form_shop_2605.entity.Enum.SportCategory;
 import lombok.*;
 
 import java.time.LocalDateTime;

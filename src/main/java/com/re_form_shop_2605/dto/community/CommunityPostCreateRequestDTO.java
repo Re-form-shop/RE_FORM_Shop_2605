@@ -1,6 +1,7 @@
 package com.re_form_shop_2605.dto.community;
 
-import com.re_form_shop_2605.entity.Enum.SportCategory;
+
+import com.re_form_shop_2605.entity.Enum.Sport;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.jetbrains.annotations.NotNull;
@@ -8,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 // POST /api/community
 public record CommunityPostCreateRequestDTO(
         @NotNull
-        SportCategory sportCategory,
+        Sport Sport,
 
         @Size(max = 50)
         String teamCategory, // 관련 구단 (선택)

@@ -1,7 +1,8 @@
 package com.re_form_shop_2605.domain.community;
 
 import com.re_form_shop_2605.entity.Enum.CommunityPostStatus;
-import com.re_form_shop_2605.entity.Enum.SportCategory;
+
+import com.re_form_shop_2605.entity.Enum.Sport;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 public class CommunityPost {
     private Long commId;
     private Long memberId;
-    private SportCategory sportCategory; // 종목
+    private Sport Sport; // 종목
     private String teamCategory; // 구단명
     private String commTitle; // 제목
     private String commContent; // 본문

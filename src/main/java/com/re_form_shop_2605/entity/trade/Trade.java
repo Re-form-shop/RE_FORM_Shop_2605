@@ -4,7 +4,7 @@ import com.re_form_shop_2605.entity.BaseEntity;
 import com.re_form_shop_2605.entity.Enum.TradeDeliveryType;
 import com.re_form_shop_2605.entity.Enum.TradeStatus;
 import com.re_form_shop_2605.entity.chat.ChatRoom;
-import com.re_form_shop_2605.entity.member.MannerReview;
+import com.re_form_shop_2605.entity.trade.MannerReview;
 import com.re_form_shop_2605.entity.member.Member;
 import jakarta.persistence.*;
 import lombok.*;
@@ -81,8 +81,8 @@ public class Trade extends BaseEntity {
     @OneToMany(mappedBy = "trade")
     private List<ChatRoom> chatRooms = new ArrayList<>();
 
-    @OneToOne(mappedBy = "trade", fetch = FetchType.LAZY)
-    private MannerReview mannerReview;
+//    @OneToOne(mappedBy = "trade", fetch = FetchType.LAZY)
+//    private MannerReview mannerReview;
 
     @Column(name = "received_at")
     private LocalDateTime receivedAt;
