@@ -20,7 +20,10 @@ public class UploadResourceConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         Path uploadPostRoot = Paths.get(uploadRoot).toAbsolutePath().normalize().resolve("post");
+        Path uploadMemberRoot = Paths.get(uploadRoot).toAbsolutePath().normalize().resolve("member");
         registry.addResourceHandler("/uploads/post/**")
                 .addResourceLocations(uploadPostRoot.toUri().toString() + "/");
+        registry.addResourceHandler("/uploads/member/**")
+                .addResourceLocations(uploadMemberRoot.toUri().toString() + "/");
     }
 }

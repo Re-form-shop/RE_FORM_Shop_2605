@@ -5,6 +5,7 @@ import com.re_form_shop_2605.dto.member.MemberRequestDTO;
 import com.re_form_shop_2605.dto.member.MemberResponseDTO;
 import com.re_form_shop_2605.dto.member.NicknameResponseDTO;
 import com.re_form_shop_2605.service.member.MemberService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -33,6 +34,10 @@ public class AuthController {
 
     // POST /api/auth/register
     // 회원가입 요청을 받아 서비스에 위임
+    @Operation(
+            summary = "회원가입",
+            description = "이메일, 비밀번호, 닉네임과 약관 동의 여부를 받아 새 회원을 등록합니다."
+    )
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<MemberResponseDTO>> register(@Valid @RequestBody RegisterRequest request) {
         if (!request.agreeTerms() || !request.agreePrivacy()) {
@@ -54,6 +59,10 @@ public class AuthController {
 
     // GET /api/auth/check-nickname
     // 닉네임 사용 가능 여부를 확인
+    @Operation(
+            summary = "닉네임 중복 확인",
+            description = "입력한 닉네임의 사용 가능 여부를 확인합니다."
+    )
     @GetMapping("/check-nickname")
     public ResponseEntity<ApiResponse<NicknameResponseDTO>> checkNickname(
             @RequestParam @NotBlank @Size(min = 2, max = 20) String nickname

@@ -26,6 +26,7 @@ import org.modelmapper.ModelMapper;
 //import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ public class MemberServiceImpl implements MemberService {
     private final TradeRepository tradeRepository;
     private final mannerReviewRepository mannerReviewRepository;
     private final InterestSettingService interestSettingService;
+    private final MemberImageService memberImageService;
 //    private final ModelMapper modelMapper;
 //    private final PasswordEncoder passwordEncoder;
 
@@ -127,12 +129,30 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     // 내 프로필에서 수정 가능한 항목만 반영
-    public void modifyProfile(Long memberId, ProfileUpdateRequestDTO profileUpdateRequestDTO) {
+    public void modifyProfile(Long memberId, ProfileUpdateRequestDTO profileUpdateRequestDTO, MultipartFile profileImage) {
         Member member = getMember(memberId);
+
+        String nickname = profileUpdateRequestDTO.nickname() != null
+                ? profileUpdateRequestDTO.nickname()
+                : member.getNickname();
+        String bio = profileUpdateRequestDTO.bio() != null
+                ? profileUpdateRequestDTO.bio()
+                : member.getBio();
+        String profileImageUrl = member.getProfileImageUrl();
+
+        if (!member.getNickname().equals(nickname) && memberRepository.existsByNickname(nickname)) {
+            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+        }
+
+        if (profileImage != null && !profileImage.isEmpty()) {
+            memberImageService.deleteProfileImageDirectory(memberId);
+            profileImageUrl = memberImageService.saveProfileImage(memberId, profileImage);
+        }
+
         member.changeProfile(
-                profileUpdateRequestDTO.nickname(),
-                profileUpdateRequestDTO.profileImageUrl(),
-                profileUpdateRequestDTO.bio()
+                nickname,
+                profileImageUrl,
+                bio
         );
     }
 

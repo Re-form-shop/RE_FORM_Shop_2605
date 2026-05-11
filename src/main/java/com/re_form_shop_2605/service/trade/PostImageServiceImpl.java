@@ -1,6 +1,7 @@
 package com.re_form_shop_2605.service.trade;
 
-import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -17,13 +18,13 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@Log4j2
-public class PostImageStorageServiceImpl implements PostImageStorageService {
+public class PostImageServiceImpl implements PostImageService {
 
+    private static final Logger log = LogManager.getLogger(PostImageServiceImpl.class);
     private static final int MAX_POST_IMAGES = 10;
     private final Path uploadRootPath;
 
-    public PostImageStorageServiceImpl(
+    public PostImageServiceImpl(
             @Value("${spring.servlet.multipart.location}") String uploadRoot
     ) {
         this.uploadRootPath = Paths.get(uploadRoot).toAbsolutePath().normalize().resolve("post");

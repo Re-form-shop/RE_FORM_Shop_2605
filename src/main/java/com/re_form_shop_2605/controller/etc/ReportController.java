@@ -5,6 +5,7 @@ import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.etc.ReportRequestDTO;
 import com.re_form_shop_2605.dto.etc.ReportResponseDTO;
 import com.re_form_shop_2605.service.etc.ReportService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,10 @@ public class ReportController {
 
     // POST /api/reports
     // 신고 등록
+    @Operation(
+            summary = "신고 등록",
+            description = "현재 회원이 대상 사용자 또는 게시글에 대한 신고를 등록합니다."
+    )
     @PostMapping
     public ResponseEntity<ApiResponse<IdResponse>> addReport(
             @RequestHeader("X-Member-Id") Long memberId,
@@ -41,6 +46,10 @@ public class ReportController {
 
     // GET /api/reports/my
     // 현재 로그인 사용자의 신고 내역을 조회
+    @Operation(
+            summary = "내 신고 내역 조회",
+            description = "현재 회원이 등록한 신고 내역을 페이지 단위로 조회합니다."
+    )
     @GetMapping("/my")
     public ResponseEntity<ApiResponse<PageResponse<ReportResponseDTO>>> readMyReports(
             @RequestHeader("X-Member-Id") Long memberId,

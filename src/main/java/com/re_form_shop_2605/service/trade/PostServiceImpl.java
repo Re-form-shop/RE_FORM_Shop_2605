@@ -38,7 +38,7 @@ public class PostServiceImpl implements PostService {
     private final MemberRepository memberRepository;
     private final postImageRepository postImageRepository;
     private final WishRepository wishRepository;
-    private final PostImageStorageService postImageStorageService;
+    private final PostImageService postImageService;
     private final ModelMapper modelMapper;
 
     @Override
@@ -66,7 +66,7 @@ public class PostServiceImpl implements PostService {
                 .build();
 
         Post savedPost = postRepository.save(post);
-        List<String> imageUrls = postImageStorageService.savePostImages(savedPost.getPostId(), images);
+        List<String> imageUrls = postImageService.savePostImages(savedPost.getPostId(), images);
 
         List<PostImage> postImages = new ArrayList<>();
         for (int i = 0; i < imageUrls.size(); i++) {
@@ -188,9 +188,9 @@ public class PostServiceImpl implements PostService {
 
         if (images != null) {
             postImageRepository.deleteByPost_PostId(postId);
-            postImageStorageService.deletePostImageDirectory(postId);
+            postImageService.deletePostImageDirectory(postId);
 
-            List<String> imageUrls = postImageStorageService.savePostImages(postId, images);
+            List<String> imageUrls = postImageService.savePostImages(postId, images);
             List<PostImage> postImages = new ArrayList<>();
 
             for (int i = 0; i < imageUrls.size(); i++) {

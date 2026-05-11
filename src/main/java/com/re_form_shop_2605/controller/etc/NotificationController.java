@@ -5,6 +5,7 @@ import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.etc.NotificationDTO;
 import com.re_form_shop_2605.dto.etc.NotificationResponseDTO;
 import com.re_form_shop_2605.service.etc.NotificationService;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -27,6 +28,10 @@ public class NotificationController {
 
     // GET /api/notifications
     // 알림 목록과 읽지 않은 개수를 함께 조회
+    @Operation(
+            summary = "알림 목록 조회",
+            description = "현재 회원의 알림 목록과 읽지 않은 알림 개수를 함께 조회합니다."
+    )
     @GetMapping
     public ResponseEntity<ApiResponse<NotificationPageResponse>> readNotifications(
             @RequestHeader("X-Member-Id") Long memberId,
@@ -40,6 +45,10 @@ public class NotificationController {
 
     // PATCH /api/notifications/{id}/read
     // 특정 알림을 읽음 상태로 변경
+    @Operation(
+            summary = "알림 읽음 처리",
+            description = "알림 ID에 해당하는 알림을 읽음 상태로 변경합니다."
+    )
     @PatchMapping("/{id}/read")
     public ResponseEntity<ApiResponse<ReadNotificationResponse>> readNotification(@PathVariable("id") Long notiId) {
         notificationService.modifyNotificationRead(notiId);
@@ -48,6 +57,10 @@ public class NotificationController {
 
     // PATCH /api/notifications/read-all
     // 현재 사용자의 모든 미확인 알림을 읽음 상태로 변경
+    @Operation(
+            summary = "전체 알림 읽음 처리",
+            description = "현재 회원의 읽지 않은 알림 전체를 읽음 상태로 변경합니다."
+    )
     @PatchMapping("/read-all")
     public ResponseEntity<ApiResponse<UpdatedCountResponse>> readAllNotifications(
             @RequestHeader("X-Member-Id") Long memberId
