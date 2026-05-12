@@ -27,14 +27,14 @@ public class AdminController {
     | GET   | `/api/admin/reports`                       | 신고 목록
     | GET   | `/api/admin/reports/{reportId}`            | 신고 상세
     | PATCH | `/api/admin/reports/{reportId}/action`     | 신고 처리
-    | GET   | `/api/admin/withdraws`                     | 출금 요청 목록
-    | PATCH | `/api/admin/withdraws/{withdrawId}/action` | 출금 승인·반려
+    | GET   | `/api/admin/withdraw-requests`             | 출금 요청 목록
+    | PATCH | `/api/admin/withdraw-requests/{withdrawId}`| 출금 승인·반려
      */
 
     private final PointService pointService;
 
     /* 7. 전체 회원 출금 요청 목록 조회 */
-    @GetMapping("/withdraws")
+    @GetMapping("/withdraw-requests")
     public ResponseEntity<List<WithdrawResponseDTO>> viewAllPendingWithdrawList() {
         List<WithdrawResponseDTO> responses = pointService.getPendingWithdrawList();
 
@@ -42,7 +42,7 @@ public class AdminController {
     }
 
     /* 8. 출금 승인·반려 */
-    @PatchMapping("/withdraws/{withdrawId}/action")
+    @PatchMapping("/withdraw-requests/{withdrawId}")
     public ResponseEntity<WithdrawResponseDTO> withdrawalProcess(
             @PathVariable Long withdrawId,
             @RequestBody AdminWithdrawActionRequestDTO request

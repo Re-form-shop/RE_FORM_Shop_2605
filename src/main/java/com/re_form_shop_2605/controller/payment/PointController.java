@@ -24,24 +24,24 @@ import java.util.List;
 @Log4j2
 @RestController
 @Tag(name = "포인트/출금 API", description = "포인트 및 출금 정산 관련 API")
-@RequestMapping("/api/points")
+@RequestMapping("/api/users/me/points")
 @RequiredArgsConstructor
 public class PointController {
-    // todo!!!!! api 질문
     /*
     8. 포인트 / 출금
-    | GET    | `/api/points/wallet`              | 포인트 지갑 조회  |
-    | GET    | `/api/points/history`             | 포인트 내역 목록  |
-    | POST   | `/api/points/withdraw`            | 출금 요청       |
-    | GET    | `/api/points/withdraw`            | 내 출금 요청 목록 |
-    | DELETE | `/api/points/cancel/{withdrawId}` | 출금 요청 취소
+    | GET    | `/api/users/me/points`                       | 포인트 지갑 조회
+    | GET    | `/api/users/me/points/history`               | 포인트 내역 조회
+    | POST   | `/api/users/me/points/withdraw`              | 출금 요청
+    | GET    | `/api/users/me/points/withdraw`              | 내 출금 요청 목록
+    | DELETE | `/api/users/me/points/withdraw/{withdrawId}` | 출금 요청 취소
      */
     private final PointService pointService;
 
-    /* 1. 포인트 지갑 조회 */
-    @GetMapping("/wallet")
+    /* 1. 포인트 지갑 + 내역 조회 */
+    @GetMapping("")
     public ResponseEntity<PointWalletResponseDTO> viewPointWallet(
-            @RequestParam("memberId") Long memberId
+//            @RequestParam("memberId") Long memberId
+            @RequestHeader(value = "X-Member-Id", required = false) Long memberId
     ) {
         log.info("==== viewPointWallet 포인트 지갑 조회 ... ====");
 
@@ -53,7 +53,8 @@ public class PointController {
     /* 2. 포인트 이력 조회 */
     @GetMapping("/history")
     public ResponseEntity<List<PointHistoryItemDTO>> viewPointHistory(
-            @RequestParam("memberId") Long memberId
+//            @RequestParam("memberId") Long memberId
+            @RequestHeader(value = "X-Member-Id", required = false) Long memberId
     ) {
         log.info("==== viewPointHistory 포인트 이력 조회 ... ====");
 
@@ -65,7 +66,8 @@ public class PointController {
     /* 3. 출금 요청 */
     @PostMapping("/withdraw")
     public ResponseEntity<WithdrawResponseDTO> askWithdraw(
-            @RequestParam("memberId") Long memberId,
+//            @RequestParam("memberId") Long memberId,
+            @RequestHeader(value = "X-Member-Id", required = false) Long memberId,
             @RequestBody WithdrawRequestDTO request
     ) {
         log.info("==== askWithdraw 출금 요청 ... ====");
@@ -77,7 +79,8 @@ public class PointController {
     /* 4. 내 출금 요청 목록 조회 */
     @GetMapping("/withdraw")
     public ResponseEntity<List<WithdrawResponseDTO>> viewRequestWithdraw(
-            @RequestParam("memberId") Long memberId
+//            @RequestParam("memberId") Long memberId
+            @RequestHeader(value = "X-Member-Id", required = false) Long memberId
     ) {
         log.info("==== viewRequestWithdraw 사용자 출금 요청 목록 조회 ... ====");
 
@@ -86,10 +89,11 @@ public class PointController {
     }
 
     /* 5. 내 출금 요청 취소 */
-    @DeleteMapping("/cancel/{withdrawId}")
+    @DeleteMapping("/withdraw/{withdrawId}")
     public ResponseEntity<Void> cancelRequestWithdraw(
             @PathVariable Long withdrawId,
-            @RequestParam("memberId") Long memberId
+//            @RequestParam("memberId") Long memberId
+            @RequestHeader(value = "X-Member-Id", required = false) Long memberId
     ) {
         log.info("==== cancelRequestWithdraw 사용자 출금 요청 취소 ... ====");
 
