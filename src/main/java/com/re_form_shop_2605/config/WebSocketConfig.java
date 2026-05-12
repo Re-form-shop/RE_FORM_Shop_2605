@@ -7,11 +7,17 @@ import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 진혜림
+ * 작성일: 2026-05-08
+ * 설명: 스프링 웹소켓 활성화 및 핸들러 매핑을 담당하는 설정 클래스
+ * ─────────────────────────────────────────────────────
+ */
 @Configuration
 @EnableWebSocket
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketConfigurer {
-    /* 스프링 웹소켓 활성화 및 핸들러 매핑을 담당하는 설정 클래스 */
     private final WebSocketChatHandler webSocketChatHandler;
 
     @Override

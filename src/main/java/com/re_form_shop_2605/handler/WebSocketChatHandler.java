@@ -11,10 +11,16 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 진혜림
+ * 작성일: 2026-05-08
+ * 설명: 웹소켓 채팅 연결의 생명주기(연결/메시지/종료)를 처리하는 핸들러
+ * ─────────────────────────────────────────────────────
+ */
 @Log4j2
 @Component
 public class WebSocketChatHandler extends TextWebSocketHandler {
-    /* 웹소켓 채팅 연결의 생명주기(연결/메시지/종료)를 처리하는 핸들러 */
 
     // 현재 서버에 접속한 클라이언트들을 저장
     final Map<String, WebSocketSession> webSocketSessionMap = new ConcurrentHashMap<>();

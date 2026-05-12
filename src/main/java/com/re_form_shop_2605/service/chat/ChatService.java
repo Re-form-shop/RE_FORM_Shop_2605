@@ -20,8 +20,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 진혜림
+ * 작성일: 2026-05-11
+ * 설명: 체팅을 구현하는 서비스
+ * ─────────────────────────────────────────────────────
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -71,7 +81,7 @@ public class ChatService {
                 .chatRoom(chatRoom)
                 .member(sender)
                 .content(chatSendMessageDTO.content())
-                .type(MessageType.valueOf(chatSendMessageDTO.type())) // .toUpperCase() -> 대문자로 변환 후 처리 ?
+                .type(MessageType.valueOf(chatSendMessageDTO.type())) // todo .toUpperCase() -> 대문자로 변환 후 처리 ?
                 .isRead(false)
                 .build();
 
@@ -85,10 +95,22 @@ public class ChatService {
 
     /* 메시지 이력 조회 (페이징) */
     public Page<ChatMessageDTO> getMessages(Long chatId, Pageable pageable){
-        
+        return chatMessageRepository
+                .findByChatRoom_ChatIdOrderByCreatedAtDesc(chatId, pageable).map(this::toChatMessageDTO);
     }
 
-    /* DTO 변환 메서드 */
+    /* 내 채팅방 목록 -> 구매자, 판매자 통합해서 보여주기 */
+    public List<ChatRoomSummaryDTO> getMyChatRooms(Long memberId) {
+        List<ChatRoom> asBuyer = chatRoomRepository.findByBuyer_MemberIdOrderByCreatedAtDesc(memberId);
+        List<ChatRoom> asSeller = chatRoomRepository.findByPost_PostIdOrderByCreatedAtDesc(memberId);
+
+        return Stream.concat(asBuyer.stream(), asSeller.stream())
+                .sorted(Comparator.comparing(ChatRoom::getCreatedAt).reversed())
+                .map(this::toChatRoomSummaryDTO)
+                .toList();
+    }
+
+    /* ---------------------------------------DTO 변환 메서드------------------------------------------- */
     private ChatMessageDTO toChatMessageDTO(ChatMessage chatMessage){
         return new ChatMessageDTO(
                 chatMessage.getMessageId(),
