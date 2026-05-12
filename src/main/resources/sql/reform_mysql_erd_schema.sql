@@ -334,7 +334,31 @@ CREATE TABLE reply
 ) ENGINE = InnoDB;
 
 
--- 19. 회원별 출금 포인트 조회 0
+-- 19. 게시글 좋아요
+CREATE TABLE community_like
+(
+    like_id   BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    member_id BIGINT             NOT NULL COMMENT '좋아요 누른 회원 ID',
+    comm_id   BIGINT             NOT NULL COMMENT '대상 게시글 ID',
+    UNIQUE KEY uk_community_like_member_comm (member_id, comm_id),
+    CONSTRAINT fk_community_like_member FOREIGN KEY (member_id) REFERENCES member (member_id),
+    CONSTRAINT fk_community_like_comm   FOREIGN KEY (comm_id)   REFERENCES community_post (comm_id)
+) ENGINE = InnoDB;
+
+
+-- 20. 댓글 좋아요
+CREATE TABLE reply_like
+(
+    like_id   BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    member_id BIGINT             NOT NULL COMMENT '좋아요 누른 회원 ID',
+    reply_id  BIGINT             NOT NULL COMMENT '대상 댓글 ID',
+    UNIQUE KEY uk_reply_like_member_reply (member_id, reply_id),
+    CONSTRAINT fk_reply_like_member FOREIGN KEY (member_id) REFERENCES member (member_id),
+    CONSTRAINT fk_reply_like_reply  FOREIGN KEY (reply_id)  REFERENCES reply (reply_id)
+) ENGINE = InnoDB;
+
+
+-- 21. 회원별 출금 포인트 조회 0
 -- PK : point_id   |  FK : reporter_id
 -- IDX : reporter_id, target_type + target_id
 CREATE TABLE report
@@ -353,7 +377,7 @@ CREATE TABLE report
 ) ENGINE = InnoDB;
 
 
--- 20. 알림 목록 0
+-- 22. 알림 목록 0
 -- PK : noti_id   |  FK : member_id
 -- IDX : member_id, type
 CREATE TABLE notification

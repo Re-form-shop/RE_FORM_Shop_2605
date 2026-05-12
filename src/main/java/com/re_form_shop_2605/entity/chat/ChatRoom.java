@@ -10,6 +10,13 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 진혜림
+ * 작성일: 2026-05-07
+ * 설명: 채팅방의 Entity
+ * ─────────────────────────────────────────────────────
+ */
 @Entity
 @Getter
 @ToString

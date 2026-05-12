@@ -9,6 +9,13 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 진혜림
+ * 작성일: 2026-05-10
+ * 설명: 채팅 메세지 Repository
+ * ─────────────────────────────────────────────────────
+ */
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
     // 채팅방 메시지 이력 페이징 조회
     Page<ChatMessage> findByChatRoom_ChatIdOrderByCreatedAtDesc(Long chatId, Pageable pageable);
