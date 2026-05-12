@@ -1,4 +1,4 @@
-package com.re_form_shop_2605.config;
+package com.re_form_shop_2605.config.db;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
