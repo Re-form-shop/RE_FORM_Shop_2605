@@ -38,7 +38,8 @@ public class ModerationService {
      * 채팅 메세지 유해성 검사 후 결과를 DB에 저장하고 RiskAnalysisResultDTO 반환.
      *
      * @param content : 검사할 메시지 내용
-     * @param messageId : 선저장된 ChatMessage PK (risk_analysis_result.target_id)
+     * @param targetType: POST / CHAT 항목 분류
+     * @param targetId : 검사 대상자
      * @return RiskAnalysisResultDTO
      * - riskLevel == null -> 정상
      * - riskLevel != null -> 유해 (reason, suggestion 포함)

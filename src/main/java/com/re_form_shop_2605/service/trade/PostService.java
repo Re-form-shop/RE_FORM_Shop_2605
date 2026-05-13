@@ -19,6 +19,7 @@ import java.util.List;
  * 작성일: 2026-05-10
  * 설명:
  */
+
 public interface PostService {
     // 프론트가 전달한 이미지 URL 목록과 함께 판매글을 등록
     Long addPost(Long sellerId, PostRequestDTO postRequestDTO, List<String> imageUrls);
