@@ -1,8 +1,3 @@
-/**
- * 작성자: 손민정
- * 작성일: 2026-05-13
- * 설명: 의미 기반 유사 상품 검색 - 검색 서비스 구현
- */
 package com.re_form_shop_2605.service.trade;
 
 import com.re_form_shop_2605.domain.trade.PostCardVO;
@@ -21,6 +16,11 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+/**
+ * 작성자: 손민정
+ * 작성일: 2026-05-13
+ * 설명: 의미 기반 유사 상품 검색 - 검색 서비스 구현
+ */
 
 @Log4j2
 @Service

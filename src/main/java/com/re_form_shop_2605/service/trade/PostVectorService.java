@@ -1,8 +1,3 @@
-/**
- * 작성자: 손민정
- * 작성일: 2026-05-13
- * 설명: 의미 기반 유사 상품 검색 - 벡터 저장소 설정
- */
 package com.re_form_shop_2605.service.trade;
 
 import com.re_form_shop_2605.entity.trade.Post;
@@ -15,6 +10,11 @@ import org.springframework.ai.document.Document;
 
 import java.util.List;
 import java.util.Map;
+/**
+ * 작성자: 손민정
+ * 작성일: 2026-05-13
+ * 설명: 의미 기반 유사 상품 검색 - 벡터 저장소 설정
+ */
 
 @Log4j2
 @Service

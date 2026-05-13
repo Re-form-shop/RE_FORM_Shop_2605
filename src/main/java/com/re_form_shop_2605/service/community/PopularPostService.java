@@ -1,12 +1,3 @@
-/**
- * ─────────────────────────────────────────────────────
- * 작성자: 손민정
- * 작성일: 2026-05-13
- * 설명: 커뮤니티 인기글 조회 서비스
- *       - Redis ZSet에서 score 높은 순으로 인기글 조회
- *       - Redis 만료 시 DB에서 직접 조회 (fallback)
- * ─────────────────────────────────────────────────────
- */
 package com.re_form_shop_2605.service.community;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,6 +9,15 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Set;
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 손민정
+ * 작성일: 2026-05-13
+ * 설명: 커뮤니티 인기글 조회 서비스
+ *       - Redis ZSet에서 score 높은 순으로 인기글 조회
+ *       - Redis 만료 시 DB에서 직접 조회 (fallback)
+ * ─────────────────────────────────────────────────────
+ */
 
 @Log4j2
 @Service

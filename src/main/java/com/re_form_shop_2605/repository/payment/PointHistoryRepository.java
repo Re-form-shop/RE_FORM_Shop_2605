@@ -5,6 +5,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 손민정
+ * 작성일: 2026-05-11
+ * 설명: 포인트 이력 조회 Repository
+ * ─────────────────────────────────────────────────────
+ */
 
 @Repository
 public interface PointHistoryRepository extends JpaRepository<PointHistory, Long> {

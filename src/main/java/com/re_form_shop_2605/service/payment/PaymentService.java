@@ -1,11 +1,3 @@
-/**
- * 작성자: 손민정
- * 작성일: 2026-05-09
- * 설명: 결제 비즈니스 로직
- *      - 토스페이먼츠 API 연동
- *      - 결제 초기화/승인/취소/환불 처리
- */
-
 package com.re_form_shop_2605.service.payment;
 
 import com.re_form_shop_2605.dto.payment.*;
@@ -29,6 +21,13 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+/**
+ * 작성자: 손민정
+ * 작성일: 2026-05-09
+ * 설명: 결제 비즈니스 로직
+ *      - 토스페이먼츠 API 연동
+ *      - 결제 초기화/승인/취소/환불 처리
+ */
 
 @Service
 @RequiredArgsConstructor

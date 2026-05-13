@@ -8,6 +8,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 손민정
+ * 작성일: 2026-05-11
+ * 설명: 출금 요청 저장 및 조회 Repository
+ * ─────────────────────────────────────────────────────
+ */
 
 @Repository
 public interface PointRequestRepository extends JpaRepository<PointRequest, Long> {
