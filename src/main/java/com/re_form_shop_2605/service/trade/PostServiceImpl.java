@@ -2,15 +2,13 @@ package com.re_form_shop_2605.service.trade;
 
 import com.re_form_shop_2605.domain.trade.PostCardVO;
 import com.re_form_shop_2605.dto.common.PageResponse;
+import com.re_form_shop_2605.dto.etc.RiskAnalysisResultDTO;
 import com.re_form_shop_2605.dto.trade.PostCardDTO;
 import com.re_form_shop_2605.dto.trade.PostDetailDTO;
 import com.re_form_shop_2605.dto.trade.PostRequestDTO;
 import com.re_form_shop_2605.dto.trade.PostUpdateRequestDTO;
 import com.re_form_shop_2605.dto.trade.SellerBriefDTO;
-import com.re_form_shop_2605.entity.Enum.DeliveryType;
-import com.re_form_shop_2605.entity.Enum.Grade;
-import com.re_form_shop_2605.entity.Enum.PostStatus;
-import com.re_form_shop_2605.entity.Enum.Sport;
+import com.re_form_shop_2605.entity.Enum.*;
 import com.re_form_shop_2605.entity.member.Member;
 import com.re_form_shop_2605.entity.trade.Post;
 import com.re_form_shop_2605.entity.trade.PostImage;
@@ -21,6 +19,7 @@ import com.re_form_shop_2605.repository.trade.PostRepository;
 import com.re_form_shop_2605.repository.trade.WishRepository;
 import com.re_form_shop_2605.repository.trade.postImageRepository;
 import com.re_form_shop_2605.service.common.ServicePageResponse;
+import com.re_form_shop_2605.service.etc.ModerationService;
 import com.re_form_shop_2605.service.etc.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -55,6 +54,7 @@ public class PostServiceImpl implements PostService {
     private final ModelMapper modelMapper;
     private final PostMapper postMapper;
     private final PostVectorService postVectorService;
+    private final ModerationService moderationService;
 
     @Override
     // 판매글을 저장하고, 프론트가 이미 업로드한 이미지 URL 목록을 함께 저장한다.
@@ -96,6 +96,24 @@ public class PostServiceImpl implements PostService {
             }
             postImageRepository.saveAll(postImages);
         }
+
+        /**
+         * ─────────────────────────────────────────────────────
+         * 작성자: 진혜림
+         * 작성일: 2026-05-14
+         * 설명: 게시글 유해성 검사 추가
+         * ─────────────────────────────────────────────────────
+         */
+        // 제목 + 본문 모두 검사
+        // Moderation 실패 시 fallback으로 safe() 반환 (게시글 등록 차단 안함)
+        String contentCheck = postRequestDTO.title() + " " + postRequestDTO.content();
+        RiskAnalysisResultDTO moderation = moderationService.checkAndSave(
+                contentCheck, // 검사할 내용
+                TargetType.POST, // POST / CHAT 항목 분류
+                savedPost.getPostId() // 대상 아이디
+        );
+        log.info("[Post Moderation] postId={}, riskLevel={}", savedPost.getPostId(), moderation.riskLevel());
+
         return savedPost.getPostId();
     }
 
