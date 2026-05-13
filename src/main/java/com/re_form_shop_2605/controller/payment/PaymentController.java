@@ -42,15 +42,11 @@ public class PaymentController {
     @PostMapping("/init")
     public ResponseEntity<PaymentInitResponseDTO> initPayment(
             @AuthenticationPrincipal MemberSecurityDTO principal,
-            @RequestBody PaymentInitRequestDTO request,
-//            @AuthenticationPrincipal UserDetails userDetails
+            @RequestBody PaymentInitRequestDTO request
     ) {
         log.info("==== initPayment 결제 초기화 주문 생성 ... ====");
 
-        // todo!!!!! Security 완성되면 buyerId 꺼내기
-        // 구매자가 결제하기 클릭 → Security 세션에서 로그인 유저 정보 꺼냄 → memberId 추출 → Service에 buyerId로 넘겨줌
-        Long buyerId = 1L; // todo!!!!!!!!!!!!!!!
-        PaymentInitResponseDTO response = paymentService.createPayment(buyerId, request);
+        PaymentInitResponseDTO response = paymentService.createPayment(principal.getMemberId(), request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

@@ -351,7 +351,6 @@ public class PostServiceImpl implements PostService {
 
         return new PageResponse<>(content, totalElements, totalPages, size, page, first, last);
     }
-}
 
     // 판매중인 상태에서만 판매글 수정 가능
     private void validateEditable(Post post) {

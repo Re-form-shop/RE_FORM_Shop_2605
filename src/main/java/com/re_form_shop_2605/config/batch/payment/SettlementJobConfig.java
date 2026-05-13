@@ -142,7 +142,7 @@ public class SettlementJobConfig {
                         .build());
 
                 // (3) Trade 상태 COMPLETE로 변경
-                result.trade().changeStatus(TradeStatus.COMPLETED);
+                result.trade().complete();
                 tradeRepository.save(result.trade());
             }
         };
@@ -154,7 +154,7 @@ public class SettlementJobConfig {
         return chunk -> {
             for (Trade trade : chunk.getItems()) {
                 // (1) 상태 변경
-                trade.changeStatus(TradeStatus.CONFIRMED);
+                trade.confirm();
                 tradeRepository.save(trade);
             }
         };

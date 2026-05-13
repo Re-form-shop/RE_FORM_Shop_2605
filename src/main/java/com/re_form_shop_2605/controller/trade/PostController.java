@@ -40,6 +40,7 @@ import java.util.List;
 public class PostController {
     private final PostService postService;
     private final PostSearchService postSearchService;
+    private final PostImageService postImageService;
     /**
      * 작성자: 손민정
      * 작성일: 2026-05-13
@@ -64,7 +65,7 @@ public class PostController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-//        return ResponseEntity.ok(ApiResponse.ok(postService.readAllPosts(memberId, page, size), "판매글 목록 조회 완료"));
+        Long memberId = principal != null ? principal.getMemberId() : null;
         PageResponse<PostCardDTO> response;
 
         if (keyword != null && !keyword.isBlank()) {
