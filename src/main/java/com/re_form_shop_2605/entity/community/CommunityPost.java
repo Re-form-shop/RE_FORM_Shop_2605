@@ -10,6 +10,13 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 진혜림
+ * 작성일: 2026-05-07
+ * 설명: CommunityPost의 Entity와 비즈니스 메서드
+ * ─────────────────────────────────────────────────────
+ */
 @Getter
 @Entity
 @Builder
@@ -57,4 +64,39 @@ public class CommunityPost extends BaseEntity {
 
     @OneToMany(mappedBy = "communityPost")
     private List<Reply> replies =  new ArrayList<>();
+
+    @OneToMany(mappedBy = "communityPost")
+    private List<CommunityLike> communityLikes =  new ArrayList<>();
+
+    // 게시글 수정
+    public void changePost(String commTitle, String commContent, String commImageUrl) {
+        if (commTitle    != null) this.commTitle    = commTitle;
+        if (commContent  != null) this.commContent  = commContent;
+        if (commImageUrl != null) this.commImageUrl = commImageUrl;
+    }
+
+    // 게시글 삭제 (soft delete)
+    public void markDeleted() {
+        this.status = CommunityPostStatus.DELETED;
+    }
+
+    // 좋아요 +1
+    public void addLike() {
+        this.likeCount++;
+    }
+
+    // 좋아요 -1
+    public void removeLike() {
+        if (this.likeCount > 0) this.likeCount--;
+    }
+
+    // 댓글 수 +1
+    public void addComment() {
+        this.commentCount++;
+    }
+
+    // 댓글 수 -1
+    public void removeComment() {
+        if (this.commentCount > 0) this.commentCount--;
+    }
 }

@@ -8,6 +8,13 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 진혜림
+ * 작성일: 2026-05-07
+ * 설명: Reply의 Entity와 비즈니스 메서드
+ * ─────────────────────────────────────────────────────
+ */
 @Entity
 @Getter
 @ToString
@@ -43,4 +50,22 @@ public class Reply extends BaseEntity {
 
     @OneToMany(mappedBy = "reply")
     private List<Reply> replies = new ArrayList<>();
+
+    @OneToMany(mappedBy = "reply")
+    private List<ReplyLike> repliesLike = new ArrayList<>();
+
+    // 댓글 삭제 (soft delete)
+    public void markAsDeleted() {
+        this.isDeleted = true;
+    }
+
+    // 댓글 좋아요 +1
+    public void addLike() {
+        this.likeCount++;
+    }
+
+    // 댓글 좋아요 -1
+    public void removeLike() {
+        if (this.likeCount > 0) this.likeCount--;
+    }
 }

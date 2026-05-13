@@ -9,6 +9,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 진혜림
+ * 작성일: 2026-05-11
+ * 설명: 채팅 메세지의 Entity
+ * ─────────────────────────────────────────────────────
+ */
 @Entity
 @Getter
 @Builder
@@ -16,7 +23,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Table(name = "chat_message")
 public class ChatMessage extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "message_id")
