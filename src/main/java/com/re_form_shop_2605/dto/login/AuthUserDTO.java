@@ -3,7 +3,11 @@ package com.re_form_shop_2605.dto.login;
 import com.re_form_shop_2605.entity.Enum.Role;
 
 import java.math.BigDecimal;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-08
+ * 설명:
+ */
 // 로그인/회원가입 응답에 공통으로 포함되는 인증 사용자 정보 DTO
 public record AuthUserDTO(
         // 회원 번호

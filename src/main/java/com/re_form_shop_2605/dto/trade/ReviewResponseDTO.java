@@ -1,7 +1,11 @@
 package com.re_form_shop_2605.dto.trade;
 
 import java.time.LocalDateTime;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-08
+ * 설명:
+ */
 // 매너 평가 조회 응답 DTO
 public record ReviewResponseDTO(
         // 리뷰 번호

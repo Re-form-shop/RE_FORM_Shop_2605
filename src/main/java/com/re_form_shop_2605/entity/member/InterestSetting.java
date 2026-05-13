@@ -12,6 +12,11 @@ import lombok.*;
 @NoArgsConstructor
 @Entity
 @Table(name = "interest_setting")
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-07
+ * 설명: 관심 종목 JPA 엔티티
+ */
 public class InterestSetting {
     @Id
     @Column(name = "member_id", nullable = false)

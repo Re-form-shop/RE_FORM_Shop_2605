@@ -2,29 +2,44 @@ package com.re_form_shop_2605.controller.trade;
 
 import com.re_form_shop_2605.dto.common.ApiResponse;
 import com.re_form_shop_2605.dto.common.PageResponse;
+import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
+import com.re_form_shop_2605.dto.trade.ListingCreateRequestDTO;
+import com.re_form_shop_2605.dto.trade.ListingUpdateRequestDTO;
 import com.re_form_shop_2605.dto.trade.PostCardDTO;
-import com.re_form_shop_2605.dto.trade.PostCreateFormDTO;
 import com.re_form_shop_2605.dto.trade.PostDetailDTO;
-import com.re_form_shop_2605.dto.trade.PostUpdateFormDTO;
 import com.re_form_shop_2605.entity.Enum.DeliveryType;
 import com.re_form_shop_2605.entity.Enum.Sport;
+import com.re_form_shop_2605.service.trade.PostImageService;
 import com.re_form_shop_2605.service.trade.PostService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 // 판매글 작성, 조회, 수정, 삭제 API
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-10
+ * 설명: 판매글 조회/작성/수정/삭제와 이미지 업로드, 찜 토글 API를 담당한다.
+ */
 @RestController
 @RequestMapping("/api/listings")
+@Tag(name = "판매글 API", description = "판매글 작성, 조회, 수정, 삭제 관련 API")
 public class PostController {
 
     private final PostService postService;
+    private final PostImageService postImageService;
 
-    public PostController(PostService postService) {
+    public PostController(PostService postService, PostImageService postImageService) {
         this.postService = postService;
+        this.postImageService = postImageService;
     }
 
     // GET /api/listings
@@ -34,15 +49,21 @@ public class PostController {
             description = "스포츠 종목, 키워드, 거래 방식, 페이지 정보를 기준으로 판매글 목록을 조회합니다."
     )
     @GetMapping
+    /**
+     * 작성자: 다른 작업자
+     * 작성일: 2026-05-10 ~ 2026-05-11
+     * 설명: 판매글 목록을 페이지 단위로 조회한다.
+     */
     public ResponseEntity<ApiResponse<PageResponse<PostCardDTO>>> readListings(
-            @RequestHeader(value = "X-Member-Id", required = false) Long memberId,
+            @AuthenticationPrincipal MemberSecurityDTO principal,
             @RequestParam(required = false) Sport sport,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) DeliveryType tradeType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(ApiResponse.ok(postService.readAllPosts(memberId, page, size), "판매글 목록 조회 완료"));
+        Long viewerId = principal != null ? principal.getMemberId() : null;
+        return ResponseEntity.ok(ApiResponse.ok(postService.readAllPosts(viewerId, page, size), "판매글 목록 조회 완료"));
     }
 
     // GET /api/listings/{id}
@@ -52,42 +73,88 @@ public class PostController {
             description = "판매글 ID로 상세 정보와 작성자 기준의 부가 정보를 조회합니다."
     )
     @GetMapping("/{id}")
+    /**
+     * 작성자: 다른 작업자
+     * 작성일: 2026-05-10 ~ 2026-05-11
+     * 설명: 판매글 상세 정보를 조회한다.
+     */
     public ResponseEntity<ApiResponse<PostDetailDTO>> readListing(
             @PathVariable("id") Long postId,
-            @RequestHeader(value = "X-Member-Id", required = false) Long memberId
+            @AuthenticationPrincipal MemberSecurityDTO principal
     ) {
-        return ResponseEntity.ok(ApiResponse.ok(postService.readPost(postId, memberId), "판매글 상세 조회 완료"));
+        Long viewerId = principal != null ? principal.getMemberId() : null;
+        return ResponseEntity.ok(ApiResponse.ok(postService.readPost(postId, viewerId), "판매글 상세 조회 완료"));
+    }
+
+    // POST /api/listings/images
+    // 프론트가 판매글 작성 전에 파일을 먼저 업로드하고 imageUrls[]를 받을 수 있게 한다.
+    @Operation(
+            summary = "판매글 이미지 업로드",
+            description = "판매글 작성 전에 이미지 파일들을 먼저 업로드하고, 이후 판매글 JSON 본문에 넣을 수 있는 이미지 URL 목록을 반환합니다."
+    )
+    @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    /**
+     * 작성자: 다른 작업자
+     * 작성일: 2026-05-10 ~ 2026-05-11
+     * 설명: 판매글 작성 전 이미지를 임시 업로드하고 URL 목록을 반환한다.
+     */
+    public ResponseEntity<ApiResponse<ImageUploadResponse>> uploadListingImages(
+            @AuthenticationPrincipal MemberSecurityDTO principal,
+            @RequestPart("images") List<MultipartFile> images
+    ) {
+        List<String> imageUrls = postImageService.saveTemporaryPostImages(principal.getMemberId(), images);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(new ImageUploadResponse(imageUrls), "판매글 이미지 업로드 완료"));
     }
 
     // POST /api/listings
-    // 판매글 필드와 첨부 이미지를 multipart form-data로 함께 등록
+    // 프론트 명세에 맞춰 JSON 본문으로 판매글을 등록
     @Operation(
             summary = "판매글 등록",
-            description = "판매글 정보와 첨부 이미지를 multipart form-data 형식으로 전달받아 새 판매글을 등록합니다."
+            description = "프론트엔드 명세에 맞춰 판매글 정보와 이미지 URL 목록을 JSON 형식으로 전달받아 새 판매글을 등록합니다."
     )
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping
+    /**
+     * 작성자: 다른 작업자
+     * 작성일: 2026-05-10 ~ 2026-05-11
+     * 설명: 판매글을 생성한다.
+     */
     public ResponseEntity<ApiResponse<IdResponse>> addListing(
-            @RequestHeader("X-Member-Id") Long memberId,
-            @Valid @ModelAttribute PostCreateFormDTO requestDTO
+            @AuthenticationPrincipal MemberSecurityDTO principal,
+            @Valid @RequestBody ListingCreateRequestDTO requestDTO
     ) {
-        Long postId = postService.addPost(memberId, requestDTO.toRequestDTO(), requestDTO.getImages());
+        Long postId = postService.addPost(
+                principal.getMemberId(),
+                requestDTO.toPostRequestDTO(),
+                requestDTO.imageUrls()
+        );
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(new IdResponse(postId), "판매글 작성 완료"));
     }
 
-    // PUT /api/listings/{id}
-    // 판매글 수정 필드와 첨부 이미지를 multipart form-data로 함께 수정
+    // PATCH /api/listings/{id}
+    // 프론트 명세에 맞춰 JSON 본문으로 판매글을 수정
     @Operation(
             summary = "판매글 수정",
-            description = "판매글 ID에 해당하는 게시글의 정보와 첨부 이미지를 수정합니다."
+            description = "프론트엔드 명세에 맞춰 판매글 ID에 해당하는 게시글의 정보와 이미지 URL 목록을 수정합니다."
     )
-    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping("/{id}")
+    /**
+     * 작성자: 다른 작업자
+     * 작성일: 2026-05-10 ~ 2026-05-11
+     * 설명: 판매글 정보를 수정한다.
+     */
     public ResponseEntity<ApiResponse<IdResponse>> modifyListing(
             @PathVariable("id") Long postId,
-            @RequestHeader("X-Member-Id") Long memberId,
-            @Valid @ModelAttribute PostUpdateFormDTO requestDTO
+            @AuthenticationPrincipal MemberSecurityDTO principal,
+            @Valid @RequestBody ListingUpdateRequestDTO requestDTO
     ) {
-        postService.modifyPost(postId, memberId, requestDTO.toUpdateRequestDTO(), requestDTO.getImages());
+        postService.modifyPost(
+                postId,
+                principal.getMemberId(),
+                requestDTO.toPostUpdateRequestDTO(),
+                requestDTO.imageUrls()
+        );
         return ResponseEntity.ok(ApiResponse.ok(new IdResponse(postId), "판매글 수정 완료"));
     }
 
@@ -98,15 +165,53 @@ public class PostController {
             description = "판매글 ID에 해당하는 게시글을 삭제 상태로 변경합니다."
     )
     @DeleteMapping("/{id}")
+    /**
+     * 작성자: 다른 작업자
+     * 작성일: 2026-05-10 ~ 2026-05-11
+     * 설명: 판매글을 삭제 상태로 변경한다.
+     */
     public ResponseEntity<ApiResponse<Void>> removeListing(
             @PathVariable("id") Long postId,
-            @RequestHeader("X-Member-Id") Long memberId
+            @AuthenticationPrincipal MemberSecurityDTO principal
     ) {
-        postService.removePost(postId, memberId);
+        postService.removePost(postId, principal.getMemberId());
         return ResponseEntity.ok(ApiResponse.ok(null, "판매글 삭제 완료"));
+    }
+
+    // POST /api/listings/{id}/like
+    // 판매글 찜 상태를 토글
+    @Operation(
+            summary = "판매글 찜 토글",
+            description = "현재 회원 기준으로 판매글 찜을 추가 또는 취소하고 최신 찜 상태와 개수를 반환합니다."
+    )
+    @PostMapping("/{id}/like")
+    /**
+     * 작성자: 민기
+     * 작성일: 2026-05-12
+     * 설명: 현재 회원 기준으로 판매글 찜을 추가 또는 취소한다.
+     */
+    public ResponseEntity<ApiResponse<LikeToggleResponse>> toggleListingLike(
+            @PathVariable("id") Long postId,
+            @AuthenticationPrincipal MemberSecurityDTO principal
+    ) {
+        PostService.WishToggleResult result = postService.toggleWish(postId, principal.getMemberId());
+        return ResponseEntity.ok(ApiResponse.ok(
+                new LikeToggleResponse(result.isLiked(), result.likeCount()),
+                result.isLiked() ? "판매글 찜 추가 완료" : "판매글 찜 취소 완료"
+        ));
     }
 
     // 생성/수정 응답에서 사용하는 식별자 DTO
     public record IdResponse(Long id) {
     }
+
+    // 이미지 업로드 응답에서 사용하는 URL 목록 DTO
+    public record ImageUploadResponse(List<String> urls) {
+    }
+
+    // 찜 토글 응답 DTO
+    public record LikeToggleResponse(boolean isLiked, long likeCount) {
+    }
 }
+
+

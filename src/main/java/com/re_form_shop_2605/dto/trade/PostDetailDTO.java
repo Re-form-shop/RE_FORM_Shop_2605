@@ -9,6 +9,11 @@ import com.re_form_shop_2605.entity.Enum.Sport;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-08
+ * 설명:
+ */
 // 판매글 상세 응답 DTO
 public record PostDetailDTO(
         // 게시글 번호

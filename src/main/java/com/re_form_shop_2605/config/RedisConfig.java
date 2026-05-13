@@ -8,7 +8,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import tools.jackson.databind.ObjectMapper;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-11
+ * 설명: Redis DB 설정
+ */
 @Configuration
 public class RedisConfig {
     // application.properties 에 정의한 Redis 서버 정보를 주입 받음

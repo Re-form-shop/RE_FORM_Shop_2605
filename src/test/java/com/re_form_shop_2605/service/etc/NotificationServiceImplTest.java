@@ -18,7 +18,11 @@ import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-10
+ * 설명:
+ */
 @Log4j2
 @SpringBootTest
 //@Transactional

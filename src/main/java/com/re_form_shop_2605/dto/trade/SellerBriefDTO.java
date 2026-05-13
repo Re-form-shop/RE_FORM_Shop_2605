@@ -1,7 +1,11 @@
 package com.re_form_shop_2605.dto.trade;
 
 import java.math.BigDecimal;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-08
+ * 설명:
+ */
 // 판매글 카드/상세에서 재사용하는 판매자 요약 DTO
 public record SellerBriefDTO(
         // 회원 번호

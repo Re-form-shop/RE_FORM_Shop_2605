@@ -4,9 +4,12 @@ import com.re_form_shop_2605.dto.common.ApiResponse;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.etc.NotificationDTO;
 import com.re_form_shop_2605.dto.etc.NotificationResponseDTO;
+import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
 import com.re_form_shop_2605.service.etc.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,10 +17,15 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-10
+ * 설명:
+ */
 // 사용자 알림 조회와 읽음 처리를 담당하는 API
 @RestController
 @RequestMapping("/api/notifications")
+@Tag(name = "알림 API", description = "사용자 알림 조회와 읽음 처리를 위한 API")
 public class NotificationController {
 
     private final NotificationService notificationService;
@@ -34,11 +42,11 @@ public class NotificationController {
     )
     @GetMapping
     public ResponseEntity<ApiResponse<NotificationPageResponse>> readNotifications(
-            @RequestHeader("X-Member-Id") Long memberId,
+            @AuthenticationPrincipal MemberSecurityDTO principal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        NotificationResponseDTO responseDTO = notificationService.readNotifications(memberId, page, size);
+        NotificationResponseDTO responseDTO = notificationService.readNotifications(principal.getMemberId(), page, size);
         NotificationPageResponse response = new NotificationPageResponse(responseDTO.items(), responseDTO.unreadCount());
         return ResponseEntity.ok(ApiResponse.ok(response, "알림 목록 조회 완료"));
     }
@@ -63,9 +71,9 @@ public class NotificationController {
     )
     @PatchMapping("/read-all")
     public ResponseEntity<ApiResponse<UpdatedCountResponse>> readAllNotifications(
-            @RequestHeader("X-Member-Id") Long memberId
+            @AuthenticationPrincipal MemberSecurityDTO principal
     ) {
-        NotificationResponseDTO responseDTO = notificationService.readNotifications(memberId, 0, Integer.MAX_VALUE);
+        NotificationResponseDTO responseDTO = notificationService.readNotifications(principal.getMemberId(), 0, Integer.MAX_VALUE);
         int updatedCount = 0;
 
         for (NotificationDTO item : responseDTO.items().content()) {

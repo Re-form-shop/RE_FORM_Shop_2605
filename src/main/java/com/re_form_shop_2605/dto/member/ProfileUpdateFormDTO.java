@@ -4,10 +4,12 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-08
+ * 설명:
+ */
 // Swagger multipart/form-data 업로드용 프로필 수정 폼 DTO
-@Getter
-@Setter
 public class ProfileUpdateFormDTO {
 
     // 수정할 닉네임

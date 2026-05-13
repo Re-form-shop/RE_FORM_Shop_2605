@@ -1,0 +1,125 @@
+package com.re_form_shop_2605.controller.admin;
+
+import com.re_form_shop_2605.dto.admin.AdminPostDetailDTO;
+import com.re_form_shop_2605.dto.admin.AdminPostListDTO;
+import com.re_form_shop_2605.dto.admin.AdminPostRequestDTO;
+import com.re_form_shop_2605.dto.common.ApiResponse;
+import com.re_form_shop_2605.dto.common.PageResponse;
+import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
+import com.re_form_shop_2605.entity.Enum.PostStatus;
+import com.re_form_shop_2605.service.admin.AdminPostService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-12
+ * 설명: 관리자 권한으로 게시글 목록과 상세를 조회하고 숨김/삭제를 처리하는 API를 제공
+ */
+@RestController
+@RequestMapping("/api/admin/posts")
+@Tag(name = "관리자 게시글 API", description = "관리자의 게시글 조회 및 상태 처리 관련 API")
+public class AdminPostController {
+
+    private final AdminPostService adminPostService;
+
+    /**
+     * 작성자: 민기
+     * 작성일: 2026-05-12
+     * 설명: 관리자 게시글 API에서 사용할 서비스를 주입받는다.
+     */
+    public AdminPostController(AdminPostService adminPostService) {
+        this.adminPostService = adminPostService;
+    }
+
+    @Operation(
+            summary = "관리자 게시글 목록 조회",
+            description = "관리자가 키워드와 상태 조건으로 게시글 목록을 조회합니다."
+    )
+    @GetMapping
+    /**
+     * 작성자: 민기
+     * 작성일: 2026-05-12
+     * 설명: 관리자 권한으로 게시글 목록을 조회한다.
+     */
+    public ResponseEntity<ApiResponse<PageResponse<AdminPostListDTO>>> readPosts(
+            @AuthenticationPrincipal MemberSecurityDTO principal,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) PostStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        validateAdmin(principal);
+        return ResponseEntity.ok(ApiResponse.ok(
+                adminPostService.readPosts(keyword, status, page, size),
+                "관리자 게시글 목록 조회 완료"
+        ));
+    }
+
+    @Operation(
+            summary = "관리자 게시글 상세 조회",
+            description = "관리자가 특정 게시글의 상세 정보와 상태를 조회합니다."
+    )
+    @GetMapping("/{id}")
+    /**
+     * 작성자: 민기
+     * 작성일: 2026-05-12
+     * 설명: 관리자 권한으로 특정 게시글의 상세 정보를 조회한다.
+     */
+    public ResponseEntity<ApiResponse<AdminPostDetailDTO>> readPost(
+            @AuthenticationPrincipal MemberSecurityDTO principal,
+            @PathVariable("id") Long postId
+    ) {
+        validateAdmin(principal);
+        return ResponseEntity.ok(ApiResponse.ok(
+                adminPostService.readPost(postId),
+                "관리자 게시글 상세 조회 완료"
+        ));
+    }
+
+    @Operation(
+            summary = "관리자 게시글 처리",
+            description = "관리자가 게시글을 숨김 또는 삭제 처리합니다."
+    )
+    @PatchMapping("/{id}/action")
+    /**
+     * 작성자: 민기
+     * 작성일: 2026-05-12
+     * 설명: 관리자 권한으로 게시글 숨김 또는 삭제 처리를 수행한다.
+     */
+    public ResponseEntity<ApiResponse<AdminPostDetailDTO>> processPost(
+            @AuthenticationPrincipal MemberSecurityDTO principal,
+            @PathVariable("id") Long postId,
+            @Valid @RequestBody AdminPostRequestDTO requestDTO
+    ) {
+        validateAdmin(principal);
+        return ResponseEntity.ok(ApiResponse.ok(
+                adminPostService.processPost(postId, requestDTO),
+                "관리자 게시글 처리 완료"
+        ));
+    }
+
+    /**
+     * 작성자: 민기
+     * 작성일: 2026-05-12
+     * 설명: 현재 로그인 사용자가 관리자 권한을 가졌는지 검증한다.
+     */
+    private void validateAdmin(MemberSecurityDTO principal) {
+        boolean isAdmin = principal.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+
+        if (!isAdmin) {
+            throw new IllegalArgumentException("관리자만 접근할 수 있습니다.");
+        }
+    }
+}

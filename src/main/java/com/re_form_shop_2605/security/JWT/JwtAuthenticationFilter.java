@@ -1,0 +1,71 @@
+package com.re_form_shop_2605.security.JWT;
+
+import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.util.StringUtils;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-11
+ * 설명:
+ */
+// 모든 API 요청마다 Bearer access token을 검사해 SecurityContext를 복원하는 필터
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JwtTokenProvider jwtTokenProvider;
+    private final CustomUserDetailsService customUserDetailsService;
+
+    // JWT 파싱기와 사용자 재조회 서비스를 받아 요청마다 인증을 복원한다.
+    public JwtAuthenticationFilter(
+            JwtTokenProvider jwtTokenProvider,
+            CustomUserDetailsService customUserDetailsService
+    ) {
+        // 필터는 토큰 파싱과 사용자 재조회 책임만 가져가도록 의존성을 최소화한다.
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.customUserDetailsService = customUserDetailsService;
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+
+        // Authorization 헤더가 없으면 JWT 인증 없이 다음 필터로 넘긴다.
+        String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (!StringUtils.hasText(authorization) || !authorization.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // "Bearer " 접두사를 떼고 순수 JWT 문자열만 추출한다.
+        String token = authorization.substring(7);
+        try {
+            if (jwtTokenProvider.validateToken(token) && "access".equals(jwtTokenProvider.getTokenType(token))) {
+                // 토큰의 subject(email)로 사용자 정보를 다시 로드해 SecurityContext에 넣는다.
+                String email = jwtTokenProvider.getSubject(token);
+                UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.getAuthorities()
+                );
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        } catch (Exception ex) {
+            // 잘못된 토큰은 인증 정보를 비우고 그대로 다음 단계 예외 처리에 맡긴다.
+            SecurityContextHolder.clearContext();
+        }
+
+        filterChain.doFilter(request, response);
+    }
+}

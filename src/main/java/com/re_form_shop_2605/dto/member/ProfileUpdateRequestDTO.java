@@ -1,7 +1,11 @@
 package com.re_form_shop_2605.dto.member;
 
 import jakarta.validation.constraints.Size;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-08
+ * 설명:
+ */
 // 내 프로필 수정 요청 DTO
 public record ProfileUpdateRequestDTO(
         // 변경할 닉네임

@@ -3,8 +3,11 @@ package com.re_form_shop_2605.service.member;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.member.*;
 import com.re_form_shop_2605.entity.Enum.MemberStatus;
-import org.springframework.web.multipart.MultipartFile;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-10
+ * 설명:
+ */
 // 회원 서비스 인터페이스
 public interface MemberService {
     // 이메일 회원가입
@@ -29,7 +32,7 @@ public interface MemberService {
     PageResponse<ProfileResponseDTO> readAllProfiles(int page, int size);
 
     // 회원 프로필 수정
-    void modifyProfile(Long memberId, ProfileUpdateRequestDTO profileUpdateRequestDTO, MultipartFile profileImage);
+    void modifyProfile(Long memberId, ProfileUpdateRequestDTO profileUpdateRequestDTO);
 
     // 공개 가능한 프로필 정보를 조회
     MemberPublicDTO readPublicProfile(Long memberId);

@@ -3,7 +3,11 @@ package com.re_form_shop_2605.dto.member;
 import com.re_form_shop_2605.entity.Enum.Sport;
 
 import java.util.List;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-08
+ * 설명:
+ */
 // 관심 정보 조회/저장 응답 DTO
 public record OnboardingResponseDTO(
         // 관심 종목

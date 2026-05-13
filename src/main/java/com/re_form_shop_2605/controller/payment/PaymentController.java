@@ -1,5 +1,6 @@
 package com.re_form_shop_2605.controller.payment;
 
+import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
 import com.re_form_shop_2605.dto.payment.*;
 import com.re_form_shop_2605.service.payment.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,8 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-//import org.springframework.security.core.annotation.AuthenticationPrincipal;
-//import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Log4j2
@@ -33,13 +33,11 @@ public class PaymentController {
     @ApiResponse(responseCode = "201", description = "결제 초기화 성공")
     @PostMapping("/init")
     public ResponseEntity<PaymentInitResponseDTO> initPayment(
+            @AuthenticationPrincipal MemberSecurityDTO principal,
             @RequestBody PaymentInitRequestDTO request
-//            , @AuthenticationPrincipal UserDetails userDetails
     ) {
-        // todo!!!!! Security 완성되면 buyerId 꺼내기
-        // 구매자가 결제하기 클릭 → Security 세션에서 로그인 유저 정보 꺼냄 → memberId 추출 → Service에 buyerId로 넘겨줌
-        Long buyerId = 1L; // todo!!!!!!!!!!!!!!!
-        PaymentInitResponseDTO response = paymentService.createPayment(buyerId, request);
+        // JWT로 인증된 현재 사용자를 실제 구매자로 사용한다.
+        PaymentInitResponseDTO response = paymentService.createPayment(principal.getMemberId(), request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

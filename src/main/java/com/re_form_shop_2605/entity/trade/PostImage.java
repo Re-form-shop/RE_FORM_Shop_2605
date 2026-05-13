@@ -10,6 +10,11 @@ import lombok.*;
 @NoArgsConstructor
 @Entity
 @Table(name = "post_image")
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-07
+ * 설명: 게시글 이미지 JPA 엔티티
+ */
 public class PostImage {
 
     @Id

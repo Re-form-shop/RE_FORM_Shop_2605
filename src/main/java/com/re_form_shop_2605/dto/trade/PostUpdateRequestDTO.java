@@ -2,6 +2,7 @@ package com.re_form_shop_2605.dto.trade;
 
 import com.re_form_shop_2605.entity.Enum.DeliveryType;
 import com.re_form_shop_2605.entity.Enum.Grade;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 // 판매글 수정 요청 DTO
@@ -24,6 +25,7 @@ public record PostUpdateRequestDTO(
         Boolean marking,
 
         // 수정할 가격
+        @Positive
         Integer price,
 
         // 수정할 수령 방법

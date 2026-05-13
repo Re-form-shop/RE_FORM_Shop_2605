@@ -6,13 +6,13 @@ import com.re_form_shop_2605.dto.trade.ReviewRequestDTO;
 import com.re_form_shop_2605.dto.trade.ReviewResponseDTO;
 import com.re_form_shop_2605.dto.trade.TradeRequestDTO;
 import com.re_form_shop_2605.dto.trade.TradeResponseDTO;
-import com.re_form_shop_2605.dto.trade.TradeStatusRequestDTO;
 import com.re_form_shop_2605.entity.Enum.DeliveryType;
 import com.re_form_shop_2605.entity.Enum.Grade;
 import com.re_form_shop_2605.entity.Enum.MemberStatus;
 import com.re_form_shop_2605.entity.Enum.PostStatus;
 import com.re_form_shop_2605.entity.Enum.Role;
 import com.re_form_shop_2605.entity.Enum.Sport;
+import com.re_form_shop_2605.entity.Enum.TradeDeliveryType;
 import com.re_form_shop_2605.entity.Enum.TradeStatus;
 import com.re_form_shop_2605.entity.member.Member;
 import com.re_form_shop_2605.entity.trade.Post;
@@ -27,9 +27,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-
+import static org.junit.jupiter.api.Assertions.assertThrows;
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-10
+ * 설명:
+ */
 @Log4j2
 @SpringBootTest
 //@Transactional
@@ -50,9 +56,55 @@ class TradeServiceImplTest {
         Member buyer = createMember("add_trade_buyer");
         Post post = createPost(seller, "trade add");
 
-        Long tradeId = tradeService.addTrade(buyer.getMemberId(), new TradeRequestDTO(post.getPostId()));
+        Long tradeId = tradeService.addTrade(buyer.getMemberId(), new TradeRequestDTO(post.getPostId(), null));
 
         assertNotNull(tradeId);
+    }
+
+    @Test
+    void addTradeWithBothDeliveryTypeRequiresSelection() {
+        Member seller = createMember("add_trade_both_seller");
+        Member buyer = createMember("add_trade_both_buyer");
+        Post post = createPost(seller, "trade both", DeliveryType.BOTH);
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> tradeService.addTrade(buyer.getMemberId(), new TradeRequestDTO(post.getPostId(), null))
+        );
+
+        assertEquals("수령 방식을 선택해야 합니다.", exception.getMessage());
+    }
+
+    @Test
+    void addTradeWithBothDeliveryTypeAcceptsBuyerSelection() {
+        Member seller = createMember("add_trade_select_seller");
+        Member buyer = createMember("add_trade_select_buyer");
+        Post post = createPost(seller, "trade select", DeliveryType.BOTH);
+
+        Long tradeId = tradeService.addTrade(
+                buyer.getMemberId(),
+                new TradeRequestDTO(post.getPostId(), TradeDeliveryType.DIRECT)
+        );
+
+        Trade savedTrade = tradeRepository.findById(tradeId).orElseThrow();
+        assertEquals(TradeDeliveryType.DIRECT, savedTrade.getDeliveryType());
+    }
+
+    @Test
+    void addTradeFailsWhenDeliveryOnlyPostReceivesDirectSelection() {
+        Member seller = createMember("add_trade_delivery_seller");
+        Member buyer = createMember("add_trade_delivery_buyer");
+        Post post = createPost(seller, "trade delivery", DeliveryType.DELIVERY);
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> tradeService.addTrade(
+                        buyer.getMemberId(),
+                        new TradeRequestDTO(post.getPostId(), TradeDeliveryType.DIRECT)
+                )
+        );
+
+        assertEquals("배송만 가능한 판매글입니다.", exception.getMessage());
     }
 
     @Test
@@ -75,8 +127,26 @@ class TradeServiceImplTest {
             createTrade(seller, buyer, "buyer_trade_" + i);
         }
 
-        PageResponse<TradeResponseDTO> trades = tradeService.readBuyerTrades(buyer.getMemberId(), 0, 10);
+        PageResponse<TradeResponseDTO> trades = tradeService.readBuyerTrades(buyer.getMemberId(), null, 0, 10);
         assertEquals(10, trades.content().size());
+    }
+
+    @Test
+    void readBuyerTradesFiltersByStatus() {
+        Member buyer = createMember("buyer_status_buyer");
+        Member seller = createMember("buyer_status_seller");
+        createTrade(seller, buyer, "buyer_requested_trade");
+        createPaidTrade(seller, buyer, "buyer_paid_trade");
+
+        PageResponse<TradeResponseDTO> trades = tradeService.readBuyerTrades(
+                buyer.getMemberId(),
+                TradeStatus.PAID,
+                0,
+                10
+        );
+
+        assertEquals(1, trades.content().size());
+        assertEquals(TradeStatus.PAID, trades.content().get(0).status());
     }
 
     @Test
@@ -87,31 +157,174 @@ class TradeServiceImplTest {
             createTrade(seller, buyer, "seller_trade_" + i);
         }
 
-        PageResponse<TradeResponseDTO> trades = tradeService.readSellerTrades(seller.getMemberId(), 0, 10);
+        PageResponse<TradeResponseDTO> trades = tradeService.readSellerTrades(seller.getMemberId(), null, 0, 10);
         assertEquals(10, trades.content().size());
     }
 
     @Test
-    void modifyTradeStatusTest() {
-        Member seller = createMember("modify_status_seller");
-        Member buyer = createMember("modify_status_buyer");
+    void readSellerTradesFiltersByStatus() {
+        Member seller = createMember("seller_status_seller");
+        Member buyer = createMember("seller_status_buyer");
+        createTrade(seller, buyer, "seller_requested_trade");
+        createAcceptedTrade(seller, buyer, "seller_accepted_trade");
+
+        PageResponse<TradeResponseDTO> trades = tradeService.readSellerTrades(
+                seller.getMemberId(),
+                TradeStatus.ACCEPTED,
+                0,
+                10
+        );
+
+        assertEquals(1, trades.content().size());
+        assertEquals(TradeStatus.ACCEPTED, trades.content().get(0).status());
+    }
+
+    @Test
+    void acceptTradeTest() {
+        Member seller = createMember("accept_trade_seller");
+        Member buyer = createMember("accept_trade_buyer");
         Trade trade = createTrade(seller, buyer, "modify status");
 
-        tradeService.modifyTradeStatus(trade.getTradeId(), new TradeStatusRequestDTO(TradeStatus.ACCEPTED));
+        tradeService.acceptTrade(seller.getMemberId(), trade.getTradeId());
 
-        assertEquals(TradeStatus.ACCEPTED, tradeRepository.findById(trade.getTradeId()).orElseThrow().getStatus());
+        Trade savedTrade = tradeRepository.findById(trade.getTradeId()).orElseThrow();
+        assertEquals(TradeStatus.ACCEPTED, savedTrade.getStatus());
+        assertEquals(PostStatus.RESERVED, postRepository.findById(savedTrade.getPost().getPostId()).orElseThrow().getStatus());
+    }
+
+    @Test
+    void acceptTradeFailsWhenRequesterIsNotSeller() {
+        Member seller = createMember("accept_fail_seller");
+        Member buyer = createMember("accept_fail_buyer");
+        Trade trade = createTrade(seller, buyer, "accept fail");
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> tradeService.acceptTrade(buyer.getMemberId(), trade.getTradeId())
+        );
+
+        assertEquals("거래 수락 권한이 없습니다.", exception.getMessage());
+    }
+
+    @Test
+    void acceptTradeFailsWhenTradeAlreadyAccepted() {
+        Member seller = createMember("accept_state_seller");
+        Member buyer = createMember("accept_state_buyer");
+        Trade trade = createAcceptedTrade(seller, buyer, "accept state fail");
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> tradeService.acceptTrade(seller.getMemberId(), trade.getTradeId())
+        );
+
+        assertEquals("구매 요청 상태의 거래만 수락할 수 있습니다.", exception.getMessage());
+    }
+
+    @Test
+    void confirmTradeTest() {
+        Member seller = createMember("confirm_trade_seller");
+        Member buyer = createMember("confirm_trade_buyer");
+        Trade trade = createPaidTrade(seller, buyer, "confirm trade");
+        tradeService.confirmTrade(buyer.getMemberId(), trade.getTradeId());
+
+        Trade savedTrade = tradeRepository.findById(trade.getTradeId()).orElseThrow();
+        assertEquals(TradeStatus.CONFIRMED, savedTrade.getStatus());
+        assertEquals(PostStatus.SOLD, postRepository.findById(savedTrade.getPost().getPostId()).orElseThrow().getStatus());
+        assertNotNull(savedTrade.getConfirmedAt());
+    }
+
+    @Test
+    void confirmTradeFailsWhenTradeNotPaidOrProgressing() {
+        Member seller = createMember("confirm_fail_seller");
+        Member buyer = createMember("confirm_fail_buyer");
+        Trade trade = createTrade(seller, buyer, "confirm fail");
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> tradeService.confirmTrade(buyer.getMemberId(), trade.getTradeId())
+        );
+
+        assertEquals("구매 확정이 가능한 거래 상태가 아닙니다.", exception.getMessage());
+    }
+
+    @Test
+    void confirmTradeFailsWhenTradeAlreadyCompleted() {
+        Member seller = createMember("confirm_completed_seller");
+        Member buyer = createMember("confirm_completed_buyer");
+        Trade trade = createCompletedTrade(seller, buyer, "confirm completed fail");
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> tradeService.confirmTrade(buyer.getMemberId(), trade.getTradeId())
+        );
+
+        assertEquals("구매 확정이 가능한 거래 상태가 아닙니다.", exception.getMessage());
     }
 
     @Test
     void modifyDeliveryTest() {
         Member seller = createMember("modify_delivery_seller");
         Member buyer = createMember("modify_delivery_buyer");
-        Trade trade = createTrade(seller, buyer, "modify delivery");
+        Trade trade = createDeliveryTrade(seller, buyer, "modify delivery", TradeStatus.REQUESTED);
 
-        tradeService.modifyDelivery(trade.getTradeId(), new DeliveryRequestDTO("서울시 강남구"));
+        tradeService.modifyDelivery(buyer.getMemberId(), trade.getTradeId(), new DeliveryRequestDTO("서울시 강남구"));
 
         assertEquals("서울시 강남구", tradeRepository.findById(trade.getTradeId()).orElseThrow().getDeliveryAddress());
     }
+
+    @Test
+    void modifyDeliveryFailsWhenRequesterIsNotBuyer() {
+        Member seller = createMember("delivery_fail_seller");
+        Member buyer = createMember("delivery_fail_buyer");
+        Trade trade = createDeliveryTrade(seller, buyer, "delivery fail auth", TradeStatus.REQUESTED);
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> tradeService.modifyDelivery(seller.getMemberId(), trade.getTradeId(), new DeliveryRequestDTO("서울시 송파구"))
+        );
+
+        assertEquals("배송지 수정 권한이 없습니다.", exception.getMessage());
+    }
+
+    @Test
+    void modifyDeliveryFailsWhenTradeAlreadyInProgress() {
+        Member seller = createMember("delivery_progress_seller");
+        Member buyer = createMember("delivery_progress_buyer");
+        Trade trade = createDeliveryTrade(seller, buyer, "delivery progress fail", TradeStatus.IN_PROGRESS);
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> tradeService.modifyDelivery(buyer.getMemberId(), trade.getTradeId(), new DeliveryRequestDTO("서울시 용산구"))
+        );
+
+        assertEquals("현재 거래 상태에서는 배송지 정보를 수정할 수 없습니다.", exception.getMessage());
+    }
+
+    @Test
+    void modifyDeliveryForDirectTradeBySellerTest() {
+        Member seller = createMember("direct_address_seller");
+        Member buyer = createMember("direct_address_buyer");
+        Trade trade = createDirectTrade(seller, buyer, "direct address");
+
+        tradeService.modifyDelivery(seller.getMemberId(), trade.getTradeId(), new DeliveryRequestDTO("잠실야구장 2번 출구"));
+
+        assertEquals("잠실야구장 2번 출구", tradeRepository.findById(trade.getTradeId()).orElseThrow().getDeliveryAddress());
+    }
+
+    @Test
+    void modifyDeliveryForDirectTradeFailsWhenRequesterIsNotSeller() {
+        Member seller = createMember("direct_auth_seller");
+        Member buyer = createMember("direct_auth_buyer");
+        Trade trade = createDirectTrade(seller, buyer, "direct auth fail");
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> tradeService.modifyDelivery(buyer.getMemberId(), trade.getTradeId(), new DeliveryRequestDTO("고척스카이돔"))
+        );
+
+        assertEquals("직거래 주소 수정 권한이 없습니다.", exception.getMessage());
+    }
+
 
     @Test
     void addReviewTest() {
@@ -166,6 +379,10 @@ class TradeServiceImplTest {
     }
 
     private Post createPost(Member seller, String title) {
+        return createPost(seller, title, DeliveryType.DIRECT);
+    }
+
+    private Post createPost(Member seller, String title, DeliveryType deliveryType) {
         Post post = Post.builder()
                 .sellerId(seller)
                 .title(title)
@@ -177,7 +394,7 @@ class TradeServiceImplTest {
                 .size("100")
                 .marking(false)
                 .price(10000)
-                .deliveryType(DeliveryType.DIRECT)
+                .deliveryType(deliveryType)
                 .status(PostStatus.ON_SALE)
                 .viewCount(0)
                 .wishCount(0)
@@ -192,12 +409,14 @@ class TradeServiceImplTest {
                 .buyer(buyer)
                 .seller(seller)
                 .status(TradeStatus.REQUESTED)
+                .deliveryType(TradeDeliveryType.DIRECT)
                 .tradePrice(10000)
                 .build());
     }
 
     private Trade createCompletedTrade(Member seller, Member buyer, String title) {
         Post post = createPost(seller, title);
+        post.changeStatus(PostStatus.SOLD);
         return tradeRepository.save(Trade.builder()
                 .post(post)
                 .buyer(buyer)
@@ -206,4 +425,56 @@ class TradeServiceImplTest {
                 .tradePrice(10000)
                 .build());
     }
+
+    private Trade createPaidTrade(Member seller, Member buyer, String title) {
+        Post post = createPost(seller, title);
+        post.changeStatus(PostStatus.RESERVED);
+        return tradeRepository.save(Trade.builder()
+                .post(post)
+                .buyer(buyer)
+                .seller(seller)
+                .status(TradeStatus.PAID)
+                .tradePrice(10000)
+                .build());
+    }
+
+    private Trade createAcceptedTrade(Member seller, Member buyer, String title) {
+        Post post = createPost(seller, title);
+        post.changeStatus(PostStatus.RESERVED);
+        return tradeRepository.save(Trade.builder()
+                .post(post)
+                .buyer(buyer)
+                .seller(seller)
+                .status(TradeStatus.ACCEPTED)
+                .tradePrice(10000)
+                .build());
+    }
+
+    private Trade createDeliveryTrade(Member seller, Member buyer, String title, TradeStatus tradeStatus) {
+        Post post = createPost(seller, title);
+        if (tradeStatus != TradeStatus.REQUESTED) {
+            post.changeStatus(PostStatus.RESERVED);
+        }
+        return tradeRepository.save(Trade.builder()
+                .post(post)
+                .buyer(buyer)
+                .seller(seller)
+                .status(tradeStatus)
+                .deliveryType(TradeDeliveryType.DELIVERY)
+                .tradePrice(10000)
+                .build());
+    }
+
+    private Trade createDirectTrade(Member seller, Member buyer, String title) {
+        Post post = createPost(seller, title, DeliveryType.DIRECT);
+        return tradeRepository.save(Trade.builder()
+                .post(post)
+                .buyer(buyer)
+                .seller(seller)
+                .status(TradeStatus.REQUESTED)
+                .deliveryType(TradeDeliveryType.DIRECT)
+                .tradePrice(10000)
+                .build());
+    }
+
 }

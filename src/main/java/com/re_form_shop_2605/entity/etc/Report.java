@@ -13,6 +13,11 @@ import lombok.*;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-07
+ * 설명: 신고 JPA 엔티티
+ */
 public class Report extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

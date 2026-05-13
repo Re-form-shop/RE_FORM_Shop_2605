@@ -1,13 +1,19 @@
 package com.re_form_shop_2605.service.trade;
 
 import com.re_form_shop_2605.dto.common.PageResponse;
+import com.re_form_shop_2605.dto.delivery.DeliveryTrackingTraceResponseDTO;
 import com.re_form_shop_2605.dto.trade.DeliveryRequestDTO;
 import com.re_form_shop_2605.dto.trade.ReviewRequestDTO;
 import com.re_form_shop_2605.dto.trade.ReviewResponseDTO;
 import com.re_form_shop_2605.dto.trade.TradeRequestDTO;
 import com.re_form_shop_2605.dto.trade.TradeResponseDTO;
-import com.re_form_shop_2605.dto.trade.TradeStatusRequestDTO;
-
+import com.re_form_shop_2605.dto.trade.TradeShippingRequestDTO;
+import com.re_form_shop_2605.entity.Enum.TradeStatus;
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-10
+ * 설명:
+ */
 // 거래 관련 서비스 인터페이스
 public interface TradeService {
 
@@ -18,16 +24,25 @@ public interface TradeService {
     TradeResponseDTO readTrade(Long tradeId);
 
     // 구매자 기준 거래 목록 조회
-    PageResponse<TradeResponseDTO> readBuyerTrades(Long buyerId, int page, int size);
+    PageResponse<TradeResponseDTO> readBuyerTrades(Long buyerId, TradeStatus status, int page, int size);
 
     // 판매자 기준 거래 목록 조회
-    PageResponse<TradeResponseDTO> readSellerTrades(Long sellerId, int page, int size);
+    PageResponse<TradeResponseDTO> readSellerTrades(Long sellerId, TradeStatus status, int page, int size);
 
-    // 거래 상태 변경
-    void modifyTradeStatus(Long tradeId, TradeStatusRequestDTO tradeStatusRequestDTO);
+    // 판매자가 거래 요청을 수락
+    void acceptTrade(Long sellerId, Long tradeId);
 
-    // 배송지 정보 수정
-    void modifyDelivery(Long tradeId, DeliveryRequestDTO deliveryRequestDTO);
+    // 구매자가 거래를 구매 확정 처리
+    void confirmTrade(Long buyerId, Long tradeId);
+
+    // 수령 주소 정보 수정
+    void modifyDelivery(Long requesterId, Long tradeId, DeliveryRequestDTO deliveryRequestDTO);
+
+    // 판매자가 배송 정보 입력
+    void startShipping(Long sellerId, Long tradeId, TradeShippingRequestDTO requestDTO);
+
+    // 거래 기준 배송 조회
+    DeliveryTrackingTraceResponseDTO readTradeTracking(Long requesterId, Long tradeId);
 
     // 매너 리뷰 등록
     Long addReview(Long buyerId, ReviewRequestDTO reviewRequestDTO);

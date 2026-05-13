@@ -16,7 +16,11 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-10
+ * 설명: 판매글 이미지 저장 서비스 구현체
+ */
 @Service
 public class PostImageServiceImpl implements PostImageService {
 
@@ -33,6 +37,19 @@ public class PostImageServiceImpl implements PostImageService {
     @Override
     // 게시글별 전용 폴더를 만들고 이미지 URL 목록을 반환
     public List<String> savePostImages(Long postId, List<MultipartFile> images) {
+        return saveImages(uploadRootPath.resolve(String.valueOf(postId)), "/uploads/post/" + postId + "/", images);
+    }
+
+    @Override
+    // 판매글 작성 전에 임시 업로드한 이미지를 회원별 temp 폴더에 저장하고 URL 목록을 반환한다.
+    public List<String> saveTemporaryPostImages(Long memberId, List<MultipartFile> images) {
+        Path tempDirectory = uploadRootPath.resolve("temp").resolve(String.valueOf(memberId));
+        String urlPrefix = "/uploads/post/temp/" + memberId + "/";
+        return saveImages(tempDirectory, urlPrefix, images);
+    }
+
+    // 실제 파일 저장 공통 로직을 한 곳으로 모아 게시글 업로드와 임시 업로드가 같은 규칙을 쓰게 한다.
+    private List<String> saveImages(Path targetDirectory, String urlPrefix, List<MultipartFile> images) {
         if (images == null || images.isEmpty()) {
             return List.of();
         }
@@ -50,8 +67,7 @@ public class PostImageServiceImpl implements PostImageService {
         }
 
         try {
-            Path postDirectory = uploadRootPath.resolve(String.valueOf(postId));
-            Files.createDirectories(postDirectory);
+            Files.createDirectories(targetDirectory);
 
             List<String> savedImageUrls = new ArrayList<>();
 
@@ -59,16 +75,16 @@ public class PostImageServiceImpl implements PostImageService {
                 MultipartFile image = validImages.get(i);
                 String extension = extractExtension(image.getOriginalFilename());
                 String savedFileName = String.format("%02d_%s%s", i + 1, UUID.randomUUID(), extension);
-                Path targetPath = postDirectory.resolve(savedFileName);
+                Path targetPath = targetDirectory.resolve(savedFileName);
 
                 try (InputStream inputStream = image.getInputStream()) {
                     Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
                 }
-                savedImageUrls.add("/uploads/post/" + postId + "/" + savedFileName);
+                savedImageUrls.add(urlPrefix + savedFileName);
             }
             return savedImageUrls;
         } catch (IOException e) {
-            log.error("판매글 이미지 저장 실패. postId={}", postId, e);
+            log.error("판매글 이미지 저장 실패. directory={}", targetDirectory, e);
             throw new IllegalStateException("판매글 이미지 저장에 실패했습니다.", e);
         }
     }

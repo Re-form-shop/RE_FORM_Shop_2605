@@ -5,7 +5,11 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-08
+ * 설명: 신고 관련 매퍼 인터페이스
+ */
 @Mapper
 public interface ReportMapper {
     // 신고 등록

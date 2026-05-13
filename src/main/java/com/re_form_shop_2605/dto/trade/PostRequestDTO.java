@@ -3,11 +3,16 @@ package com.re_form_shop_2605.dto.trade;
 import com.re_form_shop_2605.entity.Enum.DeliveryType;
 import com.re_form_shop_2605.entity.Enum.Grade;
 import com.re_form_shop_2605.entity.Enum.Sport;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-08
+ * 설명:
+ */
 // 판매글 등록 요청 DTO
 public record PostRequestDTO(
         // 제목
@@ -46,7 +51,7 @@ public record PostRequestDTO(
 
         // 판매 희망가
         @NotNull
-        @Min(0)
+        @Positive
         int price,
 
         // 수령 방법

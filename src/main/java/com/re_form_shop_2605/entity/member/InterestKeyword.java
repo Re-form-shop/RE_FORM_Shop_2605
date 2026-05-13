@@ -12,6 +12,11 @@ import lombok.*;
 @Table(name = "interest_keyword", uniqueConstraints = {
         @UniqueConstraint(name = "uk_interest_keyword_member_keyword", columnNames = {"member_id", "keyword"})
 })
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-07
+ * 설명: 관심 키워드 JPA 엔티티
+ */
 public class InterestKeyword {
 
     @Id

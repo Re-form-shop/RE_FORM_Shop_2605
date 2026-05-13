@@ -8,12 +8,19 @@ import com.re_form_shop_2605.dto.trade.PostUpdateRequestDTO;
 import com.re_form_shop_2605.entity.Enum.DeliveryType;
 import com.re_form_shop_2605.entity.Enum.Grade;
 import com.re_form_shop_2605.entity.Enum.MemberStatus;
+import com.re_form_shop_2605.entity.Enum.NotificationType;
 import com.re_form_shop_2605.entity.Enum.PostStatus;
 import com.re_form_shop_2605.entity.Enum.Role;
 import com.re_form_shop_2605.entity.Enum.Sport;
+import com.re_form_shop_2605.entity.etc.Notification;
 import com.re_form_shop_2605.entity.member.Member;
+import com.re_form_shop_2605.entity.trade.Post;
+import com.re_form_shop_2605.entity.trade.Wish;
+import com.re_form_shop_2605.repository.etc.NotificationRepository;
 import com.re_form_shop_2605.repository.member.MemberRepository;
 import com.re_form_shop_2605.repository.trade.PostRepository;
+import com.re_form_shop_2605.repository.trade.WishRepository;
+import com.re_form_shop_2605.repository.trade.postImageRepository;
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +32,14 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-
+import static org.junit.jupiter.api.Assertions.assertTrue;
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-10
+ * 설명:
+ */
 @Log4j2
 @SpringBootTest
 //@Transactional
@@ -38,13 +51,24 @@ class PostServiceImplTest {
     private MemberRepository memberRepository;
     @Autowired
     private PostRepository postRepository;
+    @Autowired
+    private postImageRepository postImageRepository;
+    @Autowired
+    private WishRepository wishRepository;
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     @Test
     void addPostTest() {
         Member seller = createSeller("add_post");
-        Long postId = postService.addPost(seller.getMemberId(), createPostRequestDTO("add title"), List.of());
+        List<String> imageUrls = List.of(
+                "/uploads/post/temp/" + seller.getMemberId() + "/first.png",
+                "/uploads/post/temp/" + seller.getMemberId() + "/second.png"
+        );
+        Long postId = postService.addPost(seller.getMemberId(), createPostRequestDTO("add title"), imageUrls);
 
         assertNotNull(postId);
+        assertEquals(2, postImageRepository.findAllByPost_PostIdOrderBySortOrderAsc(postId).size());
     }
 
     @Test
@@ -81,7 +105,11 @@ class PostServiceImplTest {
     @Test
     void modifyPostTest() {
         Member seller = createSeller("modify_post");
-        Long postId = postService.addPost(seller.getMemberId(), createPostRequestDTO("origin title"), List.of());
+        Long postId = postService.addPost(
+                seller.getMemberId(),
+                createPostRequestDTO("origin title"),
+                List.of("/uploads/post/temp/" + seller.getMemberId() + "/origin.png")
+        );
 
         PostUpdateRequestDTO requestDTO = new PostUpdateRequestDTO(
                 "updated title",
@@ -93,12 +121,17 @@ class PostServiceImplTest {
                 DeliveryType.DELIVERY
         );
 
-        postService.modifyPost(postId, seller.getMemberId(), requestDTO, null);
+        List<String> updatedImageUrls = List.of(
+                "/uploads/post/temp/" + seller.getMemberId() + "/updated-1.png",
+                "/uploads/post/temp/" + seller.getMemberId() + "/updated-2.png"
+        );
+        postService.modifyPost(postId, seller.getMemberId(), requestDTO, updatedImageUrls);
 
         PostDetailDTO postDetailDTO = postService.readPost(postId, null);
         assertEquals("updated title", postDetailDTO.title());
         assertEquals(12000, postDetailDTO.price());
         assertEquals(Grade.S, postDetailDTO.grade());
+        assertEquals(updatedImageUrls, postDetailDTO.imageUrls());
     }
 
     @Test
@@ -109,6 +142,222 @@ class PostServiceImplTest {
         postService.removePost(postId, seller.getMemberId());
 
         assertEquals(PostStatus.DELETED, postRepository.findById(postId).orElseThrow().getStatus());
+    }
+
+    @Test
+    void modifyPostFailsWhenPostIsNotOnSale() {
+        Member seller = createSeller("modify_blocked");
+        Long postId = postService.addPost(seller.getMemberId(), createPostRequestDTO("blocked title"), List.of());
+        Post post = postRepository.findById(postId).orElseThrow();
+        post.changeStatus(PostStatus.RESERVED);
+        postRepository.save(post);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> postService.modifyPost(
+                        postId,
+                        seller.getMemberId(),
+                        new PostUpdateRequestDTO("new title", null, null, null, null, null, null),
+                        null
+                ));
+
+        assertEquals("판매 중인 판매글만 수정할 수 있습니다.", ex.getMessage());
+    }
+
+    @Test
+    void removePostFailsWhenPostIsNotOnSale() {
+        Member seller = createSeller("remove_blocked");
+        Long postId = postService.addPost(seller.getMemberId(), createPostRequestDTO("blocked remove"), List.of());
+        Post post = postRepository.findById(postId).orElseThrow();
+        post.changeStatus(PostStatus.SOLD);
+        postRepository.save(post);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> postService.removePost(postId, seller.getMemberId()));
+
+        assertEquals("판매 중인 판매글만 삭제할 수 있습니다.", ex.getMessage());
+    }
+
+    @Test
+    void toggleWishAddAndCancelTest() {
+        Member seller = createSeller("wish_seller");
+        Member buyer = createSeller("wish_buyer");
+        Long postId = postService.addPost(seller.getMemberId(), createPostRequestDTO("wish title"), List.of());
+
+        PostService.WishToggleResult added = postService.toggleWish(postId, buyer.getMemberId());
+        assertTrue(added.isLiked());
+        assertEquals(1, added.likeCount());
+        assertTrue(wishRepository.existsByMember_MemberIdAndPost_PostId(buyer.getMemberId(), postId));
+
+        PostService.WishToggleResult canceled = postService.toggleWish(postId, buyer.getMemberId());
+        assertFalse(canceled.isLiked());
+        assertEquals(0, canceled.likeCount());
+        assertFalse(wishRepository.existsByMember_MemberIdAndPost_PostId(buyer.getMemberId(), postId));
+    }
+
+    @Test
+    void addPostFailsWhenPriceIsNotPositive() {
+        Member seller = createSeller("invalid_price");
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> postService.addPost(
+                        seller.getMemberId(),
+                        new PostRequestDTO(
+                                "invalid price",
+                                "본문",
+                                Sport.BASEBALL,
+                                "LG",
+                                "유니폼",
+                                Grade.A,
+                                "100",
+                                false,
+                                0,
+                                DeliveryType.DIRECT
+                        ),
+                        List.of()
+                ));
+
+        assertEquals("판매 가격은 0보다 커야 합니다.", ex.getMessage());
+    }
+
+    @Test
+    void addPostFailsWhenImageCountExceedsLimit() {
+        Member seller = createSeller("too_many_images");
+        List<String> imageUrls = java.util.stream.IntStream.rangeClosed(1, 11)
+                .mapToObj(i -> "/uploads/post/temp/" + seller.getMemberId() + "/image-" + i + ".png")
+                .toList();
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> postService.addPost(seller.getMemberId(), createPostRequestDTO("too many images"), imageUrls));
+
+        assertEquals("판매글 이미지는 최대 10장까지 등록할 수 있습니다.", ex.getMessage());
+    }
+
+    @Test
+    void modifyPostFailsWhenImageUrlIsBlank() {
+        Member seller = createSeller("blank_image");
+        Long postId = postService.addPost(seller.getMemberId(), createPostRequestDTO("blank image title"), List.of());
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> postService.modifyPost(
+                        postId,
+                        seller.getMemberId(),
+                        new PostUpdateRequestDTO("new title", null, null, null, null, 1000, null),
+                        List.of(" ")
+                ));
+
+        assertEquals("판매글 이미지 URL은 비어 있을 수 없습니다.", ex.getMessage());
+    }
+
+    @Test
+    void modifyPostCreatesPriceDropNotificationsForWishMembers() {
+        Member seller = createSeller("price_drop_seller");
+        Member watcher = createSeller("price_drop_watcher");
+        Long postId = postService.addPost(seller.getMemberId(), createPostRequestDTO("price drop title"), List.of());
+
+        Post post = postRepository.findById(postId).orElseThrow();
+        wishRepository.save(Wish.builder()
+                .member(watcher)
+                .post(post)
+                .build());
+
+        postService.modifyPost(
+                postId,
+                seller.getMemberId(),
+                new PostUpdateRequestDTO(null, null, null, null, null, 9000, null),
+                null
+        );
+
+        java.util.List<Notification> notifications =
+                notificationRepository.findAllByMember_MemberIdOrderByNotiIdDesc(watcher.getMemberId());
+
+        assertEquals(1, notifications.size());
+        assertEquals(NotificationType.PRICE_DROP, notifications.get(0).getType());
+        assertEquals("/api/listings/" + postId, notifications.get(0).getLinkUrl());
+    }
+
+    @Test
+    void modifyPostDoesNotCreatePriceDropNotificationWhenPriceIsRaised() {
+        Member seller = createSeller("price_up_seller");
+        Member watcher = createSeller("price_up_watcher");
+        Long postId = postService.addPost(seller.getMemberId(), createPostRequestDTO("price up title"), List.of());
+
+        Post post = postRepository.findById(postId).orElseThrow();
+        wishRepository.save(Wish.builder()
+                .member(watcher)
+                .post(post)
+                .build());
+
+        postService.modifyPost(
+                postId,
+                seller.getMemberId(),
+                new PostUpdateRequestDTO(null, null, null, null, null, 12000, null),
+                null
+        );
+
+        assertEquals(0, notificationRepository.findAllByMember_MemberIdOrderByNotiIdDesc(watcher.getMemberId()).size());
+    }
+
+    @Test
+    void modifyPostDoesNotCreateDuplicateUnreadPriceDropNotificationOnSameDay() {
+        Member seller = createSeller("dup_drop_seller");
+        Member watcher = createSeller("dup_drop_watcher");
+        Long postId = postService.addPost(seller.getMemberId(), createPostRequestDTO("dup drop title"), List.of());
+
+        Post post = postRepository.findById(postId).orElseThrow();
+        wishRepository.save(Wish.builder()
+                .member(watcher)
+                .post(post)
+                .build());
+
+        postService.modifyPost(
+                postId,
+                seller.getMemberId(),
+                new PostUpdateRequestDTO(null, null, null, null, null, 9000, null),
+                null
+        );
+        postService.modifyPost(
+                postId,
+                seller.getMemberId(),
+                new PostUpdateRequestDTO(null, null, null, null, null, 8000, null),
+                null
+        );
+
+        assertEquals(1, notificationRepository.findAllByMember_MemberIdOrderByNotiIdDesc(watcher.getMemberId()).size());
+    }
+
+    @Test
+    void modifyPostCanCreatePriceDropNotificationAgainWhenPreviousOneIsRead() {
+        Member seller = createSeller("repeat_drop_seller");
+        Member watcher = createSeller("repeat_drop_watcher");
+        Long postId = postService.addPost(seller.getMemberId(), createPostRequestDTO("repeat drop title"), List.of());
+
+        Post post = postRepository.findById(postId).orElseThrow();
+        wishRepository.save(Wish.builder()
+                .member(watcher)
+                .post(post)
+                .build());
+
+        postService.modifyPost(
+                postId,
+                seller.getMemberId(),
+                new PostUpdateRequestDTO(null, null, null, null, null, 9000, null),
+                null
+        );
+
+        Notification firstNotification = notificationRepository
+                .findAllByMember_MemberIdOrderByNotiIdDesc(watcher.getMemberId())
+                .get(0);
+        firstNotification.read();
+        notificationRepository.save(firstNotification);
+
+        postService.modifyPost(
+                postId,
+                seller.getMemberId(),
+                new PostUpdateRequestDTO(null, null, null, null, null, 8000, null),
+                null
+        );
+
+        assertEquals(2, notificationRepository.findAllByMember_MemberIdOrderByNotiIdDesc(watcher.getMemberId()).size());
     }
 
     private Member createSeller(String prefix) {

@@ -3,7 +3,11 @@ package com.re_form_shop_2605.dto.member;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-08
+ * 설명:
+ */
 // 이메일 회원가입 요청 DTO
 public record MemberRequestDTO(
         // 회원 이메일

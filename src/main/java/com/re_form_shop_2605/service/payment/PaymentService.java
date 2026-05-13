@@ -2,6 +2,8 @@ package com.re_form_shop_2605.service.payment;
 
 import com.re_form_shop_2605.dto.payment.*;
 import com.re_form_shop_2605.entity.Enum.PaymentStatus;
+import com.re_form_shop_2605.entity.Enum.PostStatus;
+import com.re_form_shop_2605.entity.Enum.TradeDeliveryType;
 import com.re_form_shop_2605.entity.Enum.TradeStatus;
 import com.re_form_shop_2605.entity.payment.Payment;
 import com.re_form_shop_2605.entity.payment.TossLog;
@@ -43,10 +45,19 @@ public class PaymentService {
             throw new IllegalArgumentException("createPayment : ACCEPTED 상태가 아닌 거래 건은 결제할 수 없습니다.");
         }
 
-        // 4) tossOrderId 생성 후 저장 => UUID 이용
+        // 4) 결제 가능 거래 방식 및 배송지 정보 검증
+        if (trade.getDeliveryType() != TradeDeliveryType.DELIVERY) {
+            throw new IllegalArgumentException("createPayment : 택배 거래만 결제를 진행할 수 있습니다.");
+        }
+
+        if (trade.getDeliveryAddress() == null || trade.getDeliveryAddress().isBlank()) {
+            throw new IllegalArgumentException("createPayment : 배송 거래는 결제 전에 배송지 정보가 필요합니다.");
+        }
+
+        // 5) tossOrderId 생성 후 저장 => UUID 이용
         String tossOrderId = UUID.randomUUID().toString();
 
-        // 5) Payment 생성 및 DB insert
+        // 6) Payment 생성 및 DB insert
         Payment payment = Payment.builder()
                 .trade(trade)
                 .payMethod(request.payMethod())
@@ -56,7 +67,7 @@ public class PaymentService {
                 .build();
         paymentRepository.save(payment);
 
-        // 6) PaymentInitResponseDTO 반환
+        // 7) PaymentInitResponseDTO 반환
         return new PaymentInitResponseDTO(
                 tossOrderId,
                 trade.getPost().getTitle(),
@@ -104,7 +115,7 @@ public class PaymentService {
 
         // 5) trade 상태 업데이트 (PAID)
         Trade trade = payment.getTrade();
-        trade.changeStatus(TradeStatus.PAID);
+        trade.markPaid();
 
         // 6) toss_log 저장
         tossLogRepository.save(
@@ -162,7 +173,8 @@ public class PaymentService {
 
         // 5) trade 상태 변경 → CANCELED
         Trade trade = payment.getTrade();
-        trade.changeStatus(TradeStatus.CANCELED);
+        trade.cancel();
+        trade.getPost().changeStatus(PostStatus.ON_SALE);
 
         // 6) PaymentResponseDTO 반환
         return new PaymentResponseDTO(

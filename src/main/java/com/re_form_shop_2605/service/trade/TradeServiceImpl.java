@@ -1,14 +1,18 @@
 package com.re_form_shop_2605.service.trade;
 
 import com.re_form_shop_2605.dto.common.PageResponse;
+import com.re_form_shop_2605.dto.delivery.DeliveryCourierListResponseDTO;
+import com.re_form_shop_2605.dto.delivery.DeliveryTrackingTraceRequestDTO;
+import com.re_form_shop_2605.dto.delivery.DeliveryTrackingTraceResponseDTO;
+import com.re_form_shop_2605.dto.etc.TradeNotificationTemplateDTO;
 import com.re_form_shop_2605.dto.trade.DeliveryRequestDTO;
 import com.re_form_shop_2605.dto.trade.MemberBriefDTO;
-import com.re_form_shop_2605.dto.trade.PostBriefDTO;
+import com.re_form_shop_2605.dto.chat.PostBriefDTO;
 import com.re_form_shop_2605.dto.trade.ReviewRequestDTO;
 import com.re_form_shop_2605.dto.trade.ReviewResponseDTO;
 import com.re_form_shop_2605.dto.trade.TradeRequestDTO;
 import com.re_form_shop_2605.dto.trade.TradeResponseDTO;
-import com.re_form_shop_2605.dto.trade.TradeStatusRequestDTO;
+import com.re_form_shop_2605.dto.trade.TradeShippingRequestDTO;
 import com.re_form_shop_2605.entity.Enum.DeliveryType;
 import com.re_form_shop_2605.entity.Enum.PostStatus;
 import com.re_form_shop_2605.entity.Enum.TradeDeliveryType;
@@ -24,15 +28,21 @@ import com.re_form_shop_2605.repository.trade.TradeRepository;
 import com.re_form_shop_2605.repository.trade.mannerReviewRepository;
 import com.re_form_shop_2605.repository.trade.postImageRepository;
 import com.re_form_shop_2605.service.common.ServicePageResponse;
+import com.re_form_shop_2605.service.delivery.DeliveryTrackingService;
+import com.re_form_shop_2605.service.etc.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-10
+ * 설명: 거래 관련 서비스 구현체
+ */
 // 거래 생성, 상태 변경, 리뷰 작성 같은 거래 흐름을 담당한다.
 @Service
 @Log4j2
@@ -45,10 +55,11 @@ public class TradeServiceImpl implements TradeService {
     private final PostRepository postRepository;
     private final postImageRepository postImageRepository;
     private final mannerReviewRepository mannerReviewRepository;
-//    private final ModelMapper modelMapper;
+    private final DeliveryTrackingService deliveryTrackingService;
+    private final NotificationService notificationService;
 
     @Override
-    // 판매글 상태와 중복 거래 여부를 확인한 뒤 거래를 생성
+    // 판매글 상태와 전달 방식 조건을 검증한 뒤 거래를 생성한다.
     public Long addTrade(Long buyerId, TradeRequestDTO tradeRequestDTO) {
         Member buyer = memberRepository.findById(buyerId)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
@@ -72,7 +83,7 @@ public class TradeServiceImpl implements TradeService {
                 .buyer(buyer)
                 .seller(post.getSellerId())
                 .status(TradeStatus.REQUESTED)
-                .deliveryType(toTradeDeliveryType(post.getDeliveryType()))
+                .deliveryType(resolveTradeDeliveryType(post.getDeliveryType(), tradeRequestDTO.deliveryType()))
                 .tradePrice(post.getPrice())
                 .build();
 
@@ -81,19 +92,22 @@ public class TradeServiceImpl implements TradeService {
 
     @Override
     @Transactional(readOnly = true)
-    // 거래 상세 화면에 필요한 정보를 조립해 반환
+    // 거래 상세 화면에 필요한 정보를 조립해 반환한다.
     public TradeResponseDTO readTrade(Long tradeId) {
         return mapTradeResponse(getTrade(tradeId));
     }
 
     @Override
     @Transactional(readOnly = true)
-    // 구매자 기준 거래 목록을 페이지 단위로 반환
-    public PageResponse<TradeResponseDTO> readBuyerTrades(Long buyerId, int page, int size) {
+    // 구매자 기준 거래 목록을 상태 필터와 함께 페이지 단위로 반환한다.
+    public PageResponse<TradeResponseDTO> readBuyerTrades(Long buyerId, TradeStatus status, int page, int size) {
         List<Trade> trades = tradeRepository.findAllByBuyer_MemberIdOrderByTradeIdDesc(buyerId);
         List<TradeResponseDTO> tradeResponseDTOList = new ArrayList<>();
 
         for (Trade trade : trades) {
+            if (!matchesTradeStatus(trade, status)) {
+                continue;
+            }
             tradeResponseDTOList.add(mapTradeResponse(trade));
         }
 
@@ -102,12 +116,15 @@ public class TradeServiceImpl implements TradeService {
 
     @Override
     @Transactional(readOnly = true)
-    // 판매자 기준 거래 목록을 페이지 단위로 반환
-    public PageResponse<TradeResponseDTO> readSellerTrades(Long sellerId, int page, int size) {
+    // 판매자 기준 거래 목록을 상태 필터와 함께 페이지 단위로 반환한다.
+    public PageResponse<TradeResponseDTO> readSellerTrades(Long sellerId, TradeStatus status, int page, int size) {
         List<Trade> trades = tradeRepository.findAllBySeller_MemberIdOrderByTradeIdDesc(sellerId);
         List<TradeResponseDTO> tradeResponseDTOList = new ArrayList<>();
 
         for (Trade trade : trades) {
+            if (!matchesTradeStatus(trade, status)) {
+                continue;
+            }
             tradeResponseDTOList.add(mapTradeResponse(trade));
         }
 
@@ -115,19 +132,119 @@ public class TradeServiceImpl implements TradeService {
     }
 
     @Override
-    // 요청된 거래 상태로 값을 변경
-    public void modifyTradeStatus(Long tradeId, TradeStatusRequestDTO tradeStatusRequestDTO) {
-        getTrade(tradeId).changeStatus(tradeStatusRequestDTO.status());
+    // 판매자만 구매 요청 상태의 거래를 수락할 수 있게 처리한다.
+    public void acceptTrade(Long sellerId, Long tradeId) {
+        Trade trade = getTrade(tradeId);
+
+        if (!trade.getSeller().getMemberId().equals(sellerId)) {
+            throw new IllegalArgumentException("거래 수락 권한이 없습니다.");
+        }
+
+        if (trade.getStatus() != TradeStatus.REQUESTED) {
+            throw new IllegalArgumentException("구매 요청 상태의 거래만 수락할 수 있습니다.");
+        }
+
+        trade.accept();
+        trade.getPost().changeStatus(PostStatus.RESERVED);
     }
 
     @Override
-    // 거래 배송지 정보를 수정
-    public void modifyDelivery(Long tradeId, DeliveryRequestDTO deliveryRequestDTO) {
-        getTrade(tradeId).changeDeliveryAddress(deliveryRequestDTO.deliveryAddress());
+    // 구매자만 결제 이후 거래를 구매 확정할 수 있게 처리한다.
+    public void confirmTrade(Long buyerId, Long tradeId) {
+        Trade trade = getTrade(tradeId);
+
+        if (!trade.getBuyer().getMemberId().equals(buyerId)) {
+            throw new IllegalArgumentException("구매 확정 권한이 없습니다.");
+        }
+
+        if (!isConfirmableStatus(trade.getStatus())) {
+            throw new IllegalArgumentException("구매 확정이 가능한 거래 상태가 아닙니다.");
+        }
+
+        trade.confirm();
+        trade.getPost().changeStatus(PostStatus.SOLD);
     }
 
     @Override
-    // 거래 완료 후 구매자만 판매자에 대한 리뷰를 남길 수 있다.
+    // 거래 수령 방식과 요청자 권한에 맞는 주소 정보를 수정한다.
+    public void modifyDelivery(Long requesterId, Long tradeId, DeliveryRequestDTO deliveryRequestDTO) {
+        Trade trade = getTrade(tradeId);
+
+        if (!isDeliveryEditableStatus(trade.getStatus())) {
+            throw new IllegalArgumentException("현재 거래 상태에서는 배송지 정보를 수정할 수 없습니다.");
+        }
+
+        if (trade.getDeliveryType() == TradeDeliveryType.DELIVERY) {
+            if (!trade.getBuyer().getMemberId().equals(requesterId)) {
+                throw new IllegalArgumentException("배송지 수정 권한이 없습니다.");
+            }
+        } else if (trade.getDeliveryType() == TradeDeliveryType.DIRECT) {
+            if (!trade.getSeller().getMemberId().equals(requesterId)) {
+                throw new IllegalArgumentException("직거래 주소 수정 권한이 없습니다.");
+            }
+        }
+
+        trade.changeDeliveryAddress(deliveryRequestDTO.deliveryAddress());
+    }
+
+    @Override
+    public void startShipping(Long sellerId, Long tradeId, TradeShippingRequestDTO requestDTO) {
+        Trade trade = getTrade(tradeId);
+
+        if (!trade.getSeller().getMemberId().equals(sellerId)) {
+            throw new IllegalArgumentException("배송 정보 입력 권한이 없습니다.");
+        }
+        if (trade.getDeliveryType() != TradeDeliveryType.DELIVERY) {
+            throw new IllegalArgumentException("택배 거래만 배송 정보를 입력할 수 있습니다.");
+        }
+        if (trade.getStatus() != TradeStatus.PAID) {
+            throw new IllegalArgumentException("결제 완료된 거래만 배송 정보를 입력할 수 있습니다.");
+        }
+        if (trade.getDeliveryAddress() == null || trade.getDeliveryAddress().isBlank()) {
+            throw new IllegalArgumentException("배송지 정보가 입력된 거래만 배송을 시작할 수 있습니다.");
+        }
+
+        String courierName = resolveCourierName(requestDTO.courierCode());
+        trade.beginShippingProgress();
+        trade.updateShippingInfo(requestDTO.courierCode(), courierName, requestDTO.trackingNumber());
+
+        TradeNotificationTemplateDTO buyerTemplate = notificationService.buildBuyerShippingRegisteredTemplate(
+                trade.getTradeId(),
+                trade.getPost().getTitle()
+        );
+        TradeNotificationTemplateDTO sellerTemplate = notificationService.buildSellerShippingRegisteredTemplate(
+                trade.getTradeId(),
+                trade.getPost().getTitle()
+        );
+
+        notificationService.createTradeNotification(trade.getBuyer(), buyerTemplate.content(), buyerTemplate.linkUrl());
+        notificationService.createTradeNotification(trade.getSeller(), sellerTemplate.content(), sellerTemplate.linkUrl());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DeliveryTrackingTraceResponseDTO readTradeTracking(Long requesterId, Long tradeId) {
+        Trade trade = getTrade(tradeId);
+
+        if (!isTradeParticipant(trade, requesterId)) {
+            throw new IllegalArgumentException("거래 배송 조회 권한이 없습니다.");
+        }
+        if (!trade.hasShippingInfo()) {
+            throw new IllegalArgumentException("배송 정보가 아직 입력되지 않았습니다.");
+        }
+
+        DeliveryTrackingTraceRequestDTO requestDTO = new DeliveryTrackingTraceRequestDTO(
+                List.of(new DeliveryTrackingTraceRequestDTO.TraceItemRequestDTO(
+                        String.valueOf(trade.getTradeId()),
+                        trade.getCourierCode(),
+                        trade.getTrackingNumber()
+                ))
+        );
+        return deliveryTrackingService.trace(requestDTO);
+    }
+
+    @Override
+    // 거래 완료 후 구매자만 판매자에 대한 리뷰를 작성할 수 있게 처리한다.
     public Long addReview(Long buyerId, ReviewRequestDTO reviewRequestDTO) {
         Trade trade = getTrade(reviewRequestDTO.tradeId());
 
@@ -156,7 +273,7 @@ public class TradeServiceImpl implements TradeService {
 
     @Override
     @Transactional(readOnly = true)
-    // 단건 리뷰를 화면용 DTO로 반환
+    // 단건 리뷰를 화면용 응답 DTO로 반환한다.
     public ReviewResponseDTO readReview(Long mannerId) {
         MannerReview review = mannerReviewRepository.findById(mannerId)
                 .orElseThrow(() -> new IllegalArgumentException("리뷰가 존재하지 않습니다."));
@@ -165,7 +282,7 @@ public class TradeServiceImpl implements TradeService {
 
     @Override
     @Transactional(readOnly = true)
-    // 판매자 기준으로 받은 리뷰 목록을 페이지 단위로 반환
+    // 판매자 기준으로 받은 리뷰 목록을 페이지 단위로 반환한다.
     public PageResponse<ReviewResponseDTO> readSellerReviews(Long sellerId, int page, int size) {
         List<MannerReview> reviews = mannerReviewRepository.findAllBySeller_MemberIdOrderByMannerIdDesc(sellerId);
         List<ReviewResponseDTO> reviewResponseDTOList = new ArrayList<>();
@@ -177,32 +294,20 @@ public class TradeServiceImpl implements TradeService {
         return ServicePageResponse.of(reviewResponseDTOList, page, size);
     }
 
-    // 공통으로 사용하는 거래 조회 메서드
+    // 거래 ID로 거래 엔티티를 조회한다.
     private Trade getTrade(Long tradeId) {
         return tradeRepository.findById(tradeId)
                 .orElseThrow(() -> new IllegalArgumentException("거래가 존재하지 않습니다."));
     }
 
-    // 거래 엔티티를 화면용 응답 DTO로 조립
+    // 거래 엔티티를 화면용 응답 DTO로 조립한다.
     private TradeResponseDTO mapTradeResponse(Trade trade) {
-        List<PostImage> postImages = postImageRepository.findAllByPost_PostIdOrderBySortOrderAsc(trade.getPost().getPostId());
-        String thumbnailUrl = null;
-        if (!postImages.isEmpty()) {
-            thumbnailUrl = postImages.get(0).getImageUrl();
-        }
-
         boolean hasReview = mannerReviewRepository.existsByTrade_TradeIdAndBuyer_MemberId(
                 trade.getTradeId(),
                 trade.getBuyer().getMemberId()
         );
 
-        PostBriefDTO postBriefDTO = new PostBriefDTO(
-                trade.getPost().getPostId(),
-                trade.getPost().getTitle(),
-                thumbnailUrl,
-                trade.getPost().getPrice(),
-                trade.getPost().getStatus()
-        );
+        PostBriefDTO postBriefDTO = toPostBriefDTO(trade.getPost());
 
         MemberBriefDTO buyer = new MemberBriefDTO(
                 trade.getBuyer().getMemberId(),
@@ -223,7 +328,11 @@ public class TradeServiceImpl implements TradeService {
                 trade.getStatus(),
                 trade.getDeliveryType(),
                 trade.getDeliveryAddress(),
+                trade.getCourierCode(),
+                trade.getCourierName(),
+                trade.getTrackingNumber(),
                 trade.getTradePrice(),
+                trade.getShippingStartedAt(),
                 trade.getCompletedAt(),
                 trade.getConfirmedAt(),
                 trade.getCreatedAt(),
@@ -231,7 +340,21 @@ public class TradeServiceImpl implements TradeService {
         );
     }
 
-    // 리뷰 엔티티를 화면용 응답 DTO로 변환
+    // 거래/채팅 화면에서 공통으로 쓰는 판매글 요약 DTO를 생성한다.
+    private PostBriefDTO toPostBriefDTO(Post post) {
+        List<PostImage> postImages = postImageRepository.findAllByPost_PostIdOrderBySortOrderAsc(post.getPostId());
+        String thumbnailUrl = postImages.isEmpty() ? null : postImages.get(0).getImageUrl();
+
+        return new PostBriefDTO(
+                post.getPostId(),
+                post.getTitle(),
+                thumbnailUrl,
+                post.getPrice(),
+                post.getStatus()
+        );
+    }
+
+    // 리뷰 엔티티를 화면용 응답 DTO로 변환한다.
     private ReviewResponseDTO toReviewResponseDTO(MannerReview review) {
         MemberBriefDTO buyer = new MemberBriefDTO(
                 review.getBuyer().getMemberId(),
@@ -255,11 +378,67 @@ public class TradeServiceImpl implements TradeService {
         );
     }
 
-    // 판매글 수령 방식 값을 거래 도메인 수령 방식 값으로 변환
-    private TradeDeliveryType toTradeDeliveryType(DeliveryType deliveryType) {
+    // 판매글 수령 방식을 거래 도메인 수령 방식 값으로 변환한다.
+    private TradeDeliveryType resolveTradeDeliveryType(DeliveryType deliveryType, TradeDeliveryType selectedDeliveryType) {
         return switch (deliveryType) {
-            case DIRECT -> TradeDeliveryType.DIRECT;
-            case DELIVERY, BOTH -> TradeDeliveryType.DELIVERY;
+            case DIRECT -> {
+                if (selectedDeliveryType != null && selectedDeliveryType != TradeDeliveryType.DIRECT) {
+                    throw new IllegalArgumentException("직거래만 가능한 판매글입니다.");
+                }
+                yield TradeDeliveryType.DIRECT;
+            }
+            case DELIVERY -> {
+                if (selectedDeliveryType != null && selectedDeliveryType != TradeDeliveryType.DELIVERY) {
+                    throw new IllegalArgumentException("배송만 가능한 판매글입니다.");
+                }
+                yield TradeDeliveryType.DELIVERY;
+            }
+            case BOTH -> {
+                if (selectedDeliveryType == null) {
+                    throw new IllegalArgumentException("수령 방식을 선택해야 합니다.");
+                }
+                yield selectedDeliveryType;
+            }
         };
     }
+
+    // 거래가 구매 확정 가능한 상태인지 확인한다.
+    private boolean isConfirmableStatus(TradeStatus status) {
+        return status == TradeStatus.PAID
+                || status == TradeStatus.IN_PROGRESS
+                || status == TradeStatus.RECEIVED;
+    }
+
+    // 거래 주소 정보를 수정할 수 있는 상태인지 확인한다.
+    private boolean isDeliveryEditableStatus(TradeStatus status) {
+        return status == TradeStatus.REQUESTED
+                || status == TradeStatus.ACCEPTED
+                || status == TradeStatus.PAID;
+    }
+
+    private boolean isTradeParticipant(Trade trade, Long memberId) {
+        return trade.getBuyer().getMemberId().equals(memberId)
+                || trade.getSeller().getMemberId().equals(memberId);
+    }
+
+    private String resolveCourierName(String courierCode) {
+        DeliveryCourierListResponseDTO courierListResponseDTO = deliveryTrackingService.readCouriers();
+        if (courierListResponseDTO == null
+                || courierListResponseDTO.data() == null
+                || courierListResponseDTO.data().couriers() == null) {
+            throw new IllegalArgumentException("택배사 목록을 불러오지 못했습니다.");
+        }
+
+        return courierListResponseDTO.data().couriers().stream()
+                .filter(courier -> courierCode.equals(courier.trackingApiCode()))
+                .map(DeliveryCourierListResponseDTO.CourierDTO::displayName)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("지원하지 않는 택배사 코드입니다."));
+    }
+
+    // 거래 상태가 조회 필터 조건과 일치하는지 확인한다.
+    private boolean matchesTradeStatus(Trade trade, TradeStatus status) {
+        return status == null || trade.getStatus() == status;
+    }
+
 }

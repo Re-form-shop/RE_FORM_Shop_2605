@@ -20,15 +20,24 @@ import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-@SpringBootTest
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-10
+ * 설명:
+ */
+@SpringBootTest(properties = "spring.servlet.multipart.location=build/test-uploads")
 @Log4j2
 //@Transactional
 class MemberServiceImplTest {
@@ -37,6 +46,7 @@ class MemberServiceImplTest {
     @Autowired private PostRepository postRepository;
     @Autowired private TradeRepository tradeRepository;
     @Autowired private mannerReviewRepository mannerReviewRepository;
+    @Autowired private MemberImageService memberImageService;
 
     @Test
     void joinTest() {
@@ -118,7 +128,7 @@ class MemberServiceImplTest {
         long seed = System.nanoTime();
         ProfileUpdateRequestDTO requestDTO = new ProfileUpdateRequestDTO(
                 "updated_profile_" + seed,
-                "https://test.com/updated.png",
+                null,
                 "updated bio"
         );
 
@@ -126,8 +136,43 @@ class MemberServiceImplTest {
         ProfileResponseDTO responseDTO = memberService.readProfile(member.getMemberId());
 
         assertEquals("updated_profile_" + seed, responseDTO.nickname());
-        assertEquals("https://test.com/updated.png", responseDTO.profileImageUrl());
+        assertEquals(null, responseDTO.profileImageUrl());
         assertEquals("updated bio", responseDTO.bio());
+    }
+
+    @Test
+    void modifyProfileWithProfileImageTest() throws Exception {
+        Member member = createMember("modify_profile_image");
+        long seed = System.nanoTime();
+        MockMultipartFile profileImage = new MockMultipartFile(
+                "profileImage",
+                "profile-test.png",
+                "image/png",
+                "fake-image-content".getBytes()
+        );
+        String temporaryProfileImageUrl = memberImageService.saveTemporaryProfileImage(member.getMemberId(), profileImage);
+        ProfileUpdateRequestDTO requestDTO = new ProfileUpdateRequestDTO(
+                "updated_image_profile_" + seed,
+                temporaryProfileImageUrl,
+                "updated image bio"
+        );
+
+        try {
+            memberService.modifyProfile(member.getMemberId(), requestDTO);
+            ProfileResponseDTO responseDTO = memberService.readProfile(member.getMemberId());
+
+            assertEquals("updated_image_profile_" + seed, responseDTO.nickname());
+            assertEquals("updated image bio", responseDTO.bio());
+            assertNotNull(responseDTO.profileImageUrl());
+            assertTrue(responseDTO.profileImageUrl().startsWith("/uploads/member/" + member.getMemberId() + "/profile_"));
+
+            String relativePath = responseDTO.profileImageUrl().replace("/uploads/", "");
+            Path savedPath = Paths.get("build/test-uploads").toAbsolutePath().resolve(relativePath);
+            assertTrue(Files.exists(savedPath));
+            assertFalse(Files.exists(Paths.get("build/test-uploads/member/temp/" + member.getMemberId())));
+        } finally {
+            memberImageService.deleteProfileImageDirectory(member.getMemberId());
+        }
     }
 
     @Test

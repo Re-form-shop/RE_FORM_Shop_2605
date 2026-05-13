@@ -8,6 +8,21 @@ GRANT ALL PRIVILEGES ON `reform_shop_2605`.* TO `admin`@`localhost`;
 FLUSH PRIVILEGES;
 
 USE `reform_shop_2605`;
+#
+# -- 1. 혹시 모를 기존 유저들 삭제
+# DROP USER IF EXISTS 'admin'@'%';
+# DROP USER IF EXISTS 'admin'@'localhost';
+#
+# -- 2. 유저 생성 (localhost와 % 모두를 위해 각각 생성)
+# CREATE USER 'admin'@'%' IDENTIFIED BY '0507';
+# CREATE USER 'admin'@'localhost' IDENTIFIED BY '0507';
+#
+# -- 3. 데이터베이스 권한 부여
+# GRANT ALL PRIVILEGES ON reform_shop_2605.* TO 'admin'@'%';
+# GRANT ALL PRIVILEGES ON reform_shop_2605.* TO 'admin'@'localhost';
+#
+# --  4. 변경사항 즉시 반영
+# FLUSH PRIVILEGES;
 
 
 -- 1. 일반 회원가입 회원
@@ -138,7 +153,11 @@ CREATE TABLE trade
         'CONFIRMED', 'COMPLETED', 'CANCELED', 'DISPUTED') NOT NULL COMMENT '거래 상태',
     delivery_type    ENUM ('DIRECT', 'DELIVERY')          NULL COMMENT '전달 방법 (수령 / 배송)',
     delivery_address VARCHAR(300)                         NULL COMMENT '배송 주소(배송 시 해당사항)',
+    courier_code     VARCHAR(50)                          NULL COMMENT '택배사 코드',
+    courier_name     VARCHAR(100)                         NULL COMMENT '택배사명',
+    tracking_number  VARCHAR(100)                         NULL COMMENT '송장번호',
     trade_price      INT                                  NOT NULL COMMENT '실제 거래 금액',
+    shipping_started_at DATETIME                          NULL COMMENT '배송 정보 입력 일시',
     completed_at     DATETIME                             NULL COMMENT '정산 완료 일시',
     confirmed_at     DATETIME                             NULL COMMENT '구매 확정 일시',
     created_at       DATETIME                             NOT NULL DEFAULT CURRENT_TIMESTAMP,

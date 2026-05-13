@@ -1,5 +1,9 @@
 package com.re_form_shop_2605.dto.common;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-08
+ * 설명:
+ */
 // 프론트와 백엔드가 공통으로 사용하는 표준 API 응답
 public record ApiResponse<T>(
         boolean success,

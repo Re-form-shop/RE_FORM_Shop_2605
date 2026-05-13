@@ -10,40 +10,50 @@ import com.re_form_shop_2605.entity.Enum.PostStatus;
 import com.re_form_shop_2605.entity.member.Member;
 import com.re_form_shop_2605.entity.trade.Post;
 import com.re_form_shop_2605.entity.trade.PostImage;
+import com.re_form_shop_2605.entity.trade.Wish;
 import com.re_form_shop_2605.repository.member.MemberRepository;
 import com.re_form_shop_2605.repository.trade.PostRepository;
-import com.re_form_shop_2605.repository.trade.TradeRepository;
 import com.re_form_shop_2605.repository.trade.WishRepository;
 import com.re_form_shop_2605.repository.trade.postImageRepository;
 import com.re_form_shop_2605.service.common.ServicePageResponse;
+import com.re_form_shop_2605.service.etc.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-10
+ * 설명: 판매글 관련 서비스 구현체
+ */
 @Service
 @Log4j2
 @RequiredArgsConstructor
 @Transactional
 public class PostServiceImpl implements PostService {
 
+    private static final int MAX_POST_IMAGES = 10;
+
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
     private final postImageRepository postImageRepository;
     private final WishRepository wishRepository;
-    private final PostImageService postImageService;
+    private final NotificationService notificationService;
     private final ModelMapper modelMapper;
 
     @Override
-    // 판매글을 저장하고, 함께 전달된 이미지를 이미지 폴더에 저장
-    public Long addPost(Long sellerId, PostRequestDTO postRequestDTO, List<MultipartFile> images) {
+    // 판매글을 저장하고, 프론트가 이미 업로드한 이미지 URL 목록을 함께 저장한다.
+    public Long addPost(Long sellerId, PostRequestDTO postRequestDTO, List<String> imageUrls) {
+        validatePrice(postRequestDTO.price());
+        validateImageUrls(imageUrls);
+
         Member seller = memberRepository.findById(sellerId)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
 
@@ -66,18 +76,18 @@ public class PostServiceImpl implements PostService {
                 .build();
 
         Post savedPost = postRepository.save(post);
-        List<String> imageUrls = postImageService.savePostImages(savedPost.getPostId(), images);
 
-        List<PostImage> postImages = new ArrayList<>();
-        for (int i = 0; i < imageUrls.size(); i++) {
-            postImages.add(PostImage.builder()
-                    .post(savedPost)
-                    .imageUrl(imageUrls.get(i))
-                    .sortOrder(i + 1)
-                    .build());
+        if (imageUrls != null && !imageUrls.isEmpty()) {
+            List<PostImage> postImages = new ArrayList<>();
+            for (int i = 0; i < imageUrls.size(); i++) {
+                postImages.add(PostImage.builder()
+                        .post(savedPost)
+                        .imageUrl(imageUrls.get(i))
+                        .sortOrder(i + 1)
+                        .build());
+            }
+            postImageRepository.saveAll(postImages);
         }
-
-        postImageRepository.saveAll(postImages);
         return savedPost.getPostId();
     }
 
@@ -169,13 +179,17 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    // 판매글과 이미지를 수정
-    public void modifyPost(Long postId, Long sellerId, PostUpdateRequestDTO postUpdateRequestDTO, List<MultipartFile> images) {
+    // 판매글과 이미지 URL 목록을 수정한다.
+    public void modifyPost(Long postId, Long sellerId, PostUpdateRequestDTO postUpdateRequestDTO, List<String> imageUrls) {
         Post post = getPost(postId);
+        int oldPrice = post.getPrice();
 
         if (!post.getSellerId().getMemberId().equals(sellerId)) {
             throw new IllegalArgumentException("판매글 수정 권한이 없습니다.");
         }
+        validateEditable(post);
+        validatePrice(postUpdateRequestDTO.price());
+        validateImageUrls(imageUrls);
         post.changePost(
                 postUpdateRequestDTO.title(),
                 postUpdateRequestDTO.content(),
@@ -186,11 +200,8 @@ public class PostServiceImpl implements PostService {
                 postUpdateRequestDTO.deliveryType()
         );
 
-        if (images != null) {
+        if (imageUrls != null) {
             postImageRepository.deleteByPost_PostId(postId);
-            postImageService.deletePostImageDirectory(postId);
-
-            List<String> imageUrls = postImageService.savePostImages(postId, images);
             List<PostImage> postImages = new ArrayList<>();
 
             for (int i = 0; i < imageUrls.size(); i++) {
@@ -202,6 +213,16 @@ public class PostServiceImpl implements PostService {
             }
             postImageRepository.saveAll(postImages);
         }
+
+        if (postUpdateRequestDTO.price() != null && post.getPrice() < oldPrice) {
+            notificationService.createPriceDropNotifications(
+                    post.getPostId(),
+                    sellerId,
+                    post.getTitle(),
+                    oldPrice,
+                    post.getPrice()
+            );
+        }
     }
 
     @Override
@@ -212,8 +233,21 @@ public class PostServiceImpl implements PostService {
         if (!post.getSellerId().getMemberId().equals(sellerId)) {
             throw new IllegalArgumentException("판매글 삭제 권한이 없습니다.");
         }
+        validateDeletable(post);
 
         post.markDeleted();
+    }
+
+    // 판매글 찜을 토글하고 실제 찜 개수와 동기화
+    @Override
+    public WishToggleResult toggleWish(Long postId, Long memberId) {
+        Post post = getPost(postId);
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+
+        return wishRepository.findByMember_MemberIdAndPost_PostId(memberId, postId)
+                .map(existingWish -> cancelWish(post, existingWish))
+                .orElseGet(() -> addWish(post, member));
     }
 
     // 공통으로 사용하는 판매글 조회 메서드
@@ -250,4 +284,67 @@ public class PostServiceImpl implements PostService {
                 member.getMannerScore()
         );
     }
+
+    // 판매중인 상태에서만 판매글 수정 가능
+    private void validateEditable(Post post) {
+        if (post.getStatus() != PostStatus.ON_SALE) {
+            throw new IllegalArgumentException("판매 중인 판매글만 수정할 수 있습니다.");
+        }
+    }
+
+    // 판매글이 삭제 가능한 판매 중 상태인지 검증한다.
+    private void validateDeletable(Post post) {
+        if (post.getStatus() != PostStatus.ON_SALE) {
+            throw new IllegalArgumentException("판매 중인 판매글만 삭제할 수 있습니다.");
+        }
+    }
+
+    // 판매 가격이 0보다 큰지 검증한다.
+    private void validatePrice(Integer price) {
+        if (price != null && price <= 0) {
+            throw new IllegalArgumentException("판매 가격은 0보다 커야 합니다.");
+        }
+    }
+
+    //판매글 이미지 URL 목록의 개수와 공백 여부를 검증한다.
+    private void validateImageUrls(List<String> imageUrls) {
+        if (imageUrls == null) {
+            return;
+        }
+
+        if (imageUrls.size() > MAX_POST_IMAGES) {
+            throw new IllegalArgumentException("판매글 이미지는 최대 10장까지 등록할 수 있습니다.");
+        }
+
+        for (String imageUrl : imageUrls) {
+            if (imageUrl == null || imageUrl.isBlank()) {
+                throw new IllegalArgumentException("판매글 이미지 URL은 비어 있을 수 없습니다.");
+            }
+        }
+    }
+
+     // 찜을 추가하고 실제 찜 수를 다시 계산한다.
+    private WishToggleResult addWish(Post post, Member member) {
+        wishRepository.save(Wish.builder()
+                .member(member)
+                .post(post)
+                .build());
+        syncWishCount(post);
+        return new WishToggleResult(true, post.getWishCount());
+    }
+
+    // 찜을 취소하고 실제 찜 수를 다시 계산한다.
+    private WishToggleResult cancelWish(Post post, Wish existingWish) {
+        wishRepository.delete(existingWish);
+        syncWishCount(post);
+        return new WishToggleResult(false, post.getWishCount());
+    }
+
+    // 저장 시점마다 실제 찜 개수를 다시 조회해 판매글 찜 수와 동기화한다.
+    private void syncWishCount(Post post) {
+        long wishCount = wishRepository.countByPost_PostId(post.getPostId());
+        post.changeWishCount(Math.toIntExact(wishCount));
+    }
 }
+
+

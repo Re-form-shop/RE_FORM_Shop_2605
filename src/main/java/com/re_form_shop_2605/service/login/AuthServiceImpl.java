@@ -1,0 +1,289 @@
+package com.re_form_shop_2605.service.login;
+
+import com.re_form_shop_2605.dto.login.AuthSessionResponseDTO;
+import com.re_form_shop_2605.dto.login.AuthUserDTO;
+import com.re_form_shop_2605.dto.login.LoginRequestDTO;
+import com.re_form_shop_2605.dto.login.LoginResponseDTO;
+import com.re_form_shop_2605.dto.login.LogoutRequestDTO;
+import com.re_form_shop_2605.dto.login.LogoutSessionRequestDTO;
+import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
+import com.re_form_shop_2605.dto.login.PasswordResetRequestDTO;
+import com.re_form_shop_2605.dto.login.TokenRefreshRequestDTO;
+import com.re_form_shop_2605.dto.login.TokenRefreshResponseDTO;
+import com.re_form_shop_2605.dto.member.MemberRequestDTO;
+import com.re_form_shop_2605.dto.member.MemberResponseDTO;
+import com.re_form_shop_2605.entity.member.Member;
+import com.re_form_shop_2605.repository.member.MemberRepository;
+import com.re_form_shop_2605.security.AuthException;
+import com.re_form_shop_2605.security.JWT.CustomUserDetailsService;
+import com.re_form_shop_2605.security.JWT.JwtTokenProvider;
+import com.re_form_shop_2605.service.member.MemberService;
+import lombok.extern.log4j.Log4j2;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-11
+ * 설명:
+ */
+@Service
+@RequiredArgsConstructor
+@Transactional
+@Log4j2
+public class AuthServiceImpl implements AuthService {
+
+    private final AuthenticationManager authenticationManager;
+    private final MemberService memberService;
+    private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final CustomUserDetailsService customUserDetailsService;
+    private final AuthTokenService authTokenService;
+
+    @Override
+    @Transactional(readOnly = true)
+    public LoginResponseDTO login(LoginRequestDTO requestDTO) {
+        // Spring Security 인증을 통과한 사용자 정보로 JWT를 발급
+        log.info("[AuthServiceImpl] login start email={}", requestDTO.email());
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(requestDTO.email(), requestDTO.password())
+        );
+        MemberSecurityDTO principal = (MemberSecurityDTO) authentication.getPrincipal();
+        LoginResponseDTO responseDTO = authTokenService.issueTokens(principal);
+        log.info("[AuthServiceImpl] login end email={} memberId={}", requestDTO.email(), principal.getMemberId());
+        return responseDTO;
+    }
+
+    @Override
+    public MemberResponseDTO register(String email, String password, String nickname, boolean marketingAgreed) {
+        // 회원가입 직후 다시 사용자 정보를 로드해 JWT를 발급
+        log.info("[AuthServiceImpl] register start email={} nickname={}", email, nickname);
+        MemberResponseDTO joined = memberService.join(new MemberRequestDTO(email, nickname, password, marketingAgreed));
+        MemberSecurityDTO principal = (MemberSecurityDTO) customUserDetailsService.loadUserByUsername(email);
+        LoginResponseDTO loginResponseDTO = authTokenService.issueTokens(principal);
+        log.info("[AuthServiceImpl] register end email={} memberId={}", email, principal.getMemberId());
+        return new MemberResponseDTO(loginResponseDTO.accessToken(), loginResponseDTO.refreshToken(), joined.user());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AuthUserDTO readMe(MemberSecurityDTO principal) {
+        // access token으로 인증된 사용자의 최신 회원 정보를 응답 DTO로 변환한다.
+        return toAuthUserDTO(principal);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AuthSessionResponseDTO> readSessions(MemberSecurityDTO principal, String accessToken) {
+        // 현재 사용자에게 연결된 refresh 세션 목록을 Redis 기준으로 조회한다.
+        log.info("[AuthServiceImpl] readSessions start memberId={}", principal.getMemberId());
+        String currentSessionId = extractBearerToken(accessToken) != null
+                ? jwtTokenProvider.getSessionId(extractBearerToken(accessToken))
+                : null;
+
+        Set<Object> sessionIds = redisTemplate.opsForSet().members(buildSessionSetKey(principal.getMemberId()));
+        List<AuthSessionResponseDTO> sessions = new ArrayList<>();
+        if (sessionIds == null) {
+            return sessions;
+        }
+
+        for (Object sessionValue : sessionIds) {
+            String sessionId = String.valueOf(sessionValue);
+            Object savedToken = redisTemplate.opsForValue().get(buildRefreshTokenKey(principal.getMemberId(), sessionId));
+            if (savedToken == null) {
+                // 세션 집합에는 남아 있지만 실제 토큰이 없으면 정리하고 응답에서는 제외한다.
+                redisTemplate.opsForSet().remove(buildSessionSetKey(principal.getMemberId()), sessionId);
+                continue;
+            }
+
+            String refreshToken = savedToken.toString();
+            sessions.add(new AuthSessionResponseDTO(
+                    sessionId,
+                    jwtTokenProvider.getLoginType(refreshToken),
+                    jwtTokenProvider.getLoginProvider(refreshToken),
+                    jwtTokenProvider.getClaims(refreshToken).getIssuedAt().toInstant(),
+                    jwtTokenProvider.getClaims(refreshToken).getExpiration().toInstant(),
+                    sessionId.equals(currentSessionId)
+            ));
+        }
+
+        sessions.sort(Comparator.comparing(AuthSessionResponseDTO::issuedAt).reversed());
+        log.info("[AuthServiceImpl] readSessions end memberId={} count={}", principal.getMemberId(), sessions.size());
+        return sessions;
+    }
+
+    @Override
+    public void logout(MemberSecurityDTO principal, LogoutRequestDTO requestDTO) {
+        // 현재 사용자에게 저장된 refresh token만 삭제해 로그아웃을 보장
+        log.info("[AuthServiceImpl] logout start memberId={}", principal.getMemberId());
+        String sessionId = jwtTokenProvider.getSessionId(requestDTO.refreshToken());
+        Long tokenMemberId = jwtTokenProvider.getMemberId(requestDTO.refreshToken());
+
+        if (!principal.getMemberId().equals(tokenMemberId)) {
+            throw new AuthException("현재 로그인 사용자와 토큰 소유자가 일치하지 않습니다.");
+        }
+
+        String redisKey = buildRefreshTokenKey(principal.getMemberId(), sessionId);
+        Object savedToken = redisTemplate.opsForValue().get(redisKey);
+
+        if (savedToken == null || !requestDTO.refreshToken().equals(savedToken.toString())) {
+            throw new AuthException("유효한 리프레시 토큰이 아닙니다.");
+        }
+
+        removeSession(principal.getMemberId(), sessionId);
+        log.info("[AuthServiceImpl] logout end memberId={} sessionId={}", principal.getMemberId(), sessionId);
+    }
+
+    @Override
+    public void logoutSession(MemberSecurityDTO principal, LogoutSessionRequestDTO requestDTO) {
+        // 현재 사용자 소유의 특정 세션 하나만 종료한다.
+        log.info("[AuthServiceImpl] logoutSession start memberId={} sessionId={}",
+                principal.getMemberId(),
+                requestDTO.sessionId());
+        Object savedToken = redisTemplate.opsForValue().get(buildRefreshTokenKey(principal.getMemberId(), requestDTO.sessionId()));
+        if (savedToken == null) {
+            throw new AuthException("해당 세션이 존재하지 않습니다.");
+        }
+
+        removeSession(principal.getMemberId(), requestDTO.sessionId());
+        log.info("[AuthServiceImpl] logoutSession end memberId={} sessionId={}",
+                principal.getMemberId(),
+                requestDTO.sessionId());
+    }
+
+    @Override
+    public void logoutAll(MemberSecurityDTO principal) {
+        // 현재 사용자에게 연결된 모든 세션을 한 번에 종료한다.
+        log.info("[AuthServiceImpl] logoutAll start memberId={}", principal.getMemberId());
+        Set<Object> sessionIds = redisTemplate.opsForSet().members(buildSessionSetKey(principal.getMemberId()));
+        if (sessionIds == null) {
+            return;
+        }
+
+        for (Object sessionValue : sessionIds) {
+            removeSession(principal.getMemberId(), String.valueOf(sessionValue));
+        }
+        log.info("[AuthServiceImpl] logoutAll end memberId={} count={}", principal.getMemberId(), sessionIds.size());
+    }
+
+    @Override
+    public void resetPassword(PasswordResetRequestDTO requestDTO) {
+        // 이메일과 닉네임을 함께 확인한 뒤 새 비밀번호를 암호화해 갱신한다.
+        log.info("[AuthServiceImpl] resetPassword start email={}", requestDTO.email());
+        Member member = memberRepository.findByEmail(requestDTO.email())
+                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+
+        if (!member.getNickname().equals(requestDTO.nickname())) {
+            throw new IllegalArgumentException("이메일과 닉네임이 일치하지 않습니다.");
+        }
+
+        member.setPassword(passwordEncoder.encode(requestDTO.newPassword()));
+        clearAllSessions(member.getMemberId());
+        log.info("[AuthServiceImpl] resetPassword end email={} memberId={}", requestDTO.email(), member.getMemberId());
+    }
+
+    @Override
+    public TokenRefreshResponseDTO refresh(TokenRefreshRequestDTO requestDTO) {
+        String refreshToken = requestDTO.refreshToken();
+        log.info("[AuthServiceImpl] refresh start");
+
+        try {
+            // 형식상 유효하고 refresh 타입인지 먼저 확인
+            if (!jwtTokenProvider.validateToken(refreshToken) || !"refresh".equals(jwtTokenProvider.getTokenType(refreshToken))) {
+                throw new AuthException("유효한 리프레시 토큰이 아닙니다.");
+            }
+        } catch (Exception ex) {
+            throw new AuthException("유효한 리프레시 토큰이 아닙니다.");
+        }
+
+        Long memberId = jwtTokenProvider.getMemberId(refreshToken);
+        String sessionId = jwtTokenProvider.getSessionId(refreshToken);
+        Object savedToken = redisTemplate.opsForValue().get(buildRefreshTokenKey(memberId, sessionId));
+
+        // Redis에 저장한 최신 refresh token과 일치할 때만 access token을 재발급
+        if (savedToken == null || !refreshToken.equals(savedToken.toString())) {
+            throw new AuthException("유효한 리프레시 토큰이 아닙니다.");
+        }
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+        MemberSecurityDTO loadedPrincipal = (MemberSecurityDTO) customUserDetailsService.loadUserByUsername(member.getEmail());
+        MemberSecurityDTO principal = new MemberSecurityDTO(
+                loadedPrincipal.getMemberId(),
+                loadedPrincipal.getUsername(),
+                loadedPrincipal.getPassword(),
+                loadedPrincipal.getEmail(),
+                loadedPrincipal.getNickname(),
+                loadedPrincipal.getProfileImageUrl(),
+                !"local".equalsIgnoreCase(jwtTokenProvider.getLoginProvider(refreshToken)),
+                jwtTokenProvider.getLoginProvider(refreshToken),
+                loadedPrincipal.getAuthorities()
+        );
+        String newAccessToken = jwtTokenProvider.generateAccessToken(principal, sessionId);
+        log.info("[AuthServiceImpl] refresh end memberId={} sessionId={}", memberId, sessionId);
+
+        return new TokenRefreshResponseDTO(newAccessToken);
+    }
+
+    private AuthUserDTO toAuthUserDTO(MemberSecurityDTO principal) {
+        // principal의 식별값으로 DB를 다시 조회해 최신 프로필 정보를 내려준다.
+        Member member = memberRepository.findById(principal.getMemberId())
+                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+
+        return new AuthUserDTO(
+                member.getMemberId(),
+                member.getEmail(),
+                member.getNickname(),
+                member.getProfileImageUrl(),
+                member.getRole(),
+                member.getMannerScore()
+        );
+    }
+    private String buildRefreshTokenKey(Long memberId, String sessionId) {
+        // 사용자와 세션별로 refresh token을 구분해 멀티 디바이스 로그인도 수용한다.
+        return "auth:refresh:" + memberId + ":" + sessionId;
+    }
+
+    private String buildSessionSetKey(Long memberId) {
+        // 회원별 세션 ID 집합을 따로 유지해 전체 로그아웃과 세션 목록 조회를 빠르게 처리한다.
+        return "auth:sessions:" + memberId;
+    }
+
+    private void removeSession(Long memberId, String sessionId) {
+        // 세션별 refresh token 키와 세션 인덱스 집합을 함께 지워 서버 기준 로그아웃을 완결한다.
+        redisTemplate.delete(buildRefreshTokenKey(memberId, sessionId));
+        redisTemplate.opsForSet().remove(buildSessionSetKey(memberId), sessionId);
+    }
+
+    private void clearAllSessions(Long memberId) {
+        // 비밀번호 재설정 같은 보안 민감 이벤트에서는 모든 세션을 끊어 재로그인을 강제한다.
+        Set<Object> sessionIds = redisTemplate.opsForSet().members(buildSessionSetKey(memberId));
+        if (sessionIds == null) {
+            return;
+        }
+        for (Object sessionValue : sessionIds) {
+            removeSession(memberId, String.valueOf(sessionValue));
+        }
+    }
+
+    private String extractBearerToken(String authorizationHeader) {
+        // Authorization 헤더가 없거나 형식이 다르면 현재 세션 판별은 생략한다.
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return null;
+        }
+        return authorizationHeader.substring(7);
+    }
+}

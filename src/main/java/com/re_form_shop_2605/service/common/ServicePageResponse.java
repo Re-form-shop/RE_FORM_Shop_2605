@@ -4,7 +4,11 @@ import com.re_form_shop_2605.dto.common.PageResponse;
 
 import java.util.ArrayList;
 import java.util.List;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-10
+ * 설명: 페이징 처리 비지니스 로직
+ */
 public final class ServicePageResponse {
 
     private ServicePageResponse() {

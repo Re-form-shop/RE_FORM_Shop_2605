@@ -5,7 +5,11 @@ import com.re_form_shop_2605.entity.Enum.Role;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-08
+ * 설명:
+ */
 // 마이페이지 내 프로필 조회 응답 DTO
 public record ProfileResponseDTO(
         // 회원 번호

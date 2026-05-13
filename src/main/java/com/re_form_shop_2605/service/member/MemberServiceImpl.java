@@ -23,15 +23,18 @@ import com.re_form_shop_2605.service.common.ServicePageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
-//import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-10
+ * 설명: 회원 관련 비즈니스 로직을 처리하는 서비스 구현체
+ */
 @Service
 @Log4j2
 @RequiredArgsConstructor
@@ -43,8 +46,8 @@ public class MemberServiceImpl implements MemberService {
     private final mannerReviewRepository mannerReviewRepository;
     private final InterestSettingService interestSettingService;
     private final MemberImageService memberImageService;
-//    private final ModelMapper modelMapper;
-//    private final PasswordEncoder passwordEncoder;
+    private final ModelMapper modelMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     // 회원가입 요청을 검증하고 저장한 뒤 응답 DTO를 반환
@@ -66,8 +69,7 @@ public class MemberServiceImpl implements MemberService {
                 .warningCount(0)
                 .emailEvent(false)
                 .build();
-//        member.setPassword(passwordEncoder.encode(memberRequestDTO.password()));
-        member.setPassword(memberRequestDTO.password());
+        member.setPassword(passwordEncoder.encode(memberRequestDTO.password()));
         member.changeEmailEvent(memberRequestDTO.marketingAgreed());
 
         Member savedMember = memberRepository.save(member);
@@ -129,7 +131,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     // 내 프로필에서 수정 가능한 항목만 반영
-    public void modifyProfile(Long memberId, ProfileUpdateRequestDTO profileUpdateRequestDTO, MultipartFile profileImage) {
+    public void modifyProfile(Long memberId, ProfileUpdateRequestDTO profileUpdateRequestDTO) {
         Member member = getMember(memberId);
 
         String nickname = profileUpdateRequestDTO.nickname() != null
@@ -138,15 +140,17 @@ public class MemberServiceImpl implements MemberService {
         String bio = profileUpdateRequestDTO.bio() != null
                 ? profileUpdateRequestDTO.bio()
                 : member.getBio();
-        String profileImageUrl = member.getProfileImageUrl();
+        String profileImageUrl = profileUpdateRequestDTO.profileImageUrl() != null
+                ? profileUpdateRequestDTO.profileImageUrl()
+                : member.getProfileImageUrl();
 
         if (!member.getNickname().equals(nickname) && memberRepository.existsByNickname(nickname)) {
             throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
         }
 
-        if (profileImage != null && !profileImage.isEmpty()) {
+        if (profileUpdateRequestDTO.profileImageUrl() != null) {
             memberImageService.deleteProfileImageDirectory(memberId);
-            profileImageUrl = memberImageService.saveProfileImage(memberId, profileImage);
+            profileImageUrl = memberImageService.promoteTemporaryProfileImage(memberId, profileImageUrl);
         }
 
         member.changeProfile(

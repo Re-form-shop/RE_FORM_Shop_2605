@@ -1,7 +1,11 @@
 package com.re_form_shop_2605.dto.common;
 
 import java.util.List;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-08
+ * 설명:
+ */
 public record PageResponse<T>(
         List<T> content,       // 데이터 목록
         long totalElements,    // 전체 건수

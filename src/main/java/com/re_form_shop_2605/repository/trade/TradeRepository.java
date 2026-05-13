@@ -10,7 +10,11 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-08
+ * 설명: 거래 JPA 리포지토리 인터페이스
+ */
 @Repository
 public interface TradeRepository extends JpaRepository<Trade, Long> {
     /* 거래 상태 변경 */

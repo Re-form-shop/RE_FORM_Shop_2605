@@ -5,14 +5,17 @@ import com.re_form_shop_2605.dto.trade.PostCardDTO;
 import com.re_form_shop_2605.dto.trade.PostDetailDTO;
 import com.re_form_shop_2605.dto.trade.PostRequestDTO;
 import com.re_form_shop_2605.dto.trade.PostUpdateRequestDTO;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.util.List;
 
 // 판매글 관련 서비스 인터페이스
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-10
+ * 설명:
+ */
 public interface PostService {
-    // 판매글 이미지 함께 등록
-    Long addPost(Long sellerId, PostRequestDTO postRequestDTO, List<MultipartFile> images);
+    // 프론트가 전달한 이미지 URL 목록과 함께 판매글을 등록
+    Long addPost(Long sellerId, PostRequestDTO postRequestDTO, List<String> imageUrls);
 
     // 판매글 상세 정보 조회
     PostDetailDTO readPost(Long postId, Long viewerId);
@@ -20,10 +23,16 @@ public interface PostService {
     // 판매글 목록을 페이지 단위 조회
     PageResponse<PostCardDTO> readAllPosts(Long viewerId, int page, int size);
 
-    // 판매글 이미지 수정
+    // 프론트가 전달한 이미지 URL 목록 기준으로 판매글을 수정
     void modifyPost
-    (Long postId, Long sellerId, PostUpdateRequestDTO postUpdateRequestDTO, List<MultipartFile> images);
+    (Long postId, Long sellerId, PostUpdateRequestDTO postUpdateRequestDTO, List<String> imageUrls);
 
     // 판매글 삭제 상태로 변경
     void removePost(Long postId, Long sellerId);
+
+    // 판매글 찜 상태를 토글하고 최신 찜 상태와 개수를 반환
+    WishToggleResult toggleWish(Long postId, Long memberId);
+
+    record WishToggleResult(boolean isLiked, long likeCount) {
+    }
 }

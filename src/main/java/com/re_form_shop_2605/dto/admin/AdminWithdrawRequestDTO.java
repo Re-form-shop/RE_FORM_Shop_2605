@@ -2,7 +2,11 @@ package com.re_form_shop_2605.dto.admin;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-08
+ * 설명:
+ */
 // 관리자 출금 요청 처리 DTO
 public record AdminWithdrawRequestDTO(
         // 수행할 출금 처리 액션

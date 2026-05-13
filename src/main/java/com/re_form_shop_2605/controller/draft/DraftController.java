@@ -3,25 +3,33 @@ package com.re_form_shop_2605.controller.draft;
 import com.re_form_shop_2605.dto.common.ApiResponse;
 import com.re_form_shop_2605.dto.draft.PostDraftDTO;
 import com.re_form_shop_2605.dto.draft.ReplyDraftDTO;
+import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
 import com.re_form_shop_2605.service.draft.DraftService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-11
+ * 설명: 게시글 및 댓글 자동 저장 controller
+ */
 @Validated
 @RestController
 @RequestMapping("/api/drafts")
+@Tag(name = "임시저장 API", description = "게시글 및 댓글 임시 저장 API")
 public class DraftController {
 
     private final DraftService draftService;
@@ -38,10 +46,10 @@ public class DraftController {
     )
     @PatchMapping("/posts")
     public ResponseEntity<ApiResponse<Void>> savePostDraft(
-            @RequestHeader("X-Member-Id") Long memberId,
+            @AuthenticationPrincipal MemberSecurityDTO principal,
             @Valid @RequestBody PostDraftDTO requestDTO
     ) {
-        draftService.savePostDraft(memberId, requestDTO);
+        draftService.savePostDraft(principal.getMemberId(), requestDTO);
         return ResponseEntity.ok(ApiResponse.ok(null, "게시글 초안 저장 완료"));
     }
 
@@ -53,9 +61,9 @@ public class DraftController {
     )
     @GetMapping("/posts")
     public ResponseEntity<ApiResponse<PostDraftDTO>> readPostDraft(
-            @RequestHeader("X-Member-Id") Long memberId
+            @AuthenticationPrincipal MemberSecurityDTO principal
     ) {
-        return ResponseEntity.ok(ApiResponse.ok(draftService.getPostDraft(memberId), "게시글 초안 조회 완료"));
+        return ResponseEntity.ok(ApiResponse.ok(draftService.getPostDraft(principal.getMemberId()), "게시글 초안 조회 완료"));
     }
 
     // DELETE /api/drafts/posts
@@ -66,9 +74,9 @@ public class DraftController {
     )
     @DeleteMapping("/posts")
     public ResponseEntity<ApiResponse<Void>> removePostDraft(
-            @RequestHeader("X-Member-Id") Long memberId
+            @AuthenticationPrincipal MemberSecurityDTO principal
     ) {
-        draftService.removePostDraft(memberId);
+        draftService.removePostDraft(principal.getMemberId());
         return ResponseEntity.ok(ApiResponse.ok(null, "게시글 초안 삭제 완료"));
     }
 
@@ -80,10 +88,10 @@ public class DraftController {
     )
     @PatchMapping("/replies")
     public ResponseEntity<ApiResponse<Void>> saveReplyDraft(
-            @RequestHeader("X-Member-Id") Long memberId,
+            @AuthenticationPrincipal MemberSecurityDTO principal,
             @Valid @RequestBody ReplyDraftDTO requestDTO
     ) {
-        draftService.saveReplyDraft(memberId, requestDTO);
+        draftService.saveReplyDraft(principal.getMemberId(), requestDTO);
         return ResponseEntity.ok(ApiResponse.ok(null, "댓글 초안 저장 완료"));
     }
 
@@ -95,12 +103,12 @@ public class DraftController {
     )
     @GetMapping("/replies")
     public ResponseEntity<ApiResponse<ReplyDraftDTO>> readReplyDraft(
-            @RequestHeader("X-Member-Id") Long memberId,
+            @AuthenticationPrincipal MemberSecurityDTO principal,
             @RequestParam @NotBlank String targetType,
             @RequestParam @NotNull Long targetId
     ) {
         return ResponseEntity.ok(ApiResponse.ok(
-                draftService.getReplyDraft(memberId, targetType, targetId),
+                draftService.getReplyDraft(principal.getMemberId(), targetType, targetId),
                 "댓글 초안 조회 완료"
         ));
     }
@@ -113,11 +121,11 @@ public class DraftController {
     )
     @DeleteMapping("/replies")
     public ResponseEntity<ApiResponse<Void>> removeReplyDraft(
-            @RequestHeader("X-Member-Id") Long memberId,
+            @AuthenticationPrincipal MemberSecurityDTO principal,
             @RequestParam @NotBlank String targetType,
             @RequestParam @NotNull Long targetId
     ) {
-        draftService.removeReplyDraft(memberId, targetType, targetId);
+        draftService.removeReplyDraft(principal.getMemberId(), targetType, targetId);
         return ResponseEntity.ok(ApiResponse.ok(null, "댓글 초안 삭제 완료"));
     }
 }

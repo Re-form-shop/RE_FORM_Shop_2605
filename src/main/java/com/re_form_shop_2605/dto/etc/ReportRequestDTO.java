@@ -4,7 +4,11 @@ import com.re_form_shop_2605.entity.Enum.ReportReason;
 import com.re_form_shop_2605.entity.Enum.ReportTargetType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-08
+ * 설명:
+ */
 // 신고 등록 요청 DTO
 public record ReportRequestDTO(
         // 신고 대상 타입

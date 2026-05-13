@@ -1,5 +1,9 @@
 package com.re_form_shop_2605.dto.login;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-08
+ * 설명:
+ */
 // 로그인 성공 응답 DTO
 public record LoginResponseDTO(
         // JWT 액세스 토큰

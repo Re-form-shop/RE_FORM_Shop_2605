@@ -7,7 +7,11 @@ import com.re_form_shop_2605.entity.Enum.Role;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-08
+ * 설명:
+ */
 // 관리자 회원 상세 조회 DTO
 public record AdminMemberDetailDTO(
         // 회원 번호

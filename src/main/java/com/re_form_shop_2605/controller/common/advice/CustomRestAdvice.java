@@ -1,11 +1,12 @@
 package com.re_form_shop_2605.controller.common.advice;
 
 import com.re_form_shop_2605.dto.common.ApiResponse;
+import com.re_form_shop_2605.security.AuthException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,7 +16,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
-
+/**
+ * 작성자: 민기
+ * 작성일: 2026-05-10
+ * 설명: 유효성 검사 및 예외처리 관련 공통 로직을 담당하는 @RestControllerAdvice 클래스
+ */
 @Log4j2
 @RestControllerAdvice
 public class CustomRestAdvice {
@@ -50,7 +55,31 @@ public class CustomRestAdvice {
         return ResponseEntity.badRequest().body(ApiResponse.fail("유효성 검사에 실패했습니다.", errorsMap));
     }
 
-    // 서비스나 컨트롤러에서 발생한 잘못된 요청 예외를 400으로 반환
+    // 로그인/토큰/세션 같은 인증 도메인 예외는 보안 정책에 맞춰 403으로 통일한다.
+    @ExceptionHandler(AuthException.class)
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleAuthException(AuthException ex) {
+        log.warn(ex);
+
+        Map<String, String> errorsMap = new HashMap<>();
+        errorsMap.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.fail(ex.getMessage(), errorsMap));
+    }
+
+    // Spring Security 인증 실패 예외도 브라우저/Swagger에서 동일한 403 응답으로 보이게 맞춘다.
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleAuthenticationException(AuthenticationException ex) {
+        log.warn(ex);
+
+        Map<String, String> errorsMap = new HashMap<>();
+        errorsMap.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.fail("인증 처리에 실패했습니다.", errorsMap));
+    }
+
+    // 서비스나 컨트롤러에서 발생한 일반 잘못된 요청 예외를 400으로 반환
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleIllegalArgumentException(IllegalArgumentException ex) {
         log.error(ex);

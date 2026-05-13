@@ -1,5 +1,6 @@
 package com.re_form_shop_2605.controller.payment;
 
+import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
 import com.re_form_shop_2605.dto.payment.PointHistoryItemDTO;
 import com.re_form_shop_2605.dto.payment.PointWalletResponseDTO;
 import com.re_form_shop_2605.service.payment.PointService;
@@ -7,9 +8,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -32,9 +33,9 @@ public class PointController {
     /* 1. 포인트 지갑 조회 */
     @GetMapping("/wallet")
     public ResponseEntity<PointWalletResponseDTO> viewPointWallet(
-            @RequestParam("memberId") Long memberId
+            @AuthenticationPrincipal MemberSecurityDTO principal
     ) {
-        PointWalletResponseDTO pointWallet = pointService.getPointWallet(memberId);
+        PointWalletResponseDTO pointWallet = pointService.getPointWallet(principal.getMemberId());
 
         return ResponseEntity.ok(pointWallet);
     }
@@ -42,9 +43,9 @@ public class PointController {
     /* 2. 포인트 이력 조회 */
     @GetMapping("/history")
     public ResponseEntity<List<PointHistoryItemDTO>> viewPointHistory(
-            @RequestParam("memberId") Long memberId
+            @AuthenticationPrincipal MemberSecurityDTO principal
     ) {
-        List<PointHistoryItemDTO> pointHistory = pointService.getPointHistory(memberId);
+        List<PointHistoryItemDTO> pointHistory = pointService.getPointHistory(principal.getMemberId());
 
         return ResponseEntity.ok(pointHistory);
     }
