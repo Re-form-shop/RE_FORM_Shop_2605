@@ -128,7 +128,7 @@ public class CommunityController {
     }
 
     // DELETE /api/community/replies/{replyId}
-    @Operation(summary = "댓글 삭제", description = "본인이 작성한 댓글을 소프트 삭제합니다.")
+    @Operation(summary = "댓글 삭제", description = "본인이 작성한 댓글을 삭제합니다.")
     @DeleteMapping("/replies/{replyId}")
     public ResponseEntity<ApiResponse<Void>> removeReply(
             @PathVariable Long replyId,
