@@ -10,6 +10,7 @@ import com.re_form_shop_2605.repository.payment.PointHistoryRepository;
 import com.re_form_shop_2605.repository.payment.PointWalletRepository;
 import com.re_form_shop_2605.repository.trade.TradeRepository;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
@@ -52,8 +53,20 @@ public class SettlementJobConfig {
     @Bean
     public Step setStep() {
         return new StepBuilder("setStep", jobRepository)
-                .<Trade, SettlementResult>chunk(10, platformTransactionManager)
-                .reader(setUnsettledTradeReader())
+                .<Trade, SettlementResult>chunk(10)
+                .transactionManager(platformTransactionManager)
+                .reader(new ItemReader<>() {
+                    private List<Trade> trades;
+                    private int index = 0;
+
+                    @Override
+                    public Trade read() {
+                        if (trades == null) {
+                            trades = tradeRepository.findConfirmedUnsettledTrades(TradeStatus.CONFIRMED);
+                        }
+                        return index < trades.size() ? trades.get(index++) : null;
+                    }
+                })
                 .processor(setCommissionProcessor())
                 .writer(setProvidePointWriter())
                 .build();
@@ -63,7 +76,8 @@ public class SettlementJobConfig {
     @Bean
     public Step autoConfirmStep() {
         return new StepBuilder("autoConfirmStep", jobRepository)
-                .<Trade, Trade>chunk(10, platformTransactionManager)
+                .<Trade, Trade>chunk(10)
+                .transactionManager(platformTransactionManager)
                 .reader(autoConfirmReader())
                 .writer(autoConfirmWriter())
                 .build();
@@ -104,7 +118,7 @@ public class SettlementJobConfig {
             int point = trade.getTradePrice() - commission;
 
             // (5) PointWallet 반환 (Writer에서 포인트 지급할 거라)
-            wallet.earnPoint(point);
+            wallet.confirm(trade.getTradePrice(), point);
             return new SettlementResult(wallet, trade, point);
         };
     }
@@ -128,7 +142,8 @@ public class SettlementJobConfig {
                         .build());
 
                 // (3) Trade 상태 COMPLETE로 변경
-                result.trade().complete();
+                result.trade().changeStatus(TradeStatus.COMPLETED);
+                tradeRepository.save(result.trade());
             }
         };
     }
@@ -139,7 +154,8 @@ public class SettlementJobConfig {
         return chunk -> {
             for (Trade trade : chunk.getItems()) {
                 // (1) 상태 변경
-                trade.confirm();
+                trade.changeStatus(TradeStatus.CONFIRMED);
+                tradeRepository.save(trade);
             }
         };
     }

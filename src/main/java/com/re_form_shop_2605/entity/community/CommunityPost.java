@@ -20,11 +20,11 @@ public class CommunityPost extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "comm_id", nullable = false)
-    private Long commId;
+    private Long commId; // 커뮤니티 게시글 ID
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
-    private Member member; // 커뮤니티 게시글 ID
+    private Member member;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "sport_category", nullable = false)

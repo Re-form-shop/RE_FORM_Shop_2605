@@ -1,5 +1,6 @@
 package com.re_form_shop_2605.service.trade;
 
+import com.re_form_shop_2605.domain.trade.PostCardVO;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.trade.PostCardDTO;
 import com.re_form_shop_2605.dto.trade.PostDetailDTO;
@@ -30,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -51,6 +53,8 @@ class PostServiceImplTest {
     private MemberRepository memberRepository;
     @Autowired
     private PostRepository postRepository;
+    @Autowired
+    private PostVectorService postVectorService;
     @Autowired
     private postImageRepository postImageRepository;
     @Autowired
@@ -388,5 +392,43 @@ class PostServiceImplTest {
                 10000,
                 DeliveryType.DIRECT
         );
+    }
+
+    @Test
+    void testSearchPosts() {
+        String keyword = null;
+        Sport sport = Sport.BASEBALL;
+        int page = 0;
+        int size = 10;
+
+        PageResponse<PostCardDTO> response = postService.searchPosts(
+                keyword, sport, null, null, null, null,
+                "latest", page, size, null
+        );
+
+        log.info("조회된 게시글 수 : " + response.content().size());
+        log.info("전체 게시글 수 : " + response.totalElements());
+
+        assertThat(response.content()).isNotNull();
+
+        if (response.totalElements() > 0) {
+            assertThat(response.content().get(0).sport()).isEqualTo(Sport.BASEBALL);
+            assertThat(response.content().get(0).seller()).isNotNull();
+        }
+    }
+
+    @Test
+    void initPostVectors() {
+        List<Post> posts = postRepository.findAllByStatusNotIn(List.of(PostStatus.DELETED, PostStatus.HIDDEN));
+        log.info("전체 게시글 수: {}", posts.size());
+
+        for (Post post : posts) {
+            try {
+                postVectorService.savePostVector(post);
+            } catch (Exception e) {
+                log.error("벡터 저장 실패 : postId: {} | {}", post.getPostId(), e.getMessage());
+            }
+        }
+        log.info("벡터 저장 완료");
     }
 }

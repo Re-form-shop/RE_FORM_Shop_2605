@@ -6,14 +6,18 @@ import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
 import com.re_form_shop_2605.dto.trade.ListingCreateRequestDTO;
 import com.re_form_shop_2605.dto.trade.ListingUpdateRequestDTO;
 import com.re_form_shop_2605.dto.trade.PostCardDTO;
+import com.re_form_shop_2605.dto.trade.PostCreateFormDTO;
 import com.re_form_shop_2605.dto.trade.PostDetailDTO;
 import com.re_form_shop_2605.entity.Enum.DeliveryType;
+import com.re_form_shop_2605.entity.Enum.Grade;
 import com.re_form_shop_2605.entity.Enum.Sport;
+import com.re_form_shop_2605.service.trade.PostSearchService;
 import com.re_form_shop_2605.service.trade.PostImageService;
 import com.re_form_shop_2605.service.trade.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -30,40 +34,50 @@ import java.util.List;
  * 설명: 판매글 조회/작성/수정/삭제와 이미지 업로드, 찜 토글 API를 담당한다.
  */
 @RestController
+@Tag(name = "판매글 게시물 API", description = "")
 @RequestMapping("/api/listings")
-@Tag(name = "판매글 API", description = "판매글 작성, 조회, 수정, 삭제 관련 API")
+@RequiredArgsConstructor
 public class PostController {
-
     private final PostService postService;
-    private final PostImageService postImageService;
-
-    public PostController(PostService postService, PostImageService postImageService) {
-        this.postService = postService;
-        this.postImageService = postImageService;
-    }
-
-    // GET /api/listings
-    // 판매글 목록을 페이지 단위로 조회
+    private final PostSearchService postSearchService;
+    /**
+     * 작성자: 손민정
+     * 작성일: 2026-05-13
+     * 설명: 판매글 게시글 검색
+     *      - 필터/정렬 페이지네이션
+     *      - 키워드 의미 기반 유사 상품 검색 페이지네이션
+     */
     @Operation(
-            summary = "판매글 목록 조회",
-            description = "스포츠 종목, 키워드, 거래 방식, 페이지 정보를 기준으로 판매글 목록을 조회합니다."
+            summary = "판매글 검색 및 목록 조회",
+            description = "키워드 제외 searchPosts, 키워드 포함 search 사용해 유사 의미 검색 결과 반환 구현"
     )
     @GetMapping
-    /**
-     * 작성자: 다른 작업자
-     * 작성일: 2026-05-10 ~ 2026-05-11
-     * 설명: 판매글 목록을 페이지 단위로 조회한다.
-     */
     public ResponseEntity<ApiResponse<PageResponse<PostCardDTO>>> readListings(
             @AuthenticationPrincipal MemberSecurityDTO principal,
             @RequestParam(required = false) Sport sport,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) DeliveryType tradeType,
+            @RequestParam(required = false) Grade condition,    // 추가 (확인 후 주석 삭제)
+            @RequestParam(required = false) Integer minPrice,   // 추가 (확인 후 주석 삭제)
+            @RequestParam(required = false) Integer maxPrice,   // 추가 (확인 후 주석 삭제)
+            @RequestParam(defaultValue = "latest") String sort, // 추가 (확인 후 주석 삭제)
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Long viewerId = principal != null ? principal.getMemberId() : null;
-        return ResponseEntity.ok(ApiResponse.ok(postService.readAllPosts(viewerId, page, size), "판매글 목록 조회 완료"));
+//        return ResponseEntity.ok(ApiResponse.ok(postService.readAllPosts(memberId, page, size), "판매글 목록 조회 완료"));
+        PageResponse<PostCardDTO> response;
+
+        if (keyword != null && !keyword.isBlank()) {
+            // 1) 키워드가 있을 경우, AI 통한 유사 의미 검색 + 일반 검색
+            response = postSearchService.search(
+                    keyword, sport, condition, tradeType, minPrice, maxPrice, sort, page, size, memberId);
+        } else {
+            // 2) 키워드가 없을 경우, 필터/정렬 적용한 일반 검색
+            response = postService.searchPosts(
+                    null, sport, condition, tradeType, minPrice, maxPrice, sort, page, size, memberId);
+        }
+        return ResponseEntity.ok(ApiResponse.ok(response,
+                "판매글 목록 조회 완료"));
     }
 
     // GET /api/listings/{id}
@@ -73,11 +87,6 @@ public class PostController {
             description = "판매글 ID로 상세 정보와 작성자 기준의 부가 정보를 조회합니다."
     )
     @GetMapping("/{id}")
-    /**
-     * 작성자: 다른 작업자
-     * 작성일: 2026-05-10 ~ 2026-05-11
-     * 설명: 판매글 상세 정보를 조회한다.
-     */
     public ResponseEntity<ApiResponse<PostDetailDTO>> readListing(
             @PathVariable("id") Long postId,
             @AuthenticationPrincipal MemberSecurityDTO principal

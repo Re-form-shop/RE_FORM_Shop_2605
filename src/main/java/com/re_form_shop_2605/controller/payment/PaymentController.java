@@ -1,3 +1,10 @@
+/**
+ * 작성자: 손민정
+ * 작성일: 2026-05-09
+ * 설명: 결제 API (토스페이먼츠 연동)
+ *       - 결제 초기화, 승인, 조회, 취소
+ */
+
 package com.re_form_shop_2605.controller.payment;
 
 import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
@@ -11,6 +18,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @Log4j2
@@ -34,10 +42,15 @@ public class PaymentController {
     @PostMapping("/init")
     public ResponseEntity<PaymentInitResponseDTO> initPayment(
             @AuthenticationPrincipal MemberSecurityDTO principal,
-            @RequestBody PaymentInitRequestDTO request
+            @RequestBody PaymentInitRequestDTO request,
+//            @AuthenticationPrincipal UserDetails userDetails
     ) {
-        // JWT로 인증된 현재 사용자를 실제 구매자로 사용한다.
-        PaymentInitResponseDTO response = paymentService.createPayment(principal.getMemberId(), request);
+        log.info("==== initPayment 결제 초기화 주문 생성 ... ====");
+
+        // todo!!!!! Security 완성되면 buyerId 꺼내기
+        // 구매자가 결제하기 클릭 → Security 세션에서 로그인 유저 정보 꺼냄 → memberId 추출 → Service에 buyerId로 넘겨줌
+        Long buyerId = 1L; // todo!!!!!!!!!!!!!!!
+        PaymentInitResponseDTO response = paymentService.createPayment(buyerId, request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -49,6 +62,8 @@ public class PaymentController {
     public ResponseEntity<PaymentResponseDTO> confirmPayment(
             @RequestBody PaymentConfirmRequestDTO request
     ) {
+        log.info("==== confirmPayment 토스 결제 승인 ... ====");
+
         PaymentResponseDTO response = paymentService.confirmPayment(request);
 
         return ResponseEntity.ok(response);
@@ -58,6 +73,8 @@ public class PaymentController {
     @Operation(summary = "결제 정보 조회", description = "tradeId로 결제 정보 조회")
     @GetMapping("/{tradeId}")
     public ResponseEntity<PaymentResponseDTO> viewPayment(@PathVariable Long tradeId) {
+        log.info("==== viewPayment 결제 정보 조회 ... ====");
+
         // todo!!!! 결제 정보 조회 구현
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build(); // todo!!!!!!
     }
@@ -70,6 +87,8 @@ public class PaymentController {
             @PathVariable String paymentKey,
             @RequestBody PaymentCancelRequestDTO request
     ) {
+        log.info("==== cancelPayment 결제 취소 ... ====");
+
         PaymentResponseDTO response = paymentService.cancelPayment(paymentKey, request);
         return ResponseEntity.ok(response);
     }

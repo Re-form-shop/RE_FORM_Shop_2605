@@ -35,4 +35,144 @@
             UPDATE post SET status = #{status} WHERE post_id = #{postId}
     </update>
 
+
+    <!-- ****** 검색 ****** -->
+    <!-- 조건에 따른 게시물 조회 -->
+    <!-- 1. 검색/필터/정렬 조회 -->
+    <select id="findPostsByCondition" resultType="com.re_form_shop_2605.domain.trade.PostCardVO">
+        SELECT p.post_id, p.title, p.team, p.sport, p.price, p.grade AS `condition`, p.size,
+               p.delivery_type AS tradeType, p.status, p.view_count, p.wish_count AS likeCount, p.created_at,
+               m.member_id AS sellerMemberId, m.nickname AS sellerNickname,
+               m.profile_image_url AS sellerProfileImageUrl,
+               m.manner_score AS sellerMannerScore,
+               (SELECT pi.image_url FROM post_image pi WHERE pi.post_id = p.post_id
+                                    ORDER BY pi.sort_order ASC LIMIT 1) AS thumbnailUrl,
+        CASE WHEN w.member_id IS NOT NULL THEN true ELSE false END AS isLiked
+        FROM post p
+            JOIN member m ON p.seller_id = m.member_id
+            LEFT JOIN wish w ON w.post_id = p.post_id AND w.member_id = #{memberId}
+            WHERE p.status = 'ON_SALE'
+        <if test="keyword != null and keyword != ''">
+            AND (p.title LIKE CONCAT('%', #{keyword}, '%')
+            OR p.uniform_name LIKE CONCAT('%', #{keyword}, '%')
+            OR p.team LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="sport != null">
+            AND p.sport = #{sport}
+        </if>
+        <if test="condition != null">
+            AND p.grade = #{condition}
+        </if>
+        <if test="tradeType != null">
+            AND p.delivery_type = #{tradeType}
+        </if>
+        <if test="minPrice != null">
+            AND p.price &gt;= #{minPrice}
+        </if>
+        <if test="maxPrice != null">
+            AND p.price &lt;= #{maxPrice}
+        </if>
+        <choose>
+            <when test="sort == 'price_asc'">
+                ORDER BY p.price ASC
+            </when>
+            <when test="sort == 'price_desc'">
+                ORDER BY p.price DESC
+            </when>
+            <when test="sort == 'popular'">
+                ORDER BY (p.wish_count + p.view_count) DESC
+            </when>
+            <otherwise>
+                ORDER BY p.created_at DESC
+            </otherwise>
+        </choose>
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- 2. 전체 건수 (페이지네이션용) -->
+    <select id="countPostByCondition" resultType="int">
+        SELECT COUNT(*) FROM post p WHERE p.status = 'ON_SALE'
+        <if test="keyword != null and keyword != ''">
+            AND (p.title LIKE CONCAT('%', #{keyword}, '%')
+            OR p.uniform_name LIKE CONCAT('%', #{keyword}, '%')
+            OR p.team LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="sport != null">
+            AND p.sport = #{sport}
+        </if>
+        <if test="condition != null">
+            AND p.grade = #{condition}
+        </if>
+        <if test="tradeType != null">
+            AND p.delivery_type = #{tradeType}
+        </if>
+        <if test="minPrice != null">
+            AND p.price &gt;= #{minPrice}
+        </if>
+        <if test="maxPrice != null">
+            AND p.price &lt;= #{maxPrice}
+        </if>
+    </select>
+
+    <!-- 3. postId 통해 게시글 상세 정보 목록 가져오기 -->
+    <select id="findPostsByIds" resultType="com.re_form_shop_2605.domain.trade.PostCardVO">
+        SELECT p.post_id, p.title, p.team, p.sport, p.price, p.grade AS `condition`, p.size,
+               p.delivery_type AS tradeType, p.status, p.view_count, p.wish_count AS likeCount, p.created_at,
+               m.member_id AS sellerMemberId, m.nickname AS sellerNickname,
+               m.profile_image_url AS sellerProfileImageUrl,
+               m.manner_score AS sellerMannerScore,
+               (SELECT pi.image_url FROM post_image pi WHERE pi.post_id = p.post_id
+                                    ORDER BY pi.sort_order ASC LIMIT 1) AS thumbnailUrl,
+               CASE WHEN w.member_id IS NOT NULL THEN true ELSE false END AS isLiked
+        FROM post p JOIN member m ON p.seller_id = m.member_id
+                    LEFT JOIN wish w ON w.post_id = p.post_id AND w.member_id = #{memberId}
+        WHERE p.status = 'ON_SALE'
+               AND p.post_id IN
+               <foreach collection="postIds" item="id" open="(" separator="," close=")">
+               #{id}
+               </foreach>
+                <if test="sport != null">
+                    AND p.sport = #{sport}
+                </if>
+                <if test="condition != null">
+                    AND p.grade = #{condition}
+                </if>
+                <if test="tradeType != null">
+                    AND p.delivery_type = #{tradeType}
+                </if>
+                <if test="minPrice != null">
+                    AND p.price &gt;= #{minPrice}
+                </if>
+                <if test="maxPrice != null">
+                    AND p.price &lt;= #{maxPrice}
+                </if>
+        ORDER BY FIELD(p.post_id,
+        <foreach collection="postIds" item="id" separator=",">
+            #{id}
+        </foreach>
+        )
+    </select>
+
+    <!-- 4. postId 목록 총 개수 반환 -->
+    <select id="countPostsByIds" resultType="int">
+        SELECT COUNT(*) FROM post p WHERE p.status = 'ON_SALE' AND post_id IN
+        <foreach collection="postIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        <if test="sport != null">
+            AND p.sport = #{sport}
+        </if>
+        <if test="condition != null">
+            AND p.grade = #{condition}
+        </if>
+        <if test="tradeType != null">
+            AND p.delivery_type = #{tradeType}
+        </if>
+        <if test="minPrice != null">
+            AND p.price &gt;= #{minPrice}
+        </if>
+        <if test="maxPrice != null">
+            AND p.price &lt;= #{maxPrice}
+        </if>
+    </select>
 </mapper>

@@ -32,11 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-/**
- * 작성자: 민기
- * 작성일: 2026-05-10
- * 설명:
- */
+
 @SpringBootTest(properties = "spring.servlet.multipart.location=build/test-uploads")
 @Log4j2
 //@Transactional

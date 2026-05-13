@@ -48,18 +48,30 @@ public class PointWallet {
     }
 
     // 3) 구매 확정 시
-    public void confirm(int amount) {
-        this.pending -= amount;
-        this.balance += amount;
-        this.withdrawable += amount;
+    public void confirm(int tradePrice, int point) {
+        this.pending -= tradePrice;
+        this.balance += point;
+        this.withdrawable += point;
     }
 
-    // 4) 출금 시
+    // 4) 출금 요청 시
     public void withdraw(int amount) {
         if (this.withdrawable < amount) {
             throw new IllegalStateException("출금 가능 포인트가 부족합니다.");
         }
         this.withdrawable -= amount;
+        this.pending += amount;
+    }
+
+    // 5) 출금 승인 시
+    public void approvedWithdraw(int amount) {
         this.balance -= amount;
+        this.pending -= amount;
+    }
+
+    // 6) 출금 반려/취소 시
+    public void rejectedWithdraw(int amount) {
+        this.withdrawable += amount;
+        this.pending -= amount;
     }
 }

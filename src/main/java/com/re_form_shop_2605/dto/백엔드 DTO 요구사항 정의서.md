@@ -545,6 +545,8 @@ public record DeliveryInfoRequestDTO(
 | POST | `/api/payments/init` | 결제 초기화 (주문 생성) |
 | POST | `/api/payments/confirm` | 토스 결제 승인 |
 | GET | `/api/payments/{tradeId}` | 결제 정보 조회 |
+| POST   | `/api/payments/{paymentKey}/cancel | 결제 취소(취소, 환불)
+         | Body: { "cancelReason": "취소 사유", "cancelType": "CANCEL" or "REFUND" }
 
 ### 7-1. PaymentInitRequestDTO
 
@@ -592,6 +594,14 @@ public record PaymentResponseDTO(
     LocalDateTime paidAt
 ) {}
 ```
+### 7-5. PaymentCancelRequestDTO
+
+```java
+public record PaymentCancelRequestDTO(
+        String cancelReason, // 취소 사유
+        String cancelType	 // CANCEL or REFUND
+) {}
+```
 
 ---
 
@@ -605,6 +615,8 @@ public record PaymentResponseDTO(
 | GET | `/api/points/history` | 포인트 내역 목록 |
 | POST | `/api/points/withdraw` | 출금 요청 |
 | GET | `/api/points/withdraw` | 내 출금 요청 목록 |
+| DELETE | `/api/points/cancel/{withdrawId}` | 출금 요청 취소
+
 
 ### 8-1. PointWalletResponseDTO
 

@@ -1,15 +1,20 @@
 package com.re_form_shop_2605.service.trade;
 
+import com.re_form_shop_2605.domain.trade.PostCardVO;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.trade.PostCardDTO;
 import com.re_form_shop_2605.dto.trade.PostDetailDTO;
 import com.re_form_shop_2605.dto.trade.PostRequestDTO;
 import com.re_form_shop_2605.dto.trade.PostUpdateRequestDTO;
 import com.re_form_shop_2605.dto.trade.SellerBriefDTO;
+import com.re_form_shop_2605.entity.Enum.DeliveryType;
+import com.re_form_shop_2605.entity.Enum.Grade;
 import com.re_form_shop_2605.entity.Enum.PostStatus;
+import com.re_form_shop_2605.entity.Enum.Sport;
 import com.re_form_shop_2605.entity.member.Member;
 import com.re_form_shop_2605.entity.trade.Post;
 import com.re_form_shop_2605.entity.trade.PostImage;
+import com.re_form_shop_2605.mapper.trade.PostMapper;
 import com.re_form_shop_2605.entity.trade.Wish;
 import com.re_form_shop_2605.repository.member.MemberRepository;
 import com.re_form_shop_2605.repository.trade.PostRepository;
@@ -22,6 +27,7 @@ import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -47,6 +53,8 @@ public class PostServiceImpl implements PostService {
     private final WishRepository wishRepository;
     private final NotificationService notificationService;
     private final ModelMapper modelMapper;
+    private final PostMapper postMapper;
+    private final PostVectorService postVectorService;
 
     @Override
     // 판매글을 저장하고, 프론트가 이미 업로드한 이미지 URL 목록을 함께 저장한다.
@@ -284,6 +292,66 @@ public class PostServiceImpl implements PostService {
                 member.getMannerScore()
         );
     }
+
+    /**
+     * 작성자: 손민정
+     * 작성일: 2026-05-12
+     * 설명: 거래 매물 게시글 검색 - 필터/정렬 페이지네이션
+     *      - 주의! 사용자가 필터 및 정렬 기준을 설정했을 때 나오는 검색 결과
+     *      - 검색어가 포함된 경우는 PostSearchService.search() 이용할 것 (AI 기능 추가)
+     */
+    /* 필터, 정렬 기준에 따른 검색 결과 조회 */
+    @Override
+    public PageResponse<PostCardDTO> searchPosts(String keyword, Sport sport, Grade condition, DeliveryType tradeType,
+                                                  Integer minPrice, Integer maxPrice, String sort,
+                                                  int page, int size, Long memberId) {
+        // 1) 게시글 목록 조회
+        int offset = page * size;
+        List<PostCardVO> posts = postMapper.findPostsByCondition(
+                keyword, sport, condition, tradeType, minPrice, maxPrice, sort, offset, size, memberId);
+
+        // 2) 전체 건수 조회
+        int totalElements = postMapper.countPostByCondition(
+                keyword, sport, condition, tradeType, minPrice, maxPrice);
+
+        // 3) DTO 변환
+        List<PostCardDTO> content = new ArrayList<>();
+        for (PostCardVO post : posts) {
+            SellerBriefDTO seller = new SellerBriefDTO(
+                    post.getSellerMemberId(),
+                    post.getSellerNickname(),
+                    post.getSellerProfileImageUrl(),
+                    post.getSellerMannerScore()
+            );
+            PostCardDTO dto = new PostCardDTO(
+                    post.getPostId(),
+                    post.getTitle(),
+                    post.getTeam(),
+                    post.getSport(),
+                    post.getPrice(),
+                    post.getCondition(),
+                    post.getSize(),
+                    post.getTradeType(),
+                    post.getStatus(),
+                    post.getViewCount(),
+                    post.getLikeCount(),
+                    post.isLiked(),
+                    post.getThumbnailUrl(),
+                    null,
+                    post.getCreatedAt(),
+                    seller
+            );
+            content.add(dto);
+        }
+
+        // 4) PageResponse
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        boolean first = page == 0;             // 첫 페이지
+        boolean last = page >= totalPages - 1; // 마지막 페이지
+
+        return new PageResponse<>(content, totalElements, totalPages, size, page, first, last);
+    }
+}
 
     // 판매중인 상태에서만 판매글 수정 가능
     private void validateEditable(Post post) {

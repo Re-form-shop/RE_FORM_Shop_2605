@@ -1,3 +1,11 @@
+/**
+ * 작성자: 손민정
+ * 작성일: 2026-05-09
+ * 설명: 결제 비즈니스 로직
+ *      - 토스페이먼츠 API 연동
+ *      - 결제 초기화/승인/취소/환불 처리
+ */
+
 package com.re_form_shop_2605.service.payment;
 
 import com.re_form_shop_2605.dto.payment.*;
@@ -6,9 +14,11 @@ import com.re_form_shop_2605.entity.Enum.PostStatus;
 import com.re_form_shop_2605.entity.Enum.TradeDeliveryType;
 import com.re_form_shop_2605.entity.Enum.TradeStatus;
 import com.re_form_shop_2605.entity.payment.Payment;
+import com.re_form_shop_2605.entity.payment.PointWallet;
 import com.re_form_shop_2605.entity.payment.TossLog;
 import com.re_form_shop_2605.entity.trade.Trade;
 import com.re_form_shop_2605.repository.payment.PaymentRepository;
+import com.re_form_shop_2605.repository.payment.PointWalletRepository;
 import com.re_form_shop_2605.repository.payment.TossLogRepository;
 import com.re_form_shop_2605.repository.trade.TradeRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +37,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final TradeRepository tradeRepository;
     private final TossLogRepository tossLogRepository;
+    private final PointWalletRepository pointWalletRepository;
     private final WebClient tossWebClient;
 
     // 1. 결제 요청
@@ -117,7 +128,12 @@ public class PaymentService {
         Trade trade = payment.getTrade();
         trade.markPaid();
 
-        // 6) toss_log 저장
+        // 6) 판매자 pending 업데이트
+        PointWallet sellerWallet = pointWalletRepository.findByMemberMemberId(trade.getSeller().getMemberId())
+                .orElseThrow(() -> new IllegalArgumentException("confirmPayment : 판매자 포인트 지갑이 존재하지 않습니다."));
+        sellerWallet.earnPoint(trade.getTradePrice());
+
+        // 7) toss_log 저장
         tossLogRepository.save(
                 TossLog.builder()
                         .payment(payment)
