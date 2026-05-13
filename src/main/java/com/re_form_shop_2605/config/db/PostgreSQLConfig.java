@@ -33,9 +33,8 @@ public class PostgreSQLConfig {
     }
 
     @Bean
-    public PgVectorStore vectorStore(
-            EmbeddingModel embeddingModel,
-            @Qualifier("postgresDataSource") DataSource dataSource) {
+    public PgVectorStore vectorStore(EmbeddingModel embeddingModel,
+                                     @Qualifier("postgresDataSource") DataSource dataSource) {
         return PgVectorStore.builder(new JdbcTemplate(dataSource), embeddingModel)
                 .initializeSchema(true)
                 .build();
