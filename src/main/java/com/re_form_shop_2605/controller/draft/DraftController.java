@@ -22,9 +22,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-11
  * 설명: 게시글 및 댓글 자동 저장 controller
+ * ─────────────────────────────────────────────────────
  */
 @Validated
 @RestController

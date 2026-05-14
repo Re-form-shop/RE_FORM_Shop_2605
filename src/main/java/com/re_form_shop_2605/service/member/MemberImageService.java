@@ -2,9 +2,11 @@ package com.re_form_shop_2605.service.member;
 
 import org.springframework.web.multipart.MultipartFile;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-10
- * 설명:
+ * 설명: 회원 프로필 이미지 저장 서비스 인터페이스
+ * ─────────────────────────────────────────────────────
  */
 // 회원 프로필 이미지 저장 서비스 인터페이스
 public interface MemberImageService {

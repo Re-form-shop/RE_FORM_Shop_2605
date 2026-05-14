@@ -12,9 +12,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-11
- * 설명:
+ * 설명: 이메일 기반으로 회원 인증 정보를 조회하는 UserDetailsService
+ * ─────────────────────────────────────────────────────
  */
 @Log4j2
 @Service

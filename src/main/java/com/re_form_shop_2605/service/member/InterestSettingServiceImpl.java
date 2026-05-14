@@ -17,9 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-10
  * 설명: 회원 관심 설정 서비스 구현체
+ * ─────────────────────────────────────────────────────
  */
 @Service
 @Log4j2

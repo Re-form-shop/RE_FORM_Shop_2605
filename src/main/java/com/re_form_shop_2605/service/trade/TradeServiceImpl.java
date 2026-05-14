@@ -6,7 +6,7 @@ import com.re_form_shop_2605.dto.delivery.DeliveryTrackingTraceRequestDTO;
 import com.re_form_shop_2605.dto.delivery.DeliveryTrackingTraceResponseDTO;
 import com.re_form_shop_2605.dto.etc.TradeNotificationTemplateDTO;
 import com.re_form_shop_2605.dto.trade.DeliveryRequestDTO;
-import com.re_form_shop_2605.dto.trade.MemberBriefDTO;
+import com.re_form_shop_2605.dto.chat.MemberBriefDTO;
 import com.re_form_shop_2605.dto.chat.PostBriefDTO;
 import com.re_form_shop_2605.dto.trade.ReviewRequestDTO;
 import com.re_form_shop_2605.dto.trade.ReviewResponseDTO;
@@ -42,9 +42,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-10
  * 설명: 거래 관련 서비스 구현체
+ * ─────────────────────────────────────────────────────
  */
 // 거래 생성, 상태 변경, 리뷰 작성 같은 거래 흐름을 담당한다.
 @Service

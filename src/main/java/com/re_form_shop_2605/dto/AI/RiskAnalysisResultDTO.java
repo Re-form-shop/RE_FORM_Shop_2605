@@ -2,7 +2,7 @@ package com.re_form_shop_2605.dto.AI;
 
 import com.re_form_shop_2605.entity.Enum.RiskLevel;
 import com.re_form_shop_2605.entity.Enum.TargetType;
-import com.re_form_shop_2605.entity.etc.RiskAnalysisResult;
+import com.re_form_shop_2605.entity.AI.RiskAnalysisResult;
 
 import java.time.LocalDateTime;
 

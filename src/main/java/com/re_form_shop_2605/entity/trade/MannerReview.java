@@ -17,9 +17,11 @@ import lombok.*;
         @UniqueConstraint(name = "uk_manner_review_trade_buyer", columnNames = {"trade_id", "buyer_id"})
 })
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-07
  * 설명: 매너 리뷰 JPA 엔티티
+ * ─────────────────────────────────────────────────────
  */
 public class MannerReview extends BaseEntity {
     @Id

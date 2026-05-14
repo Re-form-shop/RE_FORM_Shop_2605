@@ -10,11 +10,12 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-11
- * 설명:
+ * 설명: 판매글 작성 요청 DTO
+ * ─────────────────────────────────────────────────────
  */
-// 프론트엔드 API 명세에 맞춘 판매글 작성 요청 DTO
 public record ListingCreateRequestDTO(
         @NotBlank
         @Size(max = 200)

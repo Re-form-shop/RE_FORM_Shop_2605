@@ -11,9 +11,11 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-08
  * 설명: 거래 JPA 리포지토리 인터페이스
+ * ─────────────────────────────────────────────────────
  */
 @Repository
 public interface TradeRepository extends JpaRepository<Trade, Long> {
@@ -38,7 +40,13 @@ public interface TradeRepository extends JpaRepository<Trade, Long> {
     @Query("SELECT t FROM Trade t WHERE t.status = :status " +
             "AND t.receivedAt <= :dueDate")
 
-    // 민기 작업 부분
+    /**
+     * ─────────────────────────────────────────────────────
+     * 작성자: 김민기
+     * 작성일: 2026-05-08
+     * 설명: 거래 JPA 리포지토리 인터페이스
+     * ─────────────────────────────────────────────────────
+     */
     List<Trade> findAutoConfirmTargets(@Param("status") TradeStatus status,
                                        @Param("dueDate")LocalDateTime dueDate);
     boolean existsByPost_PostId(Long postId);

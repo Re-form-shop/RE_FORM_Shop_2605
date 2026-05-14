@@ -8,11 +8,12 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-08
- * 설명:
+ * 설명: 관리자 회원 상세 조회 DTO
+ * ─────────────────────────────────────────────────────
  */
-// 관리자 회원 상세 조회 DTO
 public record AdminMemberDetailDTO(
         // 회원 번호
         Long memberId,

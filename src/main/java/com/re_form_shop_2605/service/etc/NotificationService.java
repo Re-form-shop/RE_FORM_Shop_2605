@@ -4,11 +4,12 @@ import com.re_form_shop_2605.dto.etc.TradeNotificationTemplateDTO;
 import com.re_form_shop_2605.dto.etc.NotificationResponseDTO;
 import com.re_form_shop_2605.entity.member.Member;
 
-// 알림 서비스 인터페이스
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-10
  * 설명: 알림 기능을 제공하는 서비스 인터페이스
+ * ─────────────────────────────────────────────────────
  */
 public interface NotificationService {
     // 알림 목록을 조회

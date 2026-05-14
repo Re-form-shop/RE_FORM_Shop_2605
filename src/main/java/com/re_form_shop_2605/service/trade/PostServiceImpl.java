@@ -33,9 +33,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-10
  * 설명: 판매글 관련 서비스 구현체
+ * ─────────────────────────────────────────────────────
  */
 @Service
 @Log4j2
@@ -322,10 +324,13 @@ public class PostServiceImpl implements PostService {
     public PageResponse<PostCardDTO> searchPosts(String keyword, Sport sport, Grade condition, DeliveryType tradeType,
                                                   Integer minPrice, Integer maxPrice, String sort,
                                                   int page, int size, Long memberId) {
+        int safePage = Math.max(page, 1);
+        int safeSize = size <= 0 ? 10 : size;
+
         // 1) 게시글 목록 조회
-        int offset = page * size;
+        int offset = (safePage - 1) * safeSize;
         List<PostCardVO> posts = postMapper.findPostsByCondition(
-                keyword, sport, condition, tradeType, minPrice, maxPrice, sort, offset, size, memberId);
+                keyword, sport, condition, tradeType, minPrice, maxPrice, sort, offset, safeSize, memberId);
 
         // 2) 전체 건수 조회
         int totalElements = postMapper.countPostByCondition(
@@ -362,11 +367,11 @@ public class PostServiceImpl implements PostService {
         }
 
         // 4) PageResponse
-        int totalPages = (int) Math.ceil((double) totalElements / size);
-        boolean first = page == 0;             // 첫 페이지
-        boolean last = page >= totalPages - 1; // 마지막 페이지
+        int totalPages = totalElements == 0 ? 0 : (int) Math.ceil((double) totalElements / safeSize);
+        boolean first = safePage == 1;             // 첫 페이지
+        boolean last = totalPages == 0 || safePage >= totalPages; // 마지막 페이지
 
-        return new PageResponse<>(content, totalElements, totalPages, size, page, first, last);
+        return new PageResponse<>(content, totalElements, totalPages, safeSize, safePage, first, last);
     }
 
     // 판매중인 상태에서만 판매글 수정 가능
@@ -430,5 +435,3 @@ public class PostServiceImpl implements PostService {
         post.changeWishCount(Math.toIntExact(wishCount));
     }
 }
-
-

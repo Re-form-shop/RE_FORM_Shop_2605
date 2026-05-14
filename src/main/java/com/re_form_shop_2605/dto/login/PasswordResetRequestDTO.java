@@ -4,11 +4,12 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-11
- * 설명:
+ * 설명: 비밀번호 찾기 후 새 비밀번호로 재설정하는 요청 DTO
+ * ─────────────────────────────────────────────────────
  */
-// 비밀번호 찾기 후 새 비밀번호로 재설정하는 요청 DTO
 public record PasswordResetRequestDTO(
         @NotBlank
         @Email

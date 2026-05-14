@@ -16,9 +16,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-12
  * 설명: 택배사 목록 조회와 송장번호 배송 조회 API를 제공하는 컨트롤러
+ * ─────────────────────────────────────────────────────
  */
 @RestController
 @RequestMapping("/api/delivery/tracking")

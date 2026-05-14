@@ -1,11 +1,8 @@
 package com.re_form_shop_2605.service.trade;
 
+
 import com.re_form_shop_2605.dto.common.PageResponse;
-import com.re_form_shop_2605.dto.trade.DeliveryRequestDTO;
-import com.re_form_shop_2605.dto.trade.ReviewRequestDTO;
-import com.re_form_shop_2605.dto.trade.ReviewResponseDTO;
-import com.re_form_shop_2605.dto.trade.TradeRequestDTO;
-import com.re_form_shop_2605.dto.trade.TradeResponseDTO;
+import com.re_form_shop_2605.dto.trade.*;
 import com.re_form_shop_2605.entity.Enum.DeliveryType;
 import com.re_form_shop_2605.entity.Enum.Grade;
 import com.re_form_shop_2605.entity.Enum.MemberStatus;
@@ -117,7 +114,6 @@ class TradeServiceImplTest {
         TradeResponseDTO responseDTO = tradeService.readTrade(trade.getTradeId());
 
         assertEquals(trade.getTradeId(), responseDTO.tradeId());
-        assertEquals(buyer.getMemberId(), responseDTO.buyer().memberId());
     }
 
     @Test

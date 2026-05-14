@@ -6,11 +6,12 @@ import com.re_form_shop_2605.entity.Enum.ReportTargetType;
 
 import java.time.LocalDateTime;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-08
- * 설명:
+ * 설명: 신고 조회 응답 DTO
+ * ─────────────────────────────────────────────────────
  */
-// 신고 조회 응답 DTO
 public record ReportResponseDTO(
         // 신고 번호
         Long reportId,

@@ -17,9 +17,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-10
  * 설명: 판매글 이미지 저장 서비스 구현체
+ * ─────────────────────────────────────────────────────
  */
 @Service
 public class PostImageServiceImpl implements PostImageService {

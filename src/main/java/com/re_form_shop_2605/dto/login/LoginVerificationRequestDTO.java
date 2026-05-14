@@ -4,9 +4,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 /**
+ * ─────────────────────────────────────────────────────
  * 작성자: 김민기
  * 작성일: 2026-05-13
  * 설명: 이메일 2차 인증 코드 검증 요청 DTO
+ * ─────────────────────────────────────────────────────
  */
 public record LoginVerificationRequestDTO(
         @NotBlank

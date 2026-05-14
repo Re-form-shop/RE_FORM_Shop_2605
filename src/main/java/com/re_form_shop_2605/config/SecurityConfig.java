@@ -25,9 +25,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-11
  * 설명: 스프링 시큐리티 설정
+ * ─────────────────────────────────────────────────────
  */
 @Log4j2
 @Configuration
@@ -52,21 +54,22 @@ public class SecurityConfig {
     @Value("${app.auth.oauth-success-redirect-uri}")
     private String oauthSuccessRedirectUri;
 
+    // 정적 리소스 보안 제외 설정
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        // 정적 파일은 시큐리티 필터 자체를 타지 않게 제외해 불필요한 인증 비용을 줄인다.
         log.info("--- [SecurityConfig] webSecurityCustomizer: 정적 리소스 보안 제외 설정 ---");
         return web -> web.ignoring()
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations())
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**", "/webjars/**");
     }
-
+    // JWT 토큰 생성/검정
     @Bean
     public JwtTokenProvider jwtTokenProvider() {
-        // JWT 구현체가 흩어진 @Value에 직접 의존하지 않도록 SecurityConfig에서 한 번에 조립한다.
+        // JWT 구현체가 흩어진 @Value에 직접 의존하지 않도록 SecurityConfig에서 한 번에 조립
         return new JwtTokenProvider(jwtSecret, accessTokenExpirationSeconds, refreshTokenExpirationSeconds);
     }
 
+    // JWT accessToken 검증 필터
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter(
             AuthTokenService authTokenService
@@ -75,18 +78,21 @@ public class SecurityConfig {
         return new JwtAuthenticationFilter(jwtTokenProvider(), customUserDetailsService, authTokenService);
     }
 
+    // 인증 실패시 응답을 브라우저 기본 HTML 대신 JSON 403으로 고정
     @Bean
     public RestAuthenticationEntryPoint restAuthenticationEntryPoint() {
         // 인증되지 않은 요청을 JSON 403 응답으로 바꿔 줄 진입점 핸들러를 등록한다.
         return new RestAuthenticationEntryPoint();
     }
 
+    // 권한 부족시 응답을 브라우저 기본 HTML 대신 JSON 403으로 고정
     @Bean
     public RestAccessDeniedHandler restAccessDeniedHandler() {
         // 인증은 되었지만 권한이 부족한 요청을 JSON 403 응답으로 바꿔 줄 핸들러를 등록한다.
         return new RestAccessDeniedHandler();
     }
 
+    // 소셜 로그인 성공시 JWT 발급 후 프론트 콜백으로 리다이렉트 핸들러
     @Bean
     public CustomSocialLoginSuccessHandler customSocialLoginSuccessHandler(
             AuthTokenService authTokenService
@@ -95,6 +101,7 @@ public class SecurityConfig {
         return new CustomSocialLoginSuccessHandler(authTokenService, oauthSuccessRedirectUri);
     }
 
+    // 스프링 시큐리티 필터 설정
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
@@ -159,6 +166,7 @@ public class SecurityConfig {
         return http.build();
     }
 
+    // 이메일 회원 가입 시 사용할 인증 provider
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         // 이메일/비밀번호 로그인 시 사용할 인증 provider를 구성한다.
@@ -168,6 +176,7 @@ public class SecurityConfig {
         return provider;
     }
 
+    // AuthenticationManager 사용
     @Bean
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration authenticationConfiguration

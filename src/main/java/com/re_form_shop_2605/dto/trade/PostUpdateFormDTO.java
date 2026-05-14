@@ -11,11 +11,12 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-08
- * 설명:
+ * 설명: Swagger multipart/form-data 업로드용 판매글 수정 폼 DTO
+ * ─────────────────────────────────────────────────────
  */
-// Swagger multipart/form-data 업로드용 판매글 수정 폼 DTO
 public class PostUpdateFormDTO {
 
     // 수정할 제목

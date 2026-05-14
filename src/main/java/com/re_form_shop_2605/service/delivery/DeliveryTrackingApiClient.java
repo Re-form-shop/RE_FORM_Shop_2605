@@ -11,9 +11,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-12
  * 설명: deliveryapi.co.kr 택배 조회 API를 호출하는 외부 연동 클라이언트
+ * ─────────────────────────────────────────────────────
  */
 @Component
 public class DeliveryTrackingApiClient {

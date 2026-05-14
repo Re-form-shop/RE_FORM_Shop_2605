@@ -5,9 +5,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-08
  * 설명: 회원 JPA 리포지토리 인터페이스
+ * ─────────────────────────────────────────────────────
  */
 public interface MemberRepository extends JpaRepository<Member, Long> {
     Optional<Member> findByEmail(String email);

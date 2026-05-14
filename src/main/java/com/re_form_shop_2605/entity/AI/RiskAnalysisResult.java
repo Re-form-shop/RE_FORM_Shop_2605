@@ -1,4 +1,4 @@
-package com.re_form_shop_2605.entity.etc;
+package com.re_form_shop_2605.entity.AI;
 
 import com.re_form_shop_2605.entity.BaseEntity;
 import com.re_form_shop_2605.entity.Enum.RiskLevel;
@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
  * ─────────────────────────────────────────────────────

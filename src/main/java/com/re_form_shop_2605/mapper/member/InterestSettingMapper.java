@@ -4,9 +4,11 @@ import com.re_form_shop_2605.domain.member.InterestSettingVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-08
  * 설명: 관심 종목 관련 매퍼 인터페이스
+ * ─────────────────────────────────────────────────────
  */
 @Mapper
 public interface InterestSettingMapper {

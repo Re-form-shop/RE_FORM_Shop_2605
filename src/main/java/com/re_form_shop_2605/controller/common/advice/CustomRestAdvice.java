@@ -17,9 +17,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-10
  * 설명: 유효성 검사 및 예외처리 관련 공통 로직을 담당하는 @RestControllerAdvice 클래스
+ * ─────────────────────────────────────────────────────
  */
 @Log4j2
 @RestControllerAdvice

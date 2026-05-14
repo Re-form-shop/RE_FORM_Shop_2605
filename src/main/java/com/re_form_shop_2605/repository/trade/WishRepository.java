@@ -7,9 +7,11 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-08
  * 설명: 찜 등록 JPA 리포지토리 인터페이스
+ * ─────────────────────────────────────────────────────
  */
 public interface WishRepository extends JpaRepository<Wish, Long> {
     boolean existsByMember_MemberIdAndPost_PostId(Long memberId, Long postId);
@@ -20,5 +22,3 @@ public interface WishRepository extends JpaRepository<Wish, Long> {
 
     List<Wish> findAllByPost_PostId(Long postId);
 }
-
-

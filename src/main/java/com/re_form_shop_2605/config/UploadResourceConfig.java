@@ -8,9 +8,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-10
  * 설명: 파일 업로드 설정
+ * ─────────────────────────────────────────────────────
  */
 @Configuration
 public class UploadResourceConfig implements WebMvcConfigurer {

@@ -10,9 +10,11 @@ import com.re_form_shop_2605.dto.trade.TradeResponseDTO;
 import com.re_form_shop_2605.dto.trade.TradeShippingRequestDTO;
 import com.re_form_shop_2605.entity.Enum.TradeStatus;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-10
- * 설명:
+ * 설명: 거래 도메인 서비스 인터페이스
+ * ─────────────────────────────────────────────────────
  */
 // 거래 관련 서비스 인터페이스
 public interface TradeService {

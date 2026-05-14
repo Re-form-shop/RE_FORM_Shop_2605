@@ -6,9 +6,11 @@ import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-08
  * 설명: ModelMapper 설정 클래스
+ * ─────────────────────────────────────────────────────
  */
 @Configuration
 public class ModelMapperConfig {

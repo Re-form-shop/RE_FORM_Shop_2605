@@ -31,11 +31,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-10
- * 설명:
+ * 설명: 거래 생성과 상태 변경, 리뷰 작성 API
+ * ─────────────────────────────────────────────────────
  */
-// 거래 생성과 상태 변경, 리뷰 작성 API
 @Validated
 @RestController
 @RequestMapping("/api/trades")
@@ -44,11 +45,6 @@ public class TradeController {
 
     private final TradeService tradeService;
 
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-10
-     * 설명: 거래 API에서 사용할 서비스를 주입받는다.
-     */
     public TradeController(TradeService tradeService) {
         this.tradeService = tradeService;
     }
@@ -60,11 +56,6 @@ public class TradeController {
             description = "판매글 정보를 바탕으로 구매자와 판매자 간의 새 거래를 생성합니다."
     )
     @PostMapping
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-10
-     * 설명: 현재 로그인한 구매자 기준으로 새 거래를 생성한다.
-     */
     public ResponseEntity<ApiResponse<CreateTradeResponse>> addTrade(
             @AuthenticationPrincipal MemberSecurityDTO principal,
             @Valid @RequestBody TradeRequestDTO requestDTO
@@ -82,11 +73,6 @@ public class TradeController {
             description = "거래 ID로 거래 상태, 배송지, 참여자 정보를 포함한 상세 정보를 조회합니다."
     )
     @GetMapping("/{id}")
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-10
-     * 설명: 거래 상세 정보를 조회한다.
-     */
     public ResponseEntity<ApiResponse<TradeResponseDTO>> readTrade(
             @PathVariable("id") Long tradeId,
             @AuthenticationPrincipal MemberSecurityDTO principal
@@ -104,11 +90,6 @@ public class TradeController {
             description = "판매자가 거래 ID에 해당하는 구매 요청을 수락하고 거래를 진행 상태로 전환합니다."
     )
     @PatchMapping("/{id}/accept")
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-12
-     * 설명: 판매자가 거래 요청을 수락한다.
-     */
     public ResponseEntity<ApiResponse<TradeStatusOnlyResponse>> acceptTrade(
             @PathVariable("id") Long tradeId,
             @AuthenticationPrincipal MemberSecurityDTO principal
@@ -124,11 +105,6 @@ public class TradeController {
             description = "거래 ID에 해당하는 거래 상태를 구매 확정 상태로 변경합니다."
     )
     @PatchMapping("/{id}/confirm")
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-12
-     * 설명: 구매자가 거래를 구매 확정 상태로 변경한다.
-     */
     public ResponseEntity<ApiResponse<TradeStatusOnlyResponse>> confirmTrade(
             @PathVariable("id") Long tradeId,
             @AuthenticationPrincipal MemberSecurityDTO principal
@@ -144,11 +120,6 @@ public class TradeController {
             description = "택배 거래는 구매자가 배송지를, 직거래는 판매자가 만남 주소를 수정합니다."
     )
     @PatchMapping("/{id}/delivery")
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-12
-     * 설명: 거래 수령 방식에 맞는 주소 정보를 수정한다.
-     */
     public ResponseEntity<ApiResponse<TradeStatusOnlyResponse>> modifyDelivery(
             @PathVariable("id") Long tradeId,
             @AuthenticationPrincipal MemberSecurityDTO principal,
@@ -159,6 +130,8 @@ public class TradeController {
         return ResponseEntity.ok(ApiResponse.ok(new TradeStatusOnlyResponse(trade.status()), "배송지 수정 완료"));
     }
 
+    // PATCH /api/trades/{id}/shipping
+    // 판매자 택배사와 송장번호를 입력
     @Operation(
             summary = "배송 정보 입력",
             description = "판매자가 택배사와 송장번호를 입력해 배송 추적을 시작합니다."
@@ -174,6 +147,8 @@ public class TradeController {
         return ResponseEntity.ok(ApiResponse.ok(new TradeStatusOnlyResponse(trade.status()), "배송 정보 입력 완료"));
     }
 
+    // GET /api/trades/{id}/tracking
+    // 판매자 구매자 모두 송장 번호로 배송 추적 조회
     @Operation(
             summary = "거래 배송 조회",
             description = "거래 참여자가 등록된 송장번호로 배송 상태를 조회합니다."
@@ -196,11 +171,6 @@ public class TradeController {
             description = "거래 완료 후 상대방에 대한 매너 점수와 후기를 등록합니다."
     )
     @PostMapping("/{id}/reviews")
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-10
-     * 설명: 거래에 대한 매너 리뷰를 등록한다.
-     */
     public ResponseEntity<ApiResponse<IdResponse>> addReview(
             @PathVariable("id") Long tradeId,
             @AuthenticationPrincipal MemberSecurityDTO principal,
@@ -222,16 +192,11 @@ public class TradeController {
             description = "현재 회원의 구매/판매 거래 목록을 역할과 상태 조건에 따라 페이지 단위로 조회합니다."
     )
     @GetMapping("/my")
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-12
-     * 설명: 로그인 회원의 거래 목록을 역할과 상태 기준으로 조회한다.
-     */
     public ResponseEntity<ApiResponse<PageResponse<TradeResponseDTO>>> readMyTrades(
             @AuthenticationPrincipal MemberSecurityDTO principal,
             @RequestParam(defaultValue = "buyer") String role,
             @RequestParam(required = false) TradeStatus status,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         PageResponse<TradeResponseDTO> trades = switch (role.toLowerCase()) {
@@ -243,15 +208,12 @@ public class TradeController {
         return ResponseEntity.ok(ApiResponse.ok(trades, "내 거래 목록 조회 완료"));
     }
 
-    // 거래 생성 응답에서 사용하는 DTO
     public record CreateTradeResponse(Long tradeId, TradeStatus status) {
     }
 
-    // 상태 변경 응답에서 사용하는 DTO
     public record TradeStatusOnlyResponse(TradeStatus status) {
     }
 
-    // 리뷰 생성 응답에서 사용하는 DTO
     public record IdResponse(Long reviewId) {
     }
 

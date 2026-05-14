@@ -9,11 +9,12 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-08
- * 설명:
+ * 설명: 판매글 등록 요청 DTO
+ * ─────────────────────────────────────────────────────
  */
-// 판매글 등록 요청 DTO
 public record PostRequestDTO(
         // 제목
         @NotBlank

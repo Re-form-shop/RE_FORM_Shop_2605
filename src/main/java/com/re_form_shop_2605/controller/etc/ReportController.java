@@ -15,16 +15,16 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-10
- * 설명:
+ * 설명: 신고 등록과 내 신고 내역 조회 API
+ * ─────────────────────────────────────────────────────
  */
-// 신고 등록과 내 신고 내역 조회 API
 @RestController
 @RequestMapping("/api/reports")
 @Tag(name = "신고 API", description = "신고 등록과 내 신고 내역 조회 관련 API")
@@ -61,14 +61,14 @@ public class ReportController {
     @GetMapping("/my")
     public ResponseEntity<ApiResponse<PageResponse<ReportResponseDTO>>> readMyReports(
             @AuthenticationPrincipal MemberSecurityDTO principal,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         PageResponse<ReportResponseDTO> reports = reportService.readReports(principal.getMemberId(), page, size);
         return ResponseEntity.ok(ApiResponse.ok(reports, "내 신고 목록 조회 완료"));
     }
 
-    // 신고 등록 응답에서 사용하는 식별자 DTO
+    // 신고 등록 응답
     public record IdResponse(Long reportId) {
     }
 }

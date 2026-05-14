@@ -10,9 +10,11 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 
 import java.io.IOException;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-11
- * 설명:
+ * 설명: 접근 거부 상황을 403 응답으로 처리하는 핸들러
+ * ─────────────────────────────────────────────────────
  */
 @Log4j2
 public class Custom403Handler implements AccessDeniedHandler {

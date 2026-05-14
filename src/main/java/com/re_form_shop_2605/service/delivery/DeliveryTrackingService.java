@@ -5,9 +5,11 @@ import com.re_form_shop_2605.dto.delivery.DeliveryTrackingTraceRequestDTO;
 import com.re_form_shop_2605.dto.delivery.DeliveryTrackingTraceResponseDTO;
 
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-12
  * 설명: 택배 조회 API 기능을 제공하는 서비스 인터페이스
+ * ─────────────────────────────────────────────────────
  */
 public interface DeliveryTrackingService {
 

@@ -7,11 +7,12 @@ import com.re_form_shop_2605.entity.Enum.Sport;
 
 import java.time.LocalDateTime;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-08
- * 설명:
+ * 설명: 판매글 목록 카드 응답 DTO
+ * ─────────────────────────────────────────────────────
  */
-// 판매글 목록 카드 응답 DTO
 public record PostCardDTO(
         // 게시글 번호
         Long postId,

@@ -15,9 +15,11 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-10
  * 설명: 회원 이미지 저장 및 관리 서비스 구현체
+ * ─────────────────────────────────────────────────────
  */
 @Service
 public class MemberImageServiceImpl implements MemberImageService {

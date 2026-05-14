@@ -16,9 +16,11 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-07
  * 설명: 알림 JPA 엔티티
+ * ─────────────────────────────────────────────────────
  */
 public class Notification extends BaseEntity {
     @Id

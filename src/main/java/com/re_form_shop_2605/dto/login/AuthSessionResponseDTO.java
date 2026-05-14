@@ -2,11 +2,12 @@ package com.re_form_shop_2605.dto.login;
 
 import java.time.Instant;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-08
- * 설명:
+ * 설명: 현재 로그인한 사용자의 개별 세션 정보를 반환하는 응답 DTO
+ * ─────────────────────────────────────────────────────
  */
-// 현재 로그인한 사용자의 개별 세션 정보를 반환하는 응답 DTO
 public record AuthSessionResponseDTO(
         // refresh/access token claim에 공통으로 담기는 세션 식별자
         String sessionId,

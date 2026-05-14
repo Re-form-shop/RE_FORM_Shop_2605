@@ -15,9 +15,11 @@ import lombok.*;
         @UniqueConstraint(name = "uk_wish_member_post", columnNames = {"member_id", "post_id"})
 })
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-07
  * 설명: 찜 정보 JPA 엔티티
+ * ─────────────────────────────────────────────────────
  */
 public class Wish extends BaseEntity {
 

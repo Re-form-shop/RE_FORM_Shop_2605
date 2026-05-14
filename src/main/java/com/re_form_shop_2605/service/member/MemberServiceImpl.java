@@ -8,7 +8,7 @@ import com.re_form_shop_2605.dto.member.MemberResponseDTO;
 import com.re_form_shop_2605.dto.member.NicknameResponseDTO;
 import com.re_form_shop_2605.dto.member.ProfileResponseDTO;
 import com.re_form_shop_2605.dto.member.ProfileUpdateRequestDTO;
-import com.re_form_shop_2605.dto.trade.MemberBriefDTO;
+import com.re_form_shop_2605.dto.chat.MemberBriefDTO;
 import com.re_form_shop_2605.dto.trade.ReviewResponseDTO;
 import com.re_form_shop_2605.entity.Enum.MemberStatus;
 import com.re_form_shop_2605.entity.Enum.Role;
@@ -31,9 +31,11 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-10
  * 설명: 회원 관련 비즈니스 로직을 처리하는 서비스 구현체
+ * ─────────────────────────────────────────────────────
  */
 @Service
 @Log4j2

@@ -5,11 +5,12 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-08
- * 설명:
+ * 설명: 매너 평가 작성 요청 DTO
+ * ─────────────────────────────────────────────────────
  */
-// 매너 평가 작성 요청 DTO
 public record ReviewRequestDTO(
         // 대상 거래 번호
         @NotNull

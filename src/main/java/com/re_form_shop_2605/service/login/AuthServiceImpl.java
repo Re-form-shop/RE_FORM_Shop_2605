@@ -42,9 +42,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-11
- * 설명:
+ * 설명: 회원 인증 및 인가 서비스 구현체
+ * ─────────────────────────────────────────────────────
  */
 @Service
 @RequiredArgsConstructor
@@ -370,6 +372,7 @@ public class AuthServiceImpl implements AuthService {
                 인증코드: %s
 
                 이 코드는 5분 동안만 유효합니다.
+                
                 본인이 요청하지 않았다면 비밀번호를 변경하고 고객센터에 문의해 주세요.
                 """.formatted(code));
         javaMailSender.send(message);

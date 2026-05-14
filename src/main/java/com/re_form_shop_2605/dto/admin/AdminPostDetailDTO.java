@@ -9,9 +9,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-12
  * 설명: 관리자 게시글 상세 조회에 사용하는 응답 DTO
+ * ─────────────────────────────────────────────────────
  */
 public record AdminPostDetailDTO(
         Long postId,

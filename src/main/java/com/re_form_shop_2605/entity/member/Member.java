@@ -23,9 +23,11 @@ import java.util.List;
 @Entity
 @Table(name = "member")
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-07
  * 설명: 회원 JPA 엔티티
+ * ─────────────────────────────────────────────────────
  */
 public class Member extends BaseEntity {
     @Id
@@ -108,4 +110,3 @@ public class Member extends BaseEntity {
         this.mannerScore = mannerScore;
     }
 }
-

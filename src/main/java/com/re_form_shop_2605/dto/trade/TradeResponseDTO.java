@@ -1,12 +1,18 @@
 package com.re_form_shop_2605.dto.trade;
 
+import com.re_form_shop_2605.dto.chat.MemberBriefDTO;
 import com.re_form_shop_2605.dto.chat.PostBriefDTO;
 import com.re_form_shop_2605.entity.Enum.TradeDeliveryType;
 import com.re_form_shop_2605.entity.Enum.TradeStatus;
 
 import java.time.LocalDateTime;
-
-// 거래 상세 응답 DTO
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
+ * 작성일: 2026-05-08
+ * 설명: 거래 상세 응답 DTO
+ * ─────────────────────────────────────────────────────
+ */
 public record TradeResponseDTO(
         // 거래 번호
         Long tradeId,

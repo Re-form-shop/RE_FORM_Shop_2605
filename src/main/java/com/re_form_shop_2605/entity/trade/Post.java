@@ -19,9 +19,11 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-07
  * 설명: 게시글 JPA 엔티티
+ * ─────────────────────────────────────────────────────
  */
 public class Post extends BaseEntity {
     @Id
@@ -129,20 +131,10 @@ public class Post extends BaseEntity {
         this.status = PostStatus.DELETED;
     }
 
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-12
-     * 설명: 판매글 상태를 외부 정책에 맞게 변경한다.
-     */
     public void changeStatus(PostStatus status) {
         this.status = status;
     }
 
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-12
-     * 설명: 찜 수를 1 증가시킨다.
-     */
     public void increaseWishCount() {
         if (this.wishCount == null) {
             this.wishCount = 0;
@@ -150,11 +142,6 @@ public class Post extends BaseEntity {
         this.wishCount++;
     }
 
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-12
-     * 설명: 찜 수를 1 감소시키되 0 미만으로 내려가지 않게 한다.
-     */
     public void decreaseWishCount() {
         if (this.wishCount == null || this.wishCount <= 0) {
             this.wishCount = 0;
@@ -163,11 +150,6 @@ public class Post extends BaseEntity {
         this.wishCount--;
     }
 
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-12
-     * 설명: 외부에서 계산한 실제 찜 수로 값을 재동기화한다.
-     */
     public void changeWishCount(int wishCount) {
         this.wishCount = Math.max(wishCount, 0);
     }
@@ -182,5 +164,3 @@ public class Post extends BaseEntity {
         this.riskLevel = riskLevel;
     }
 }
-
-

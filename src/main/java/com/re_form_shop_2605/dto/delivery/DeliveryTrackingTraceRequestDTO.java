@@ -8,9 +8,11 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-12
  * 설명: 송장 조회 API 요청 본문을 담는 DTO
+ * ─────────────────────────────────────────────────────
  */
 public record DeliveryTrackingTraceRequestDTO(
         @NotEmpty

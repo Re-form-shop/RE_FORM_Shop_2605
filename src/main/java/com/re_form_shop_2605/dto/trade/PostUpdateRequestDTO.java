@@ -4,8 +4,13 @@ import com.re_form_shop_2605.entity.Enum.DeliveryType;
 import com.re_form_shop_2605.entity.Enum.Grade;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-
-// 판매글 수정 요청 DTO
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
+ * 작성일: 2026-05-08
+ * 설명: 판매글 수정 요청 DTO
+ * ─────────────────────────────────────────────────────
+ */
 public record PostUpdateRequestDTO(
         // 수정할 제목
         @Size(max = 200)

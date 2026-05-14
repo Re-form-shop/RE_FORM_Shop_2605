@@ -8,6 +8,7 @@ import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
 import com.re_form_shop_2605.entity.Enum.ReportStatus;
 import com.re_form_shop_2605.service.etc.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -20,12 +21,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-// 관리자 신고 검토/처리 API
+
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-12
  * 설명: 관리자 권한으로 신고 목록을 조회하고 처리 상태를 변경하는 API를 제공
+ * ─────────────────────────────────────────────────────
  */
+// 관리자 신고 검토/처리 API
 @RestController
 @RequestMapping("/api/admin/reports")
 @Tag(name = "관리자 신고 API", description = "관리자의 신고 목록 조회와 처리 관련 API")
@@ -42,15 +46,14 @@ public class AdminReportController {
             description = "관리자가 신고 목록을 상태별로 조회합니다."
     )
     @GetMapping
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-12
-     * 설명: 관리자 신고 목록을 상태별로 조회한다.
-     */
+    // 관리자 신고 목록을 상태별로 조회한다.
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "관리자 신고 목록 조회 성공")
+    })
     public ResponseEntity<ApiResponse<PageResponse<ReportResponseDTO>>> readReports(
             @AuthenticationPrincipal MemberSecurityDTO principal,
             @RequestParam(required = false) ReportStatus status,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         validateAdmin(principal);
@@ -65,11 +68,10 @@ public class AdminReportController {
             description = "관리자가 신고 상태를 NORMAL, WARNING, DELETED 중 하나로 처리합니다."
     )
     @PatchMapping("/{id}")
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-12
-     * 설명: 관리자가 신고를 처리하고 변경된 상태를 반환한다.
-     */
+    // 관리자가 신고를 처리하고 변경된 상태를 반환한다.
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "관리자 신고 처리 성공")
+    })
     public ResponseEntity<ApiResponse<ReportResponseDTO>> processReport(
             @AuthenticationPrincipal MemberSecurityDTO principal,
             @PathVariable("id") Long reportId,
@@ -82,11 +84,7 @@ public class AdminReportController {
         ));
     }
 
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-12
-     * 설명: 현재 로그인 사용자가 관리자 권한을 가졌는지 확인한다.
-     */
+    // 현재 로그인 사용자가 관리자 권한을 가졌는지 확인한다.
     private void validateAdmin(MemberSecurityDTO principal) {
         boolean isAdmin = principal.getAuthorities().stream()
                 .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
@@ -96,4 +94,3 @@ public class AdminReportController {
         }
     }
 }
-

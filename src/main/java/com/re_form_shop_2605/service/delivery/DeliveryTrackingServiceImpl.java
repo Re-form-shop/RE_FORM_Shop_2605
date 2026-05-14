@@ -8,9 +8,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-12
  * 설명: 택배 조회 API 요청을 중계하는 서비스 구현체
+ * ─────────────────────────────────────────────────────
  */
 @Service
 @RequiredArgsConstructor

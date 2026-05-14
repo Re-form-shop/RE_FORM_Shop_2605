@@ -3,9 +3,11 @@ package com.re_form_shop_2605.domain.member;
 import com.re_form_shop_2605.entity.Enum.Provider;
 import lombok.*;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-08
  * 설명: 소셜 회원 mybatis 전용 VO
+ * ─────────────────────────────────────────────────────
  */
 @Getter
 @Builder

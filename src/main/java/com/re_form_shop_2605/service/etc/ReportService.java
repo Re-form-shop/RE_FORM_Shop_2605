@@ -5,11 +5,12 @@ import com.re_form_shop_2605.dto.etc.ReportRequestDTO;
 import com.re_form_shop_2605.dto.etc.ReportResponseDTO;
 import com.re_form_shop_2605.entity.Enum.ReportStatus;
 
-// 신고 서비스 인터페이스
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-10
  * 설명: 신고 기능을 제공하는 서비스 인터페이스
+ * ─────────────────────────────────────────────────────
  */
 public interface ReportService {
     // 신고를 등록

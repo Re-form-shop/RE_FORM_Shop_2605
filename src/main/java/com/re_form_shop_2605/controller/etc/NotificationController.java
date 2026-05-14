@@ -13,16 +13,16 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-10
- * 설명:
+ * 설명: 사용자 알림 조회와 읽음 처리를 담당하는 API
+ * ─────────────────────────────────────────────────────
  */
-// 사용자 알림 조회와 읽음 처리를 담당하는 API
 @RestController
 @RequestMapping("/api/notifications")
 @Tag(name = "알림 API", description = "사용자 알림 조회와 읽음 처리를 위한 API")
@@ -43,7 +43,7 @@ public class NotificationController {
     @GetMapping
     public ResponseEntity<ApiResponse<NotificationPageResponse>> readNotifications(
             @AuthenticationPrincipal MemberSecurityDTO principal,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         NotificationResponseDTO responseDTO = notificationService.readNotifications(principal.getMemberId(), page, size);
@@ -89,15 +89,15 @@ public class NotificationController {
         return ResponseEntity.ok(ApiResponse.ok(new UpdatedCountResponse(updatedCount), "전체 알림 읽음 처리 완료"));
     }
 
-    // 알림 목록 응답에서 사용하는 래퍼 DTO
+    // 페이징 처리 응답
     public record NotificationPageResponse(PageResponse<NotificationDTO> content, int unreadCount) {
     }
 
-    // 단건 읽음 처리 응답 DTO
+    // 읽음 처리 응답
     public record ReadNotificationResponse(Long id, boolean isRead) {
     }
 
-    // 전체 읽음 처리 결과 DTO
+    // 업데이트 된 응답
     public record UpdatedCountResponse(int updatedCount) {
     }
 }

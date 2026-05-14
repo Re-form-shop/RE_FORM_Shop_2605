@@ -7,11 +7,12 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-08
- * 설명:
+ * 설명: 회원가입 직후 관심 정보 저장/수정 요청 DTO
+ * ─────────────────────────────────────────────────────
  */
-// 회원가입 직후 관심 정보 저장/수정 요청 DTO
 public record OnboardingRequestDTO(
         // 관심 종목
         @NotNull

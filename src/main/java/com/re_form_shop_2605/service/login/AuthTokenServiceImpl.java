@@ -14,9 +14,11 @@ import org.springframework.stereotype.Service;
 import java.util.concurrent.TimeUnit;
 import java.util.UUID;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-11
- * 설명:
+ * 설명: 인증 토큰 저장, 조회, 삭제를 담당하는 서비스 구현체
+ * ─────────────────────────────────────────────────────
  */
 @Service
 @RequiredArgsConstructor

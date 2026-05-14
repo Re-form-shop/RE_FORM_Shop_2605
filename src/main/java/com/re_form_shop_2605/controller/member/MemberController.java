@@ -32,11 +32,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-10
- * 설명:
+ * 설명: 마이페이지와 관심 목록 관련 사용자 API
+ * ─────────────────────────────────────────────────────
  */
-// 마이페이지와 관심 목록 관련 사용자 API
 @RestController
 @RequestMapping("/api/users/me")
 @Tag(name = "사용자 API", description = "마이페이지와 관심 목록 관련 API")
@@ -145,14 +146,14 @@ public class MemberController {
     @GetMapping("/reviews")
     public ResponseEntity<ApiResponse<PageResponse<ReviewResponseDTO>>> readMyReviews(
             @AuthenticationPrincipal MemberSecurityDTO principal,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         PageResponse<ReviewResponseDTO> reviews = tradeService.readSellerReviews(principal.getMemberId(), page, size);
         return ResponseEntity.ok(ApiResponse.ok(reviews, "받은 매너 평가 조회 완료"));
     }
 
-    // 프로필 이미지 업로드 응답에서 사용하는 URL DTO
+    // 프로필 이미지 업로드 응답
     public record ProfileImageUploadResponse(String profileImageUrl) {
     }
 }

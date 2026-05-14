@@ -9,6 +9,7 @@ import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
 import com.re_form_shop_2605.entity.Enum.PostStatus;
 import com.re_form_shop_2605.service.admin.AdminPostService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +23,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-12
  * 설명: 관리자 권한으로 게시글 목록과 상세를 조회하고 숨김/삭제를 처리하는 API를 제공
+ * ─────────────────────────────────────────────────────
  */
 @RestController
 @RequestMapping("/api/admin/posts")
@@ -33,11 +36,7 @@ public class AdminPostController {
 
     private final AdminPostService adminPostService;
 
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-12
-     * 설명: 관리자 게시글 API에서 사용할 서비스를 주입받는다.
-     */
+    // 관리자 게시글 API에서 사용할 서비스를 주입받는다.
     public AdminPostController(AdminPostService adminPostService) {
         this.adminPostService = adminPostService;
     }
@@ -47,16 +46,15 @@ public class AdminPostController {
             description = "관리자가 키워드와 상태 조건으로 게시글 목록을 조회합니다."
     )
     @GetMapping
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-12
-     * 설명: 관리자 권한으로 게시글 목록을 조회한다.
-     */
+    // 관리자 권한으로 게시글 목록을 조회한다.
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "관리자 게시글 목록 조회 성공")
+    })
     public ResponseEntity<ApiResponse<PageResponse<AdminPostListDTO>>> readPosts(
             @AuthenticationPrincipal MemberSecurityDTO principal,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) PostStatus status,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         validateAdmin(principal);
@@ -71,11 +69,10 @@ public class AdminPostController {
             description = "관리자가 특정 게시글의 상세 정보와 상태를 조회합니다."
     )
     @GetMapping("/{id}")
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-12
-     * 설명: 관리자 권한으로 특정 게시글의 상세 정보를 조회한다.
-     */
+    // 관리자 권한으로 특정 게시글의 상세 정보를 조회한다.
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "관리자 게시글 상세 조회 성공")
+    })
     public ResponseEntity<ApiResponse<AdminPostDetailDTO>> readPost(
             @AuthenticationPrincipal MemberSecurityDTO principal,
             @PathVariable("id") Long postId
@@ -92,11 +89,10 @@ public class AdminPostController {
             description = "관리자가 게시글을 숨김 또는 삭제 처리합니다."
     )
     @PatchMapping("/{id}/action")
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-12
-     * 설명: 관리자 권한으로 게시글 숨김 또는 삭제 처리를 수행한다.
-     */
+    // 관리자 권한으로 게시글 숨김 또는 삭제 처리를 수행한다.
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "관리자 게시글 처리 성공")
+    })
     public ResponseEntity<ApiResponse<AdminPostDetailDTO>> processPost(
             @AuthenticationPrincipal MemberSecurityDTO principal,
             @PathVariable("id") Long postId,
@@ -109,11 +105,7 @@ public class AdminPostController {
         ));
     }
 
-    /**
-     * 작성자: 민기
-     * 작성일: 2026-05-12
-     * 설명: 현재 로그인 사용자가 관리자 권한을 가졌는지 검증한다.
-     */
+    // 현재 로그인 사용자가 관리자 권한을 가졌는지 검증한다.
     private void validateAdmin(MemberSecurityDTO principal) {
         boolean isAdmin = principal.getAuthorities().stream()
                 .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));

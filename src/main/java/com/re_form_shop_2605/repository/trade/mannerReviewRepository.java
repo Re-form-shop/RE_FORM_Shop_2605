@@ -7,9 +7,11 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-08
  * 설명: 매너 리뷰 JPA 리포지토리 인터페이스
+ * ─────────────────────────────────────────────────────
  */
 public interface mannerReviewRepository extends JpaRepository<MannerReview, Long> {
     List<MannerReview> findTop5BySeller_MemberIdOrderByMannerIdDesc(Long memberId);

@@ -3,9 +3,11 @@ package com.re_form_shop_2605.service.member;
 import com.re_form_shop_2605.dto.member.OnboardingRequestDTO;
 import com.re_form_shop_2605.dto.member.OnboardingResponseDTO;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-10
- * 설명:
+ * 설명: 회원 관심 설정 서비스 인터페이스
+ * ─────────────────────────────────────────────────────
  */
 // 회원 관심 설정 서비스 인터페이스
 public interface InterestSettingService {

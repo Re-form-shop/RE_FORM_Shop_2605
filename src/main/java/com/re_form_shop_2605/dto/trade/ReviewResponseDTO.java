@@ -1,12 +1,15 @@
 package com.re_form_shop_2605.dto.trade;
 
+import com.re_form_shop_2605.dto.chat.MemberBriefDTO;
+
 import java.time.LocalDateTime;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-08
- * 설명:
+ * 설명: 매너 평가 응답 DTO
+ * ─────────────────────────────────────────────────────
  */
-// 매너 평가 조회 응답 DTO
 public record ReviewResponseDTO(
         // 리뷰 번호
         Long mannerId,

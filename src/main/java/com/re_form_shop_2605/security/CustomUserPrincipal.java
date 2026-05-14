@@ -9,9 +9,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-11
- * 설명:
+ * 설명: Spring Security 인증에 사용하는 사용자 principal 구현체
+ * ─────────────────────────────────────────────────────
  */
 public record CustomUserPrincipal(
         Long memberId,

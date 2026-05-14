@@ -4,9 +4,11 @@ import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.member.*;
 import com.re_form_shop_2605.entity.Enum.MemberStatus;
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-10
- * 설명:
+ * 설명: 회원 정보 서비스 인터페이스
+ * ─────────────────────────────────────────────────────
  */
 // 회원 서비스 인터페이스
 public interface MemberService {

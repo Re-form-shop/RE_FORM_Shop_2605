@@ -33,6 +33,8 @@ public class PostSearchService {
     public PageResponse<PostCardDTO> search(String query, Sport sport, Grade condition,
                                     DeliveryType tradeType, Integer minPrice, Integer maxPrice,
                                     String sort, int page, int size, Long memberId) {
+        int safePage = Math.max(page, 1);
+        int safeSize = size <= 0 ? 10 : size;
         Set<Long> postIdSet = new LinkedHashSet<>();
 
         // 1) AI 통한 유사 의미 결과 검색
@@ -63,17 +65,17 @@ public class PostSearchService {
 
         // 3) postIds가 비어있을 경우, 빈 결과 반환
         if (postIdSet.isEmpty()) {
-            return new PageResponse<>(List.of(), 0, 0, size, page, true, true);
+            return new PageResponse<>(List.of(), 0, 0, safeSize, safePage, true, true);
         }
 
         // 4) postIdSet 리스트 변환 후 페이징 처리
         List<Long> postIds = new ArrayList<>(postIdSet);
         int totalElements = postMapper.countPostsByIds(postIds, sport, condition, tradeType, minPrice, maxPrice);
-        int totalPages = (int) Math.ceil((double) totalElements / size);
-        int offset = page * size;
+        int totalPages = totalElements == 0 ? 0 : (int) Math.ceil((double) totalElements / safeSize);
+        int offset = (safePage - 1) * safeSize;
         List<Long> pageIds = postIds.stream()
                 .skip(offset)
-                .limit(size)
+                .limit(safeSize)
                 .toList();
 
         // 5) 상세 정보 조회
@@ -96,9 +98,9 @@ public class PostSearchService {
         }).toList();
 
         // 7) PageResponse 반환
-        boolean first = page == 0;
-        boolean last = page >= totalPages - 1;
+        boolean first = safePage == 1;
+        boolean last = totalPages == 0 || safePage >= totalPages;
 
-        return new PageResponse<>(content, totalElements, totalPages, size, page, first, last);
+        return new PageResponse<>(content, totalElements, totalPages, safeSize, safePage, first, last);
     }
 }

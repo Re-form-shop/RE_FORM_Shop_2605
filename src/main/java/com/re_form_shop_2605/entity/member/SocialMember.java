@@ -16,9 +16,11 @@ import lombok.*;
                 @UniqueConstraint(name = "uk_social_member_provider", columnNames = {"member_id", "provider"})
 })
 /**
- * 작성자: 민기
+ * ─────────────────────────────────────────────────────
+ * 작성자: 김민기
  * 작성일: 2026-05-07
  * 설명: 소셜 회원 JPA 엔티티
+ * ─────────────────────────────────────────────────────
  */
 public class SocialMember {
     @Id
