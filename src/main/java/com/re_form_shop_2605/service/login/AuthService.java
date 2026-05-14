@@ -2,8 +2,10 @@ package com.re_form_shop_2605.service.login;
 
 import com.re_form_shop_2605.dto.login.AuthUserDTO;
 import com.re_form_shop_2605.dto.login.AuthSessionResponseDTO;
+import com.re_form_shop_2605.dto.login.LoginChallengeResponseDTO;
 import com.re_form_shop_2605.dto.login.LoginRequestDTO;
 import com.re_form_shop_2605.dto.login.LoginResponseDTO;
+import com.re_form_shop_2605.dto.login.LoginVerificationRequestDTO;
 import com.re_form_shop_2605.dto.login.LogoutRequestDTO;
 import com.re_form_shop_2605.dto.login.LogoutSessionRequestDTO;
 import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
@@ -22,7 +24,13 @@ import java.util.List;
 public interface AuthService {
 
     // 로그인 한 회원 정보와 토큰을 반환
-    LoginResponseDTO login(LoginRequestDTO requestDTO);
+    LoginChallengeResponseDTO login(LoginRequestDTO requestDTO);
+
+    // 이메일 2차 인증 코드를 검증한 뒤 로그인 토큰을 발급
+    LoginResponseDTO verifyLoginCode(LoginVerificationRequestDTO requestDTO);
+
+    // 인증된 principal을 기준으로 이메일 2차 인증 challenge를 시작
+    LoginChallengeResponseDTO startLoginChallenge(MemberSecurityDTO principal);
 
     // 회원가입 직후 사용자 정보를 로드해 토큰을 반환
     MemberResponseDTO register(String email, String password, String nickname, boolean marketingAgreed);
@@ -33,8 +41,8 @@ public interface AuthService {
     // 현재 로그인한 사용자의 모든 세션 정보를 조회
     List<AuthSessionResponseDTO> readSessions(MemberSecurityDTO principal, String accessToken);
 
-    // 사용자에게 저장된 리프레쉬 토큰을 삭제 후 로그아웃
-    void logout(MemberSecurityDTO principal, LogoutRequestDTO requestDTO);
+    // 사용자에게 저장된 리프레쉬 토큰을 삭제 후 로그아웃 (액세스 토큰 블랙리스트 포함)
+    void logout(MemberSecurityDTO principal, LogoutRequestDTO requestDTO, String accessToken);
 
     // 현재 사용자의 특정 세션 하나만 종료
     void logoutSession(MemberSecurityDTO principal, LogoutSessionRequestDTO requestDTO);

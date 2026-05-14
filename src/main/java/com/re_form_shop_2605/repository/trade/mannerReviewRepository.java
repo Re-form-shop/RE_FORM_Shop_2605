@@ -2,6 +2,8 @@ package com.re_form_shop_2605.repository.trade;
 
 import com.re_form_shop_2605.entity.trade.MannerReview;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 /**
@@ -15,4 +17,7 @@ public interface mannerReviewRepository extends JpaRepository<MannerReview, Long
     List<MannerReview> findAllBySeller_MemberIdOrderByMannerIdDesc(Long sellerId);
 
     boolean existsByTrade_TradeIdAndBuyer_MemberId(Long tradeId, Long buyerId);
+
+    @Query("select avg(review.score) from MannerReview review where review.seller.memberId = :sellerId")
+    Double findAverageScoreBySellerId(@Param("sellerId") Long sellerId);
 }

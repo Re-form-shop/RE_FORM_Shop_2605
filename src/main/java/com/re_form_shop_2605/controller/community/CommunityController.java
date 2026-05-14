@@ -3,13 +3,16 @@ package com.re_form_shop_2605.controller.community;
 import com.re_form_shop_2605.dto.common.ApiResponse;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.community.*;
+import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
 import com.re_form_shop_2605.entity.Enum.Sport;
 import com.re_form_shop_2605.service.community.CommunityService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +27,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/community")
 @RequiredArgsConstructor
+@Tag(name = "커뮤니티 API", description = "커뮤니티 게시글 관련 API")
 public class CommunityController {
     private final CommunityService communityService;
 
@@ -45,10 +49,10 @@ public class CommunityController {
     @GetMapping("/{commId}")
     public ResponseEntity<ApiResponse<CommunityPostDetailDTO>> readPosts(
             @PathVariable Long commId,
-            @RequestHeader(value = "X-Member-Id", required = false) Long memberId
+            @AuthenticationPrincipal MemberSecurityDTO principal
     ) {
         return ResponseEntity.ok(
-                ApiResponse.ok(communityService.readPost(commId, memberId), "게시글 상세 조회 완료")
+                ApiResponse.ok(communityService.readPost(commId, principal.getMemberId()), "게시글 상세 조회 완료")
         );
     }
 
@@ -56,10 +60,10 @@ public class CommunityController {
     @Operation(summary = "커뮤니티 게시글 작성", description = "새 게시글을 작성합니다.")
     @PostMapping
     public ResponseEntity<ApiResponse<CommIdResponseDTO>> addPost(
-            @RequestHeader("X-Member-Id") Long memberId,
+            @AuthenticationPrincipal MemberSecurityDTO principal,
             @Valid @RequestBody CommunityPostCreateRequestDTO requestDTO
     ) {
-        Long commId = communityService.addPost(memberId, requestDTO);
+        Long commId = communityService.addPost(principal.getMemberId(), requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(new CommIdResponseDTO(commId), "게시글 작성 완료"));
     }
@@ -69,10 +73,10 @@ public class CommunityController {
     @PutMapping("/{commId}")
     public ResponseEntity<ApiResponse<CommIdResponseDTO>> modifyPost(
             @PathVariable Long commId,
-            @RequestHeader("X-Member-Id") Long memberId,
+            @AuthenticationPrincipal MemberSecurityDTO principal,
             @Valid @RequestBody CommunityPostUpdateRequestDTO requestDTO
     ) {
-        communityService.modifyPost(commId, memberId, requestDTO);
+        communityService.modifyPost(commId, principal.getMemberId(), requestDTO);
         return ResponseEntity.ok(
                 ApiResponse.ok(new CommIdResponseDTO(commId), "게시글 수정 완료")
         );
@@ -83,9 +87,9 @@ public class CommunityController {
     @DeleteMapping("/{commId}")
     public ResponseEntity<ApiResponse<Void>> removePost(
             @PathVariable Long commId,
-            @RequestHeader("X-Member-Id") Long memberId
+            @AuthenticationPrincipal MemberSecurityDTO principal
     ) {
-        communityService.removePost(commId, memberId);
+        communityService.removePost(commId, principal.getMemberId());
         return ResponseEntity.ok(ApiResponse.ok(null, "게시글 삭제 완료"));
     }
 
@@ -94,10 +98,10 @@ public class CommunityController {
     @PostMapping("/{commId}/like")
     public ResponseEntity<ApiResponse<Integer>> toggleLike(
             @PathVariable Long commId,
-            @RequestHeader("X-Member-Id") Long memberId
+            @AuthenticationPrincipal MemberSecurityDTO principal
     ) {
         return ResponseEntity.ok(
-                ApiResponse.ok(communityService.toggleLike(commId, memberId), "좋아요 처리 완료")
+                ApiResponse.ok(communityService.toggleLike(commId, principal.getMemberId()), "좋아요 처리 완료")
         );
     }
 
@@ -106,10 +110,10 @@ public class CommunityController {
     @GetMapping("/{commId}/replies")
     public ResponseEntity<ApiResponse<List<ReplyResponseDTO>>> readReplies(
             @PathVariable Long commId,
-            @RequestHeader(value = "X-Member-Id", required = false) Long memberId
+            @AuthenticationPrincipal MemberSecurityDTO principal
     ) {
         return ResponseEntity.ok(
-                ApiResponse.ok(communityService.readReplies(commId, memberId), "댓글 목록 조회 완료")
+                ApiResponse.ok(communityService.readReplies(commId, principal.getMemberId()), "댓글 목록 조회 완료")
         );
     }
 
@@ -118,12 +122,12 @@ public class CommunityController {
     @PostMapping("/{commId}/replies")
     public ResponseEntity<ApiResponse<ReplyResponseDTO>> addReply(
             @PathVariable Long commId,
-            @RequestHeader("X-Member-Id") Long memberId,
+            @AuthenticationPrincipal MemberSecurityDTO principal,
             @Valid @RequestBody ReplyCreateRequestDTO requestDTO
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(
-                        communityService.addReply(commId, memberId, requestDTO), "댓글 작성 완료"
+                        communityService.addReply(commId, principal.getMemberId(), requestDTO), "댓글 작성 완료"
                 ));
     }
 
@@ -132,9 +136,9 @@ public class CommunityController {
     @DeleteMapping("/replies/{replyId}")
     public ResponseEntity<ApiResponse<Void>> removeReply(
             @PathVariable Long replyId,
-            @RequestHeader("X-Member-Id") Long memberId
+            @AuthenticationPrincipal MemberSecurityDTO principal
     ) {
-        communityService.removeReply(replyId, memberId);
+        communityService.removeReply(replyId, principal.getMemberId());
         return ResponseEntity.ok(ApiResponse.ok(null, "댓글 삭제 완료"));
     }
 
@@ -143,10 +147,10 @@ public class CommunityController {
     @PostMapping("/replies/{replyId}/like")
     public ResponseEntity<ApiResponse<Integer>> toggleReplyLike(
             @PathVariable Long replyId,
-            @RequestHeader("X-Member-Id") Long memberId
+            @AuthenticationPrincipal MemberSecurityDTO principal
     ) {
         return ResponseEntity.ok(
-                ApiResponse.ok(communityService.toggleReplyLike(replyId, memberId), "댓글 좋아요 처리 완료")
+                ApiResponse.ok(communityService.toggleReplyLike(replyId, principal.getMemberId()), "댓글 좋아요 처리 완료")
         );
     }
 }

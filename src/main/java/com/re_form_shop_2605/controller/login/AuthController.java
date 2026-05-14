@@ -3,8 +3,10 @@ package com.re_form_shop_2605.controller.login;
 import com.re_form_shop_2605.dto.common.ApiResponse;
 import com.re_form_shop_2605.dto.login.AuthSessionResponseDTO;
 import com.re_form_shop_2605.dto.login.AuthUserDTO;
+import com.re_form_shop_2605.dto.login.LoginChallengeResponseDTO;
 import com.re_form_shop_2605.dto.login.LoginRequestDTO;
 import com.re_form_shop_2605.dto.login.LoginResponseDTO;
+import com.re_form_shop_2605.dto.login.LoginVerificationRequestDTO;
 import com.re_form_shop_2605.dto.login.LogoutRequestDTO;
 import com.re_form_shop_2605.dto.login.LogoutSessionRequestDTO;
 import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
@@ -61,14 +63,31 @@ public class AuthController {
 
     @Operation(
             summary = "이메일 로그인",
-            description = "이메일과 비밀번호로 로그인하고 JWT 액세스 토큰과 리프레시 토큰을 발급합니다."
+            description = "이메일과 비밀번호를 확인한 뒤 사용자 이메일로 6자리 2차 인증코드를 발송합니다."
     )
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponseDTO>> login(@Valid @RequestBody LoginRequestDTO request) {
-        // 로그인 요청을 인증 서비스에 위임하고 JWT 응답을 그대로 반환한다.
+    public ResponseEntity<ApiResponse<LoginChallengeResponseDTO>> login(@Valid @RequestBody LoginRequestDTO request) {
+        // 비밀번호 인증 후 이메일 2차 인증을 시작한다. JWT는 코드 검증 후 발급된다.
         log.info("[AuthController] login start email={}", request.email());
-        LoginResponseDTO responseDTO = authService.login(request);
-        log.info("[AuthController] login end email={} memberId={}", request.email(), responseDTO.user().id());
+        LoginChallengeResponseDTO responseDTO = authService.login(request);
+        log.info("[AuthController] login challenge sent email={} challengeId={}", request.email(), responseDTO.challengeId());
+        return ResponseEntity.ok(ApiResponse.ok(responseDTO, "이메일 인증코드가 발송되었습니다."));
+    }
+
+    @Operation(
+            summary = "이메일 로그인 2차 인증",
+            description = "로그인 시 발급된 challengeId와 이메일 인증코드를 검증하고 JWT 액세스 토큰과 리프레시 토큰을 발급합니다."
+    )
+    @PostMapping("/login/verify")
+    public ResponseEntity<ApiResponse<LoginResponseDTO>> verifyLoginCode(
+            @Valid @RequestBody LoginVerificationRequestDTO request
+    ) {
+        // 인증코드가 맞을 때만 최종 로그인 토큰을 발급한다.
+        log.info("[AuthController] verifyLoginCode start challengeId={}", request.challengeId());
+        LoginResponseDTO responseDTO = authService.verifyLoginCode(request);
+        log.info("[AuthController] verifyLoginCode end challengeId={} memberId={}",
+                request.challengeId(),
+                responseDTO.user().id());
         return ResponseEntity.ok(ApiResponse.ok(responseDTO, "로그인 완료"));
     }
 
@@ -142,16 +161,17 @@ public class AuthController {
 
     @Operation(
             summary = "로그아웃",
-            description = "리프레시 토큰을 무효화하여 로그아웃 처리합니다."
+            description = "리프레시 토큰을 무효화하고 액세스 토큰을 블랙리스트에 등록하여 로그아웃 처리합니다."
     )
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
             @AuthenticationPrincipal MemberSecurityDTO principal,
-            @Valid @RequestBody LogoutRequestDTO requestDTO
+            @Valid @RequestBody LogoutRequestDTO requestDTO,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization
     ) {
-        // 요청한 refresh token을 서버 저장소에서 제거해 재사용을 막는다.
+        // 요청한 refresh token을 서버 저장소에서 제거하고 access token을 블랙리스트에 등록한다.
         log.info("[AuthController] logout start memberId={}", principal.getMemberId());
-        authService.logout(principal, requestDTO);
+        authService.logout(principal, requestDTO, authorization);
         log.info("[AuthController] logout end memberId={}", principal.getMemberId());
         return ResponseEntity.noContent().build();
     }

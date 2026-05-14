@@ -23,6 +23,9 @@ public interface TradeService {
     // 거래 단건 조회
     TradeResponseDTO readTrade(Long tradeId);
 
+    // 거래 참여자 기준 단건 조회
+    TradeResponseDTO readTrade(Long requesterId, Long tradeId);
+
     // 구매자 기준 거래 목록 조회
     PageResponse<TradeResponseDTO> readBuyerTrades(Long buyerId, TradeStatus status, int page, int size);
 

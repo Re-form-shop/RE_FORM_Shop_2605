@@ -3,11 +3,17 @@ package com.re_form_shop_2605.service.etc;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.etc.ReportRequestDTO;
 import com.re_form_shop_2605.dto.etc.ReportResponseDTO;
+import com.re_form_shop_2605.entity.Enum.MemberStatus;
+import com.re_form_shop_2605.entity.Enum.PostStatus;
 import com.re_form_shop_2605.entity.Enum.ReportStatus;
+import com.re_form_shop_2605.entity.community.CommunityPost;
 import com.re_form_shop_2605.entity.etc.Report;
 import com.re_form_shop_2605.entity.member.Member;
+import com.re_form_shop_2605.entity.trade.Post;
+import com.re_form_shop_2605.repository.community.CommunityPostRepository;
 import com.re_form_shop_2605.repository.etc.ReportRepository;
 import com.re_form_shop_2605.repository.member.MemberRepository;
+import com.re_form_shop_2605.repository.trade.PostRepository;
 import com.re_form_shop_2605.service.common.ServicePageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -28,8 +34,12 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class ReportServiceImpl implements ReportService{
+    private static final int SUSPEND_WARNING_THRESHOLD = 3;
+
     private final ReportRepository reportRepository;
     private final MemberRepository memberRepository;
+    private final PostRepository postRepository;
+    private final CommunityPostRepository communityPostRepository;
     private final ModelMapper modelMapper;
 
     @Override
@@ -38,13 +48,12 @@ public class ReportServiceImpl implements ReportService{
         Member reporter = memberRepository.findById(reporterId)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
 
-        Report mappedReport = modelMapper.map(reportRequestDTO, Report.class);
         Report report = new Report(
                 reporter,
-                mappedReport.getTargetType(),
-                mappedReport.getTargetId(),
-                mappedReport.getReason(),
-                mappedReport.getDetail()
+                reportRequestDTO.targetType(),
+                reportRequestDTO.targetId(),
+                reportRequestDTO.reason(),
+                reportRequestDTO.detail()
         );
 
         return reportRepository.save(report).getReportId();
@@ -93,15 +102,61 @@ public class ReportServiceImpl implements ReportService{
 
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new IllegalArgumentException("신고가 존재하지 않습니다."));
+        if (report.getStatus() != ReportStatus.PENDING) {
+            throw new IllegalArgumentException("이미 처리된 신고는 다시 처리할 수 없습니다.");
+        }
 
         switch (action) {
             case NORMAL -> report.normal();
-            case WARNING -> report.warn();
-            case DELETED -> report.delete();
+            case WARNING -> {
+                report.warn();
+                applyWarningToTargetAuthor(report);
+            }
+            case DELETED -> {
+                report.delete();
+                deleteTargetContent(report);
+            }
             default -> throw new IllegalArgumentException("지원하지 않는 신고 처리 상태입니다.");
         }
 
         return toReportResponseDTO(report);
+    }
+
+    private void applyWarningToTargetAuthor(Report report) {
+        Member targetAuthor = resolveTargetAuthor(report);
+        int nextWarningCount = targetAuthor.getWarningCount() + 1;
+        targetAuthor.setWarningCount(nextWarningCount);
+
+        if (nextWarningCount >= SUSPEND_WARNING_THRESHOLD && targetAuthor.getStatus() == MemberStatus.ACTIVE) {
+            targetAuthor.setStatus(MemberStatus.SUSPENDED);
+        }
+    }
+
+    private void deleteTargetContent(Report report) {
+        switch (report.getTargetType()) {
+            case POST -> {
+                Post post = postRepository.findById(report.getTargetId())
+                        .orElseThrow(() -> new IllegalArgumentException("신고 대상 판매글이 존재하지 않습니다."));
+                post.changeStatus(PostStatus.DELETED);
+            }
+            case COMMUNITY_POST -> {
+                CommunityPost communityPost = communityPostRepository.findById(report.getTargetId())
+                        .orElseThrow(() -> new IllegalArgumentException("신고 대상 커뮤니티 게시글이 존재하지 않습니다."));
+                communityPost.markDeleted();
+            }
+            default -> throw new IllegalArgumentException("지원하지 않는 신고 대상 타입입니다.");
+        }
+    }
+
+    private Member resolveTargetAuthor(Report report) {
+        return switch (report.getTargetType()) {
+            case POST -> postRepository.findById(report.getTargetId())
+                    .orElseThrow(() -> new IllegalArgumentException("신고 대상 판매글이 존재하지 않습니다."))
+                    .getSellerId();
+            case COMMUNITY_POST -> communityPostRepository.findById(report.getTargetId())
+                    .orElseThrow(() -> new IllegalArgumentException("신고 대상 커뮤니티 게시글이 존재하지 않습니다."))
+                    .getMember();
+        };
     }
 
     // 신고 엔티티를 화면용 응답 DTO로 변환

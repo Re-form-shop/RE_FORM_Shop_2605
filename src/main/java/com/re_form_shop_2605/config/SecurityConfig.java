@@ -7,6 +7,7 @@ import com.re_form_shop_2605.security.JWT.JwtTokenProvider;
 import com.re_form_shop_2605.security.RestAccessDeniedHandler;
 import com.re_form_shop_2605.security.JWT.RestAuthenticationEntryPoint;
 import com.re_form_shop_2605.security.handler.CustomSocialLoginSuccessHandler;
+import com.re_form_shop_2605.service.login.AuthTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,9 +68,11 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+    public JwtAuthenticationFilter jwtAuthenticationFilter(
+            AuthTokenService authTokenService
+    ) {
         // Authorization 헤더의 Bearer access token을 검사할 필터를 등록한다.
-        return new JwtAuthenticationFilter(jwtTokenProvider(), customUserDetailsService);
+        return new JwtAuthenticationFilter(jwtTokenProvider(), customUserDetailsService, authTokenService);
     }
 
     @Bean
@@ -86,7 +89,7 @@ public class SecurityConfig {
 
     @Bean
     public CustomSocialLoginSuccessHandler customSocialLoginSuccessHandler(
-            com.re_form_shop_2605.service.login.AuthTokenService authTokenService
+            AuthTokenService authTokenService
     ) {
         // OAuth2 로그인 성공 시 JWT를 발급하고 프론트 콜백으로 리다이렉트할 핸들러를 등록한다.
         return new CustomSocialLoginSuccessHandler(authTokenService, oauthSuccessRedirectUri);
@@ -95,7 +98,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            CustomSocialLoginSuccessHandler customSocialLoginSuccessHandler
+            CustomSocialLoginSuccessHandler customSocialLoginSuccessHandler,
+            JwtAuthenticationFilter jwtAuthenticationFilter
     ) throws Exception {
         log.info("--- [SecurityConfig] securityFilterChain: 회원 시큐리티 설정 ---");
 
@@ -107,15 +111,18 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
                                 "/api/auth/login",
+                                "/api/auth/login/verify",
                                 "/api/auth/register",
                                 "/api/auth/check-nickname",
                                 "/api/auth/token/refresh",
                                 "/api/auth/password/reset",
                                 "/api/auth/oauth2/**",
                                 "/api/auth/oauth/**",
+                                "/api/community/**",
                                 "/oauth2/**",
                                 "/login/oauth2/**",
                                 "/login/**",
+                                "/stomp/**",
                                 "/api/delivery/tracking/**",
                                 "/uploads/**",
                                 "/confirm"
@@ -145,7 +152,7 @@ public class SecurityConfig {
                 )
 
                 // 컨트롤러 진입 전에 Authorization 헤더의 access token을 먼저 검사한다.
-                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

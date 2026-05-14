@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 /**
  * 작성자: 민기
@@ -98,15 +99,31 @@ public class JwtTokenProvider {
         return getClaims(token).get("loginType", String.class);
     }
 
+    public List<String> getRoles(String token) {
+        // 여러 권한이 쉼표로 저장된 경우를 대비해 리스트로 반환한다.
+        String roles = getClaims(token).get("role", String.class);
+        if (roles == null || roles.isBlank()) {
+            return List.of();
+        }
+        return List.of(roles.split(","));
+    }
+
     private String buildToken(MemberSecurityDTO principal, long expirationSeconds, String type, String sessionId) {
         // 이메일은 subject, 회원 식별값과 권한은 claim으로 넣어 후속 인증에 재사용한다.
         Instant now = Instant.now();
         String loginProvider = principal.getLoginProvider();
         String loginType = "local".equalsIgnoreCase(loginProvider) ? "local" : "social";
+
+        // 다중 권한을 지원하기 위해 모든 권한을 쉼표로 연결해 저장한다.
+        String roles = principal.getAuthorities().stream()
+                .map(Object::toString)
+                .reduce((a, b) -> a + "," + b)
+                .orElse("ROLE_USER");
+
         return Jwts.builder()
                 .subject(principal.getEmail())
                 .claim("memberId", principal.getMemberId())
-                .claim("role", principal.getAuthorities().stream().findFirst().map(Object::toString).orElse("ROLE_USER"))
+                .claim("role", roles)
                 .claim("type", type)
                 .claim("provider", loginProvider)
                 .claim("loginType", loginType)

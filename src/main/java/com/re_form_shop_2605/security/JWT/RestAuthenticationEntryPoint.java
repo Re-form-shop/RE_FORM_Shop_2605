@@ -24,11 +24,27 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
             HttpServletResponse response,
             AuthenticationException authException
     ) throws IOException, ServletException {
-        // 보호된 API에 토큰 없이 접근한 경우 인증 정책에 맞춰 JSON 403 응답을 내려준다.
-        log.warn("[RestAuthenticationEntryPoint] unauthorized path={} message={}", request.getRequestURI(), authException.getMessage());
-        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        // 필터에서 저장한 예외 정보를 확인해 구체적인 에러 응답을 구성한다.
+        String exception = (String) request.getAttribute("exception");
+        log.warn("[RestAuthenticationEntryPoint] unauthorized path={} exception={} message={}",
+                request.getRequestURI(), exception, authException.getMessage());
+
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write("{\"success\":false,\"message\":\"인증이 필요합니다.\",\"data\":{\"message\":\"Forbidden\"}}");
+
+        if ("EXPIRED_TOKEN".equals(exception)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"success\":false,\"message\":\"토큰이 만료되었습니다.\",\"code\":\"40101\"}");
+        } else if ("INVALID_TOKEN".equals(exception)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"success\":false,\"message\":\"유효하지 않은 토큰입니다.\",\"code\":\"40102\"}");
+        } else if ("AUTH_ERROR".equals(exception)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"success\":false,\"message\":\"인증 오류가 발생했습니다.\",\"code\":\"40103\"}");
+        } else {
+            // 토큰 자체가 없는 등의 일반적인 금지 요청
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.getWriter().write("{\"success\":false,\"message\":\"인증이 필요합니다.\",\"code\":\"40300\"}");
+        }
     }
 }

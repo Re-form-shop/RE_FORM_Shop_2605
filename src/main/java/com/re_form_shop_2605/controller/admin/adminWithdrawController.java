@@ -18,7 +18,7 @@ import java.util.List;
 @Tag(name = "관리자 API", description = "관리자(Role.ADMIN) 관련 API)")
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
-public class AdminController {
+public class adminWithdrawController {
     /*
     14. 관리자
     | GET   | `/api/admin/members`                       | 회원 목록 (검색·필터)

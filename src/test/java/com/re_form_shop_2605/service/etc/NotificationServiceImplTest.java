@@ -63,7 +63,7 @@ class NotificationServiceImplTest {
                 .linkUrl("/test")
                 .build());
 
-        notificationService.modifyNotificationRead(notification.getNotiId());
+        notificationService.modifyNotificationRead(member.getMemberId(), notification.getNotiId());
 
         assertFalse(!notificationRepository.findById(notification.getNotiId()).orElseThrow().isRead());
     }

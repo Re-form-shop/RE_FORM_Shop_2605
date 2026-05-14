@@ -35,6 +35,9 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,6 +52,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class TradeServiceImpl implements TradeService {
+
+    private static final int REVIEW_WRITE_PERIOD_DAYS = 5;
 
     private final TradeRepository tradeRepository;
     private final MemberRepository memberRepository;
@@ -95,6 +100,16 @@ public class TradeServiceImpl implements TradeService {
     // 거래 상세 화면에 필요한 정보를 조립해 반환한다.
     public TradeResponseDTO readTrade(Long tradeId) {
         return mapTradeResponse(getTrade(tradeId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TradeResponseDTO readTrade(Long requesterId, Long tradeId) {
+        Trade trade = getTrade(tradeId);
+        if (!isTradeParticipant(trade, requesterId)) {
+            throw new IllegalArgumentException("거래 참여자만 거래 상세를 조회할 수 있습니다.");
+        }
+        return mapTradeResponse(trade);
     }
 
     @Override
@@ -260,6 +275,8 @@ public class TradeServiceImpl implements TradeService {
             throw new IllegalArgumentException("거래 완료 후에만 리뷰를 작성할 수 있습니다.");
         }
 
+        validateReviewWritePeriod(trade);
+
         MannerReview review = MannerReview.builder()
                 .trade(trade)
                 .buyer(trade.getBuyer())
@@ -268,7 +285,10 @@ public class TradeServiceImpl implements TradeService {
                 .content(reviewRequestDTO.content())
                 .build();
 
-        return mannerReviewRepository.save(review).getMannerId();
+        MannerReview savedReview = mannerReviewRepository.save(review);
+        updateSellerMannerScore(trade.getSeller());
+
+        return savedReview.getMannerId();
     }
 
     @Override
@@ -419,6 +439,31 @@ public class TradeServiceImpl implements TradeService {
     private boolean isTradeParticipant(Trade trade, Long memberId) {
         return trade.getBuyer().getMemberId().equals(memberId)
                 || trade.getSeller().getMemberId().equals(memberId);
+    }
+
+    private void validateReviewWritePeriod(Trade trade) {
+        LocalDateTime baseTime = resolveReviewBaseTime(trade);
+        if (LocalDateTime.now().isAfter(baseTime.plusDays(REVIEW_WRITE_PERIOD_DAYS))) {
+            throw new IllegalArgumentException("리뷰는 거래 완료 후 5일 이내에만 작성할 수 있습니다.");
+        }
+    }
+
+    private LocalDateTime resolveReviewBaseTime(Trade trade) {
+        if (trade.getCompletedAt() != null) {
+            return trade.getCompletedAt();
+        }
+        if (trade.getConfirmedAt() != null) {
+            return trade.getConfirmedAt();
+        }
+        throw new IllegalArgumentException("거래 완료 시각이 없어 리뷰를 작성할 수 없습니다.");
+    }
+
+    private void updateSellerMannerScore(Member seller) {
+        Double averageScore = mannerReviewRepository.findAverageScoreBySellerId(seller.getMemberId());
+        BigDecimal mannerScore = averageScore == null
+                ? BigDecimal.ZERO
+                : BigDecimal.valueOf(averageScore).setScale(2, RoundingMode.HALF_UP);
+        seller.updateMannerScore(mannerScore);
     }
 
     private String resolveCourierName(String courierCode) {

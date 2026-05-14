@@ -37,7 +37,7 @@ public class CustomSocialLoginSuccessHandler implements AuthenticationSuccessHan
             HttpServletResponse response,
             Authentication authentication
     ) throws IOException, ServletException {
-        // 소셜 로그인 성공 직후에도 이메일 로그인과 동일하게 JWT를 발급해 프론트 콜백으로 넘긴다.
+        // 소셜 로그인 성공 직후에는 OAuth 제공자 인증을 신뢰하고 JWT를 발급해 프론트 콜백으로 넘긴다.
         MemberSecurityDTO principal = (MemberSecurityDTO) authentication.getPrincipal();
         log.info("[CustomSocialLoginSuccessHandler] success start memberId={} provider={}",
                 principal.getMemberId(),

@@ -54,9 +54,12 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     // 알림을 읽음 상태로 변경
 
-    public void modifyNotificationRead(Long notiId) {
+    public void modifyNotificationRead(Long memberId, Long notiId) {
         Notification notification = notificationRepository.findById(notiId)
                 .orElseThrow(() -> new IllegalArgumentException("알림이 존재하지 않습니다."));
+        if (!notification.getMember().getMemberId().equals(memberId)) {
+            throw new IllegalArgumentException("본인 알림만 읽음 처리할 수 있습니다.");
+        }
         notification.read();
     }
 

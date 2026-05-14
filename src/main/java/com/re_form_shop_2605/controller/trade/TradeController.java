@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -88,8 +87,14 @@ public class TradeController {
      * 작성일: 2026-05-10
      * 설명: 거래 상세 정보를 조회한다.
      */
-    public ResponseEntity<ApiResponse<TradeResponseDTO>> readTrade(@PathVariable("id") Long tradeId) {
-        return ResponseEntity.ok(ApiResponse.ok(tradeService.readTrade(tradeId), "거래 상세 조회 완료"));
+    public ResponseEntity<ApiResponse<TradeResponseDTO>> readTrade(
+            @PathVariable("id") Long tradeId,
+            @AuthenticationPrincipal MemberSecurityDTO principal
+    ) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                tradeService.readTrade(principal.getMemberId(), tradeId),
+                "거래 상세 조회 완료"
+        ));
     }
 
     // PATCH /api/trades/{id}/accept

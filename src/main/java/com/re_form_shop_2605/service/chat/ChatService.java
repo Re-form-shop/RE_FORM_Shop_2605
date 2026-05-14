@@ -73,9 +73,10 @@ public class ChatService {
     }
 
     /* 메시지 저장 (WebSocket 컨트롤러에서 호출) */
-    public ChatMessageDTO saveMessage(ChatSendMessageDTO chatSendMessageDTO){
+    public ChatMessageDTO saveMessage(ChatSendMessageDTO chatSendMessageDTO, Long senderId){
         ChatRoom chatRoom = chatRoomRepository.findById(chatSendMessageDTO.chatId()).orElseThrow();
-        Member sender = memberRepository.findById(chatSendMessageDTO.senderId()).orElseThrow();
+        validateParticipant(chatRoom, senderId);
+        Member sender = memberRepository.findById(senderId).orElseThrow();
 
         ChatMessage chatMessage = ChatMessage.builder()
                 .chatRoom(chatRoom)
@@ -90,6 +91,8 @@ public class ChatService {
 
     /* 채팅방 입장 시 읽음 처리 */
     public void markAsRead(Long chatId, Long myId){
+        ChatRoom chatRoom = chatRoomRepository.findById(chatId).orElseThrow();
+        validateParticipant(chatRoom, myId);
         chatMessageRepository.markAllAsRead(chatId, myId);
     }
 
@@ -216,5 +219,13 @@ public class ChatService {
                 unreadCount,
                 post
         );
+    }
+
+    private void validateParticipant(ChatRoom chatRoom, Long memberId) {
+        boolean isBuyer = chatRoom.getBuyer().getMemberId().equals(memberId);
+        boolean isSeller = chatRoom.getPost().getSellerId().getMemberId().equals(memberId);
+        if (!isBuyer && !isSeller) {
+            throw new IllegalArgumentException("채팅방 참여자만 메시지를 처리할 수 있습니다.");
+        }
     }
 }

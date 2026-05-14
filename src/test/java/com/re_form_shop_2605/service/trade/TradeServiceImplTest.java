@@ -27,6 +27,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -338,6 +339,35 @@ class TradeServiceImplTest {
     }
 
     @Test
+    void addReviewUpdatesSellerMannerScore() {
+        Member seller = createMember("score_update_seller");
+        Member buyer1 = createMember("score_update_buyer_1");
+        Member buyer2 = createMember("score_update_buyer_2");
+        Trade trade1 = createCompletedTrade(seller, buyer1, "score review 1");
+        Trade trade2 = createCompletedTrade(seller, buyer2, "score review 2");
+
+        tradeService.addReview(buyer1.getMemberId(), new ReviewRequestDTO(trade1.getTradeId(), 5, "좋아요"));
+        tradeService.addReview(buyer2.getMemberId(), new ReviewRequestDTO(trade2.getTradeId(), 4, "괜찮아요"));
+
+        Member savedSeller = memberRepository.findById(seller.getMemberId()).orElseThrow();
+        assertEquals(BigDecimal.valueOf(4.50).setScale(2), savedSeller.getMannerScore());
+    }
+
+    @Test
+    void addReviewFailsAfterReviewWritePeriod() {
+        Member seller = createMember("review_period_seller");
+        Member buyer = createMember("review_period_buyer");
+        Trade trade = createCompletedTrade(seller, buyer, "expired review", LocalDateTime.now().minusDays(6));
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> tradeService.addReview(buyer.getMemberId(), new ReviewRequestDTO(trade.getTradeId(), 5, "늦은 리뷰"))
+        );
+
+        assertEquals("리뷰는 거래 완료 후 5일 이내에만 작성할 수 있습니다.", exception.getMessage());
+    }
+
+    @Test
     void readReviewTest() {
         Member seller = createMember("read_review_seller");
         Member buyer = createMember("read_review_buyer");
@@ -415,6 +445,10 @@ class TradeServiceImplTest {
     }
 
     private Trade createCompletedTrade(Member seller, Member buyer, String title) {
+        return createCompletedTrade(seller, buyer, title, LocalDateTime.now());
+    }
+
+    private Trade createCompletedTrade(Member seller, Member buyer, String title, LocalDateTime completedAt) {
         Post post = createPost(seller, title);
         post.changeStatus(PostStatus.SOLD);
         return tradeRepository.save(Trade.builder()
@@ -423,6 +457,7 @@ class TradeServiceImplTest {
                 .seller(seller)
                 .status(TradeStatus.COMPLETED)
                 .tradePrice(10000)
+                .completedAt(completedAt)
                 .build());
     }
 

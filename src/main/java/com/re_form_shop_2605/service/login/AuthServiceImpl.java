@@ -2,8 +2,10 @@ package com.re_form_shop_2605.service.login;
 
 import com.re_form_shop_2605.dto.login.AuthSessionResponseDTO;
 import com.re_form_shop_2605.dto.login.AuthUserDTO;
+import com.re_form_shop_2605.dto.login.LoginChallengeResponseDTO;
 import com.re_form_shop_2605.dto.login.LoginRequestDTO;
 import com.re_form_shop_2605.dto.login.LoginResponseDTO;
+import com.re_form_shop_2605.dto.login.LoginVerificationRequestDTO;
 import com.re_form_shop_2605.dto.login.LogoutRequestDTO;
 import com.re_form_shop_2605.dto.login.LogoutSessionRequestDTO;
 import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
@@ -20,7 +22,10 @@ import com.re_form_shop_2605.security.JWT.JwtTokenProvider;
 import com.re_form_shop_2605.service.member.MemberService;
 import lombok.extern.log4j.Log4j2;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -28,11 +33,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 /**
  * 작성자: 민기
  * 작성일: 2026-05-11
@@ -44,6 +52,9 @@ import java.util.Set;
 @Log4j2
 public class AuthServiceImpl implements AuthService {
 
+    private static final long LOGIN_CODE_EXPIRATION_SECONDS = 300L;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private final AuthenticationManager authenticationManager;
     private final MemberService memberService;
     private final MemberRepository memberRepository;
@@ -52,18 +63,74 @@ public class AuthServiceImpl implements AuthService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final CustomUserDetailsService customUserDetailsService;
     private final AuthTokenService authTokenService;
+    private final JavaMailSender javaMailSender;
+
+    @Value("${spring.mail.username:ppaapp220022@gmail.com}")
+    private String mailFrom;
+
+    @Value("${app.auth.login-code-delivery-mode:console}")
+    private String loginCodeDeliveryMode;
 
     @Override
-    @Transactional(readOnly = true)
-    public LoginResponseDTO login(LoginRequestDTO requestDTO) {
-        // Spring Security 인증을 통과한 사용자 정보로 JWT를 발급
+    public LoginChallengeResponseDTO login(LoginRequestDTO requestDTO) {
+        // 비밀번호 인증을 통과한 사용자에게 2차 인증코드를 발급한다.
         log.info("[AuthServiceImpl] login start email={}", requestDTO.email());
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(requestDTO.email(), requestDTO.password())
         );
         MemberSecurityDTO principal = (MemberSecurityDTO) authentication.getPrincipal();
+        LoginChallengeResponseDTO responseDTO = startLoginChallenge(principal);
+
+        log.info("[AuthServiceImpl] login challenge created email={} memberId={} challengeId={}",
+                requestDTO.email(),
+                principal.getMemberId(),
+                responseDTO.challengeId());
+        return responseDTO;
+    }
+
+    @Override
+    public LoginChallengeResponseDTO startLoginChallenge(MemberSecurityDTO principal) {
+        String challengeId = UUID.randomUUID().toString();
+        String code = generateLoginCode();
+        redisTemplate.opsForValue().set(
+                buildLoginCodeKey(challengeId),
+                principal.getMemberId() + ":" + code,
+                LOGIN_CODE_EXPIRATION_SECONDS,
+                TimeUnit.SECONDS
+        );
+        sendLoginCodeEmail(principal.getEmail(), code);
+
+        log.info("[AuthServiceImpl] login challenge sent email={} memberId={} challengeId={}",
+                principal.getEmail(),
+                principal.getMemberId(),
+                challengeId);
+        return new LoginChallengeResponseDTO(challengeId, principal.getEmail(), LOGIN_CODE_EXPIRATION_SECONDS);
+    }
+
+    // 2차 로그인 인증
+    @Override
+    public LoginResponseDTO verifyLoginCode(LoginVerificationRequestDTO requestDTO) {
+        log.info("[AuthServiceImpl] verifyLoginCode start challengeId={}", requestDTO.challengeId());
+        String redisKey = buildLoginCodeKey(requestDTO.challengeId());
+        Object savedChallenge = redisTemplate.opsForValue().get(redisKey);
+
+        if (savedChallenge == null) {
+            throw new AuthException("인증코드가 만료되었거나 존재하지 않습니다.");
+        }
+
+        String[] challengeParts = savedChallenge.toString().split(":", 2);
+        if (challengeParts.length != 2 || !requestDTO.code().equals(challengeParts[1])) {
+            throw new AuthException("인증코드가 일치하지 않습니다.");
+        }
+
+        redisTemplate.delete(redisKey);
+
+        Long memberId = Long.valueOf(challengeParts[0]);
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
+        MemberSecurityDTO principal = (MemberSecurityDTO) customUserDetailsService.loadUserByUsername(member.getEmail());
         LoginResponseDTO responseDTO = authTokenService.issueTokens(principal);
-        log.info("[AuthServiceImpl] login end email={} memberId={}", requestDTO.email(), principal.getMemberId());
+        log.info("[AuthServiceImpl] verifyLoginCode end memberId={} challengeId={}", memberId, requestDTO.challengeId());
         return responseDTO;
     }
 
@@ -126,7 +193,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void logout(MemberSecurityDTO principal, LogoutRequestDTO requestDTO) {
+    public void logout(MemberSecurityDTO principal, LogoutRequestDTO requestDTO, String accessToken) {
         // 현재 사용자에게 저장된 refresh token만 삭제해 로그아웃을 보장
         log.info("[AuthServiceImpl] logout start memberId={}", principal.getMemberId());
         String sessionId = jwtTokenProvider.getSessionId(requestDTO.refreshToken());
@@ -141,6 +208,12 @@ public class AuthServiceImpl implements AuthService {
 
         if (savedToken == null || !requestDTO.refreshToken().equals(savedToken.toString())) {
             throw new AuthException("유효한 리프레시 토큰이 아닙니다.");
+        }
+
+        // 액세스 토큰을 블랙리스트에 등록하여 즉시 무효화한다.
+        String pureAccessToken = extractBearerToken(accessToken);
+        if (pureAccessToken != null) {
+            authTokenService.blacklistAccessToken(pureAccessToken);
         }
 
         removeSession(principal.getMemberId(), sessionId);
@@ -235,7 +308,13 @@ public class AuthServiceImpl implements AuthService {
         String newAccessToken = jwtTokenProvider.generateAccessToken(principal, sessionId);
         log.info("[AuthServiceImpl] refresh end memberId={} sessionId={}", memberId, sessionId);
 
-        return new TokenRefreshResponseDTO(newAccessToken);
+        // [Refresh Token Rotation] 기존 리프레시 토큰을 삭제하고 새로 한 쌍을 발급한다.
+        removeSession(memberId, sessionId);
+        LoginResponseDTO newTokens = authTokenService.issueTokens(principal, sessionId);
+
+        log.info("[AuthServiceImpl] refresh end memberId={} sessionId={} (Rotated)", memberId, sessionId);
+
+        return new TokenRefreshResponseDTO(newTokens.accessToken(), newTokens.refreshToken());
     }
 
     private AuthUserDTO toAuthUserDTO(MemberSecurityDTO principal) {
@@ -260,6 +339,40 @@ public class AuthServiceImpl implements AuthService {
     private String buildSessionSetKey(Long memberId) {
         // 회원별 세션 ID 집합을 따로 유지해 전체 로그아웃과 세션 목록 조회를 빠르게 처리한다.
         return "auth:sessions:" + memberId;
+    }
+
+    private String buildLoginCodeKey(String challengeId) {
+        return "auth:login-code:" + challengeId;
+    }
+
+    private String generateLoginCode() {
+        return String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
+    }
+
+    private void sendLoginCodeEmail(String email, String code) {
+        if (!"mail".equalsIgnoreCase(loginCodeDeliveryMode)) {
+            log.info("[AuthServiceImpl] login verification code email={} code={} mode={}",
+                    email,
+                    code,
+                    loginCodeDeliveryMode);
+            return;
+        }
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(mailFrom);
+        message.setTo(email);
+        message.setSubject("[RE:FORM] 로그인 2차 인증코드");
+        message.setText("""
+                안녕하세요. RE:FORM 입니다.
+
+                로그인 2차 인증코드는 아래와 같습니다.
+
+                인증코드: %s
+
+                이 코드는 5분 동안만 유효합니다.
+                본인이 요청하지 않았다면 비밀번호를 변경하고 고객센터에 문의해 주세요.
+                """.formatted(code));
+        javaMailSender.send(message);
     }
 
     private void removeSession(Long memberId, String sessionId) {

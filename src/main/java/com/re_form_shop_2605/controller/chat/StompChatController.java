@@ -2,15 +2,16 @@ package com.re_form_shop_2605.controller.chat;
 
 import com.re_form_shop_2605.dto.chat.ChatMessageDTO;
 import com.re_form_shop_2605.dto.chat.ChatSendMessageDTO;
+import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
 import com.re_form_shop_2605.service.chat.ChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+
+import java.security.Principal;
 
 /**
  * ─────────────────────────────────────────────────────
@@ -30,20 +31,30 @@ public class StompChatController {
 
     // 클라이언트가 /pub/chat/message로 보내면 여기서 처리
     @MessageMapping("/chat/message")
-    public void handleMessage(ChatSendMessageDTO chatSendMessageDTO) {
-        log.info("Received message: chatId={}, sender={}", chatSendMessageDTO.chatId(), chatSendMessageDTO.senderId());
+    public void handleMessage(ChatSendMessageDTO chatSendMessageDTO, Principal principal) {
+        MemberSecurityDTO member = resolveMember(principal);
+        log.info("Received message: chatId={}, sender={}", chatSendMessageDTO.chatId(), member.getMemberId());
 
         // 1. DB 저장
-        ChatMessageDTO saved = chatService.saveMessage(chatSendMessageDTO);
+        ChatMessageDTO saved = chatService.saveMessage(chatSendMessageDTO, member.getMemberId());
 
         // 2. 해당 채팅방 구독자에게 전송
         // todo React 클라이언트는 /sub/chat/{chatId} 를 구독하고 있어야 함
-        simpMessagingTemplate.convertAndSend("/sub/chat" + chatSendMessageDTO.chatId(), saved);
+        simpMessagingTemplate.convertAndSend("/sub/chat/" + chatSendMessageDTO.chatId(), saved);
     }
 
     // 채팅방 입장 시 읽음 처리
     @MessageMapping("/chat/read")
-    public void handleRead(@Payload Long chatId, @Header("sender-id") Long myId) {
-        chatService.markAsRead(chatId, myId);
+    public void handleRead(@Payload Long chatId, Principal principal) {
+        MemberSecurityDTO member = resolveMember(principal);
+        chatService.markAsRead(chatId, member.getMemberId());
+    }
+
+    private MemberSecurityDTO resolveMember(Principal principal) {
+        if (principal instanceof org.springframework.security.core.Authentication authentication
+                && authentication.getPrincipal() instanceof MemberSecurityDTO member) {
+            return member;
+        }
+        throw new IllegalArgumentException("STOMP 인증 정보가 없습니다.");
     }
 }

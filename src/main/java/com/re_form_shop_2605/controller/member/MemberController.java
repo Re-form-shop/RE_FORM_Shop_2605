@@ -12,9 +12,12 @@ import com.re_form_shop_2605.service.member.InterestSettingService;
 import com.re_form_shop_2605.service.member.MemberImageService;
 import com.re_form_shop_2605.service.member.MemberService;
 import com.re_form_shop_2605.service.trade.TradeService;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,12 +25,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 /**
  * 작성자: 민기
@@ -91,9 +93,14 @@ public class MemberController {
             summary = "프로필 이미지 업로드",
             description = "프로필 수정 전에 이미지 파일을 먼저 업로드하고, 이후 프로필 수정 JSON의 profileImageUrl에 넣을 URL을 반환합니다."
     )
-    @PostMapping("/profile-image")
+    @PostMapping(value = "/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<ProfileImageUploadResponse>> uploadProfileImage(
             @AuthenticationPrincipal MemberSecurityDTO principal,
+            @Parameter(
+                    description = "업로드할 프로필 이미지 파일",
+                    required = true,
+                    schema = @Schema(type = "string", format = "binary")
+            )
             @RequestPart("profileImage") MultipartFile profileImage
     ) {
         String profileImageUrl = memberImageService.saveTemporaryProfileImage(principal.getMemberId(), profileImage);

@@ -58,8 +58,11 @@ public class NotificationController {
             description = "알림 ID에 해당하는 알림을 읽음 상태로 변경합니다."
     )
     @PatchMapping("/{id}/read")
-    public ResponseEntity<ApiResponse<ReadNotificationResponse>> readNotification(@PathVariable("id") Long notiId) {
-        notificationService.modifyNotificationRead(notiId);
+    public ResponseEntity<ApiResponse<ReadNotificationResponse>> readNotification(
+            @PathVariable("id") Long notiId,
+            @AuthenticationPrincipal MemberSecurityDTO principal
+    ) {
+        notificationService.modifyNotificationRead(principal.getMemberId(), notiId);
         return ResponseEntity.ok(ApiResponse.ok(new ReadNotificationResponse(notiId, true), "알림 읽음 처리 완료"));
     }
 
@@ -78,7 +81,7 @@ public class NotificationController {
 
         for (NotificationDTO item : responseDTO.items().content()) {
             if (!item.isRead()) {
-                notificationService.modifyNotificationRead(item.notiId());
+                notificationService.modifyNotificationRead(principal.getMemberId(), item.notiId());
                 updatedCount++;
             }
         }

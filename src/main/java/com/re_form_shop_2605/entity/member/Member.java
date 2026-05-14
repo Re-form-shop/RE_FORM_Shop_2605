@@ -103,5 +103,9 @@ public class Member extends BaseEntity {
     public void changeEmailEvent(boolean emailEvent) {
         this.emailEvent = emailEvent;
     }
+
+    public void updateMannerScore(BigDecimal mannerScore) {
+        this.mannerScore = mannerScore;
+    }
 }
 

@@ -15,7 +15,7 @@ public interface NotificationService {
     NotificationResponseDTO readNotifications(Long memberId, int page, int size);
 
     // 알림을 읽음 상태로 변경
-    void modifyNotificationRead(Long notiId);
+    void modifyNotificationRead(Long memberId, Long notiId);
 
     // 알림을 삭제
     void removeNotification(Long notiId);

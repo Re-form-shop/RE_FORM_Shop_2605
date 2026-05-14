@@ -50,6 +50,29 @@ public class AuthTokenServiceImpl implements AuthTokenService {
         return new LoginResponseDTO(accessToken, refreshToken, toAuthUserDTO(principal));
     }
 
+    @Override
+    public void blacklistAccessToken(String accessToken) {
+        // 액세스 토큰의 남은 유효 시간을 계산해 그만큼만 Redis에 블랙리스트로 등록한다.
+        long expirationTime = jwtTokenProvider.getClaims(accessToken).getExpiration().getTime();
+        long now = System.currentTimeMillis();
+        long ttl = expirationTime - now;
+
+        if (ttl > 0) {
+            redisTemplate.opsForValue().set(
+                    "auth:blacklist:" + accessToken,
+                    "logout",
+                    ttl,
+                    TimeUnit.MILLISECONDS
+            );
+        }
+    }
+
+    @Override
+    public boolean isAccessTokenBlacklisted(String accessToken) {
+        // 블랙리스트 키가 존재하면 이미 로그아웃된 토큰으로 간주한다.
+        return Boolean.TRUE.equals(redisTemplate.hasKey("auth:blacklist:" + accessToken));
+    }
+
     private AuthUserDTO toAuthUserDTO(MemberSecurityDTO principal) {
         // 응답에 담을 사용자 정보는 DB 기준 최신 상태를 다시 조회해 조립한다.
         Member member = memberRepository.findById(principal.getMemberId())
