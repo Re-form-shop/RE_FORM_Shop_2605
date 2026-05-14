@@ -3,14 +3,11 @@ package com.re_form_shop_2605.controller.trade;
 import com.re_form_shop_2605.dto.common.ApiResponse;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
-import com.re_form_shop_2605.dto.trade.ListingCreateRequestDTO;
-import com.re_form_shop_2605.dto.trade.ListingUpdateRequestDTO;
-import com.re_form_shop_2605.dto.trade.PostCardDTO;
-import com.re_form_shop_2605.dto.trade.PostCreateFormDTO;
-import com.re_form_shop_2605.dto.trade.PostDetailDTO;
+import com.re_form_shop_2605.dto.trade.*;
 import com.re_form_shop_2605.entity.Enum.DeliveryType;
 import com.re_form_shop_2605.entity.Enum.Grade;
 import com.re_form_shop_2605.entity.Enum.Sport;
+import com.re_form_shop_2605.service.trade.AiListingService;
 import com.re_form_shop_2605.service.trade.PostSearchService;
 import com.re_form_shop_2605.service.trade.PostImageService;
 import com.re_form_shop_2605.service.trade.PostService;
@@ -25,6 +22,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 // 판매글 작성, 조회, 수정, 삭제 API
@@ -41,6 +39,8 @@ public class PostController {
     private final PostService postService;
     private final PostSearchService postSearchService;
     private final PostImageService postImageService;
+    private final AiListingService aiListingService;
+
     /**
      * 작성자: 손민정
      * 작성일: 2026-05-13
@@ -115,6 +115,27 @@ public class PostController {
         List<String> imageUrls = postImageService.saveTemporaryPostImages(principal.getMemberId(), images);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(new ImageUploadResponse(imageUrls), "판매글 이미지 업로드 완료"));
+    }
+    /**
+     * ─────────────────────────────────────────────────────
+     * 작성자: 진혜림
+     * 작성일: 2026-05-14
+     * 설명: 판매 상품 이미지를 업로드하면 AI가 제목과 설명을 자동 제안
+     * ─────────────────────────────────────────────────────
+     */
+    @Operation(
+            summary = "AI 판매글 제목/설명 제안",
+            description = "판매 상품 이미지를 업로드하면 AI가 판매글 제목과 설명을 자동으로 제안합니다."
+    )
+    @PostMapping(value = "/ai-suggest", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<AiListingSuggestResponseDTO>> suggestListingInfo(
+        @RequestParam("image") MultipartFile image
+    ) throws IOException {
+        AiListingSuggestResponseDTO result = aiListingService.suggestFromImage(
+            image.getContentType(),
+                image.getBytes()
+        );
+        return ResponseEntity.ok(ApiResponse.ok(result, "AI 제목/설명 제안 완료"));
     }
 
     // POST /api/listings
