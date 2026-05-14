@@ -32,6 +32,13 @@ public interface PostMapper {
     int updatePostStatus(@Param("postId") Long postId, @Param("status") String status);
 
 
+    /**
+     * ─────────────────────────────────────────────────────
+     * 작성자: 손민정
+     * 작성일: 2026-05-12
+     * 설명: 조건 따른 게시글 조회 Mapper
+     * ─────────────────────────────────────────────────────
+     */
     /* 조건 따른 게시글 조회 */
     // 1. 검색/필터/정렬 조회
     List<PostCardVO> findPostsByCondition(@Param("keyword") String keyword,

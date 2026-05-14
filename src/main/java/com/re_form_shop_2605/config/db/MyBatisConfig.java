@@ -9,6 +9,18 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import javax.sql.DataSource;
 
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 손민정
+ * 작성일: 2026-05-12
+ * 설명: MyBatis 수동 설정
+ *       - JPA, Spring Batch DataSource와 충돌 방지를 위해 수동 설정
+ *       - MariaDB DataSource 사용 (Primary)
+ *       - 경로 따른 XML 매퍼 파일 인식
+ *       - 카멜 케이스 자동 매핑 설정
+ * ─────────────────────────────────────────────────────
+ */
+
 @Configuration
 @MapperScan("com.re_form_shop_2605.mapper") // Mapper 인터페이스 패키지 경로
 public class MyBatisConfig {

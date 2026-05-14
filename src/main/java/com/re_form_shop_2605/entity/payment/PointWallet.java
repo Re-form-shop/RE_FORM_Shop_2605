@@ -4,6 +4,23 @@ import com.re_form_shop_2605.entity.member.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 손민정
+ * 작성일: 2026-05-07
+ * 설명: 포인트 지갑 Entity
+ *      - balance: 총 보유 포인트
+ *      - withdrawable: 출금 가능 포인트
+ *      - pending: 정산 대기 포인트
+ *      - 포인트 흐름:
+ *        거래 완료 → +pending
+ *        구매 확정 → +balance, +withdrawable, -pending
+ *        출금 요청 → -withdrawable, +pending
+ *        출금 승인 → -balance, -pending
+ *        출금 반려/취소 → +withdrawable, -pending
+ * ─────────────────────────────────────────────────────
+ */
+
 @Entity
 @Table(name = "point_wallet")
 @Getter

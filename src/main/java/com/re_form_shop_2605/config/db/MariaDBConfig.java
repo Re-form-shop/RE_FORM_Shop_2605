@@ -1,10 +1,3 @@
-/**
- * 작성자: 손민정
- * 작성일: 2026-05-13
- * 설명: DB DataSource 충돌 방지
- *      - 오류 1) ConfigurationProperties 사용 시 postgres.*까지 읽어 오류
- *              => HikariDataSource에 직접 값 넣어 해결
- */
 package com.re_form_shop_2605.config.db;
 
 import com.zaxxer.hikari.HikariDataSource;
@@ -13,6 +6,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 import javax.sql.DataSource;
+
+/**
+ * 작성자: 손민정
+ * 작성일: 2026-05-13
+ * 설명: DB DataSource 충돌 방지
+ *      - 오류 1) ConfigurationProperties 사용 시 postgres.*까지 읽어 오류
+ *              => HikariDataSource에 직접 값 넣어 해결
+ */
 
 @Configuration
 public class MariaDBConfig {

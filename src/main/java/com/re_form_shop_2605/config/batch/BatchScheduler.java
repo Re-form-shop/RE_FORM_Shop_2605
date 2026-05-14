@@ -8,11 +8,22 @@ import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 손민정
+ * 작성일: 2026-05-13
+ * 설명: 배치 스케줄러
+ *       - 자동 구매 확정 및 미정산 거래 정산 처리 (매일 새벽 4시)
+ *       - 커뮤니티 인기글 집계 (1시간마다)
+ * ─────────────────────────────────────────────────────
+ */
+
 @Component
 @RequiredArgsConstructor
 public class BatchScheduler {
     private final JobOperator jobOperator;
-    private final Job dailyBatchJob; // SettlementJob (정산)
+    private final Job dailyBatchJob;           // 자동구매 확정 + 정산 자동화
+    private final Job popularCommunityPostJob; // 커뮤니티 인기글 조회
 
     /* 자동 구매 확정 -> 미정산 거래 정산 처리 */
     // 1) 5일 경과된 미구매확정 거래 자동 구매확정 처리
@@ -23,5 +34,14 @@ public class BatchScheduler {
                 .addLong("time", System.currentTimeMillis())
                 .toJobParameters();
         jobOperator.start(dailyBatchJob, params);
+    }
+
+    /* 1시간 간격 커뮤니티 게시물 인기글 집계 */
+    @Scheduled(cron = "0 0 * * * *")
+    public void runPopularCommunityPostJob() throws Exception {
+        JobParameters params = new JobParametersBuilder()
+                .addLong("time", System.currentTimeMillis())
+                .toJobParameters();
+        jobOperator.start(popularCommunityPostJob, params);
     }
 }

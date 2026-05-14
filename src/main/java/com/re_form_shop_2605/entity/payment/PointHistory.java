@@ -7,6 +7,16 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 손민정
+ * 작성일: 2026-05-07
+ * 설명: 포인트 이력 Entity
+ *      - 포인트 적립/차감 이력 저장
+ *      - type: EARN(적립) | WITHDRAW(출금)
+ *      - trade: 중복 지급 방지용 거래 ID (unique)
+ * ─────────────────────────────────────────────────────
+ */
 
 @Entity
 @Table(name = "point_history")

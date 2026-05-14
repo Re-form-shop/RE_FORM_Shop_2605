@@ -1,11 +1,3 @@
-/**
- * 작성자: 손민정
- * 작성일: 2026-05-09
- * 설명: 결제 비즈니스 로직
- *      - 토스페이먼츠 API 연동
- *      - 결제 초기화/승인/취소/환불 처리
- */
-
 package com.re_form_shop_2605.service.payment;
 
 import com.re_form_shop_2605.dto.payment.*;
@@ -29,6 +21,14 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+/**
+ * 작성자: 손민정
+ * 작성일: 2026-05-09
+ * 설명: 결제 비즈니스 로직
+ *      - 토스페이먼츠 API 연동
+ *      - 결제 초기화/승인/취소/환불 처리
+ */
 
 @Service
 @RequiredArgsConstructor
@@ -198,5 +198,17 @@ public class PaymentService {
                 payment.getPayMethod(), payment.getAmount(), payment.getStatus(),
                 payment.getApprovalNo(), payment.getPaidAt()
         );
+    }
+
+    // 4. 결제 정보 조회
+    public PaymentResponseDTO getPayment(Long tradeId) {
+        // 1) 해당 거래의 결제 내역이 존재 여부 확인
+        Payment payment = paymentRepository.findByTradeTradeId(tradeId)
+                .orElseThrow(() -> new IllegalArgumentException("getPayment : 해당 거래의 결제 내역이 존재하지 않습니다."));
+
+        // 2) PaymentResponseDTO 반환
+        return new PaymentResponseDTO(payment.getPaymentId(), tradeId,
+                payment.getPayMethod(), payment.getAmount(), payment.getStatus(),
+                payment.getApprovalNo(), payment.getPaidAt());
     }
 }

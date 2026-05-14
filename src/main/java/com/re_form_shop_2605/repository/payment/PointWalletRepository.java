@@ -7,6 +7,14 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 손민정
+ * 작성일: 2026-05-11
+ * 설명: 포인트 지갑 조회 및 업데이트 Repository
+ * ─────────────────────────────────────────────────────
+ */
+
 @Repository
 public interface PointWalletRepository extends JpaRepository<PointWallet, Long> {
     /* 포인트 지갑 조회/업데이트 */

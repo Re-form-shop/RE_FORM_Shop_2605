@@ -10,7 +10,6 @@ import com.re_form_shop_2605.repository.payment.PointHistoryRepository;
 import com.re_form_shop_2605.repository.payment.PointWalletRepository;
 import com.re_form_shop_2605.repository.trade.TradeRepository;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.Nullable;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
@@ -26,6 +25,17 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 손민정
+ * 작성일: 2026-05-09
+ * 설명: 정산 배치 Job 설정
+ *       - dailyBatchJob: 매일 새벽 4시 실행
+ *       - autoConfirmStep: RECEIVED 상태 + 5일 경과 거래 자동 구매 확정 (CONFIRMED)
+ *       - setStep: CONFIRMED 상태 + 미정산 거래 판매자 포인트 정산 (수수료 5% 차감 후 지급)
+ * ─────────────────────────────────────────────────────
+ */
 
 @Configuration
 @RequiredArgsConstructor

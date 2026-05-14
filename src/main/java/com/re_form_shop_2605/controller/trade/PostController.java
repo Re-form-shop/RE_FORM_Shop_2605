@@ -58,10 +58,10 @@ public class PostController {
             @RequestParam(required = false) Sport sport,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) DeliveryType tradeType,
-            @RequestParam(required = false) Grade condition,    // 추가 (확인 후 주석 삭제)
-            @RequestParam(required = false) Integer minPrice,   // 추가 (확인 후 주석 삭제)
-            @RequestParam(required = false) Integer maxPrice,   // 추가 (확인 후 주석 삭제)
-            @RequestParam(defaultValue = "latest") String sort, // 추가 (확인 후 주석 삭제)
+            @RequestParam(required = false) Grade condition,
+            @RequestParam(required = false) Integer minPrice,
+            @RequestParam(required = false) Integer maxPrice,
+            @RequestParam(defaultValue = "latest") String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {

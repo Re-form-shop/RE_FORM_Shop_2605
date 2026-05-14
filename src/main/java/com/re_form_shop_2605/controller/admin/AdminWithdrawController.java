@@ -1,24 +1,32 @@
 package com.re_form_shop_2605.controller.admin;
 
 import com.re_form_shop_2605.dto.admin.AdminWithdrawActionRequestDTO;
-import com.re_form_shop_2605.dto.payment.WithdrawRequestDTO;
 import com.re_form_shop_2605.dto.payment.WithdrawResponseDTO;
 import com.re_form_shop_2605.service.payment.PointService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+/**
+ * 작성자: 손민정
+ * 작성일: 2026-05-11
+ * 설명: 관리자 포인트 관련 기능 구현
+ *       - 출금 요청 목록, 출금 승인/반려
+ */
 
 @Log4j2
 @RestController
 @Tag(name = "관리자 API", description = "관리자(Role.ADMIN) 관련 API)")
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
+<<<<<<<< HEAD:src/main/java/com/re_form_shop_2605/controller/admin/adminWithdrawController.java
 public class adminWithdrawController {
+========
+public class AdminWithdrawController {
+>>>>>>>> payment_3rd:src/main/java/com/re_form_shop_2605/controller/admin/AdminWithdrawController.java
     /*
     14. 관리자
     | GET   | `/api/admin/members`                       | 회원 목록 (검색·필터)
@@ -33,12 +41,6 @@ public class adminWithdrawController {
 
     private final PointService pointService;
 
-    /**
-     * 작성자: 손민정
-     * 작성일: 2026-05-11
-     * 설명: 관리자 포인트 관련 기능 구현
-     *       - 출금 요청 목록, 출금 승인/반려
-     */
     /* 7. 전체 회원 출금 요청 목록 조회 */
     @GetMapping("/withdraw-requests")
     public ResponseEntity<List<WithdrawResponseDTO>> viewAllPendingWithdrawList() {

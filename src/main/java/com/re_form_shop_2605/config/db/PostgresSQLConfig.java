@@ -1,10 +1,3 @@
-/**
- * 작성자: 손민정
- * 작성일: 2026-05-13
- * 설명: DB DataSource 충돌 방지
- *      - 오류 1) Spring AI PgVectorStore 자동 설정이 @Primary인 MariaDB에 접근
- *              => PGVectorStore 빈 직접 생성해 PostgreSQL DataSource 명시적 주입
- */
 package com.re_form_shop_2605.config.db;
 
 import org.springframework.ai.embedding.EmbeddingModel;
@@ -17,8 +10,16 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import javax.sql.DataSource;
 
+/**
+ * 작성자: 손민정
+ * 작성일: 2026-05-13
+ * 설명: DB DataSource 충돌 방지
+ *      - 오류 1) Spring AI PgVectorStore 자동 설정이 @Primary인 MariaDB에 접근
+ *              => PGVectorStore 빈 직접 생성해 PostgreSQL DataSource 명시적 주입
+ */
+
 @Configuration
-public class PostgreSQLConfig {
+public class PostgresSQLConfig {
     /* 벡터 데이터 (AI)
        - spring.datasource.postgres.* 값 읽어옴
      */

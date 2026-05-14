@@ -8,6 +8,16 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 손민정
+ * 작성일: 2026-05-08
+ * 설명: 토스페이먼츠 WebClient 설정
+ *      - 시크릿 키를 Base64로 인코딩하여 Basic 인증 헤더 생성
+ *      - 모든 요청에 Authorization, Content-Type 헤더 기본값 설정
+ * ─────────────────────────────────────────────────────
+ */
+
 @Configuration
 public class TossWebClientConfig {
     /*

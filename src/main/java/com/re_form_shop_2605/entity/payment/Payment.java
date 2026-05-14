@@ -9,6 +9,17 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 손민정
+ * 작성일: 2026-05-07
+ * 설명: 결제 Entity
+ *      - 토스페이먼츠 결제 정보 저장
+ *      - 결제 상태: READY → PAID → CANCELED | REFUNDED
+ *      - trade와 1:1 관계
+ * ─────────────────────────────────────────────────────
+ */
+
 @Entity
 @Table(name = "payment")
 @Getter

@@ -125,7 +125,9 @@ public class SecurityConfig {
                                 "/stomp/**",
                                 "/api/delivery/tracking/**",
                                 "/uploads/**",
-                                "/confirm"
+                                "/confirm",
+                                "/api/community/**",
+                                "/api/payments/**"
                         ).permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/listings", "/api/listings/**")
                         .permitAll()

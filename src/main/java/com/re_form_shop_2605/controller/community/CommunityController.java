@@ -1,11 +1,13 @@
 package com.re_form_shop_2605.controller.community;
 
+import com.re_form_shop_2605.dto.batch.PopularPostDTO;
 import com.re_form_shop_2605.dto.common.ApiResponse;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.community.*;
 import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
 import com.re_form_shop_2605.entity.Enum.Sport;
 import com.re_form_shop_2605.service.community.CommunityService;
+import com.re_form_shop_2605.service.community.PopularPostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -25,11 +27,13 @@ import java.util.List;
  * ─────────────────────────────────────────────────────
  */
 @RestController
+@Tag(name = "커뮤니티 게시판 API", description = "커뮤니티 게시글 작성·수정·삭제·조회 및 인기글 조회 API")
 @RequestMapping("/api/community")
 @RequiredArgsConstructor
 @Tag(name = "커뮤니티 API", description = "커뮤니티 게시글 관련 API")
 public class CommunityController {
     private final CommunityService communityService;
+    private final PopularPostService popularPostService;
 
     // GET /api/community
     @Operation(summary = "커뮤니티 게시글 목록 조회", description = "종목 필터와 페이지 정보를 기준으로 게시글 목록을 조회합니다.")
@@ -152,5 +156,21 @@ public class CommunityController {
         return ResponseEntity.ok(
                 ApiResponse.ok(communityService.toggleReplyLike(replyId, principal.getMemberId()), "댓글 좋아요 처리 완료")
         );
+    }
+
+    /**
+     * ─────────────────────────────────────────────────────
+     * 작성자: 손민정
+     * 작성일: 2026-05-13
+     * 설명: 커뮤니티 인기글 조회 API
+     * ─────────────────────────────────────────────────────
+     */
+    @Operation(summary = "인기글 조회", description = "Redis ZSet에서 높은 score 순으로 인기글 반환")
+    @GetMapping("/posts/popular")
+    public ResponseEntity<ApiResponse<List<PopularPostDTO>>> viewPopularCommunityPosts(
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        List<PopularPostDTO> popularPosts = popularPostService.getPopularPosts(size);
+        return ResponseEntity.ok(ApiResponse.ok(popularPosts, "인기글 조회 완료"));
     }
 }

@@ -1,10 +1,3 @@
-/**
- * 작성자: 손민정
- * 작성일: 2026-05-11
- * 설명: 포인트/출금 API
- *       - 포인트 지갑 조회, 이력 조회, 출금 요청/취소
- */
-
 package com.re_form_shop_2605.controller.payment;
 
 import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
@@ -18,12 +11,20 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+/**
+ * 작성자: 손민정
+ * 작성일: 2026-05-11
+ * 설명: 포인트/출금 API
+ *       - 포인트 지갑 조회, 이력 조회, 출금 요청/취소
+ */
 
 @Log4j2
 @RestController
@@ -41,9 +42,9 @@ public class PointController {
      */
     private final PointService pointService;
 
-    /* 1. 포인트 지갑 + 내역 조회 */
-    @Operation(summary = "포인트 지갑 조회", description = "현재 로그인한 사용자의 포인트 잔액과 지갑 정보를 조회합니다.")
+    /* 1. 포인트 지갑 조회 */
     @GetMapping("")
+    @Operation(summary = "포인트 지갑 조회", description = "보유 포인트, 출금 가능 포인트, 정산 대기 포인트 조회")
     public ResponseEntity<PointWalletResponseDTO> viewPointWallet(
 //            @RequestParam("memberId") Long memberId
             @AuthenticationPrincipal MemberSecurityDTO principal
@@ -56,8 +57,8 @@ public class PointController {
     }
 
     /* 2. 포인트 이력 조회 */
-    @Operation(summary = "포인트 이력 조회", description = "현재 로그인한 사용자의 포인트 적립, 사용, 정산 이력을 조회합니다.")
     @GetMapping("/history")
+    @Operation(summary = "포인트 이력 조회", description = "포인트 적립/차감 이력 최신순 조회")
     public ResponseEntity<List<PointHistoryItemDTO>> viewPointHistory(
 //            @RequestParam("memberId") Long memberId
             @AuthenticationPrincipal MemberSecurityDTO principal
@@ -70,9 +71,8 @@ public class PointController {
     }
 
     /* 3. 출금 요청 */
-    @Operation(summary = "출금 요청", description = "현재 로그인한 사용자가 보유 포인트에 대해 출금 요청을 생성합니다.")
-    @ApiResponse(responseCode = "201", description = "출금 요청 성공")
     @PostMapping("/withdraw")
+    @Operation(summary = "포인트 출금 신청", description = "잔액 초과 시 400 반환")
     public ResponseEntity<WithdrawResponseDTO> askWithdraw(
 //            @RequestParam("memberId") Long memberId,
             @AuthenticationPrincipal MemberSecurityDTO principal,
@@ -85,8 +85,8 @@ public class PointController {
     }
 
     /* 4. 내 출금 요청 목록 조회 */
-    @Operation(summary = "내 출금 요청 목록 조회", description = "현재 로그인한 사용자가 요청한 출금 내역 목록을 조회합니다.")
     @GetMapping("/withdraw")
+    @Operation(summary = "내 출금 요청 목록 조회", description = "내가 신청한 출금 요청 목록 조회")
     public ResponseEntity<List<WithdrawResponseDTO>> viewRequestWithdraw(
 //            @RequestParam("memberId") Long memberId
             @AuthenticationPrincipal MemberSecurityDTO principal
@@ -98,9 +98,8 @@ public class PointController {
     }
 
     /* 5. 내 출금 요청 취소 */
-    @Operation(summary = "출금 요청 취소", description = "현재 로그인한 사용자가 자신의 출금 요청을 취소합니다.")
-    @ApiResponse(responseCode = "204", description = "출금 요청 취소 성공")
     @DeleteMapping("/withdraw/{withdrawId}")
+    @Operation(summary = "출금 요청 취소", description = "PENDING 상태인 출금 요청만 취소 가능")
     public ResponseEntity<Void> cancelRequestWithdraw(
             @PathVariable Long withdrawId,
 //            @RequestParam("memberId") Long memberId

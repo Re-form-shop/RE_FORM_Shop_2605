@@ -11,6 +11,16 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * ─────────────────────────────────────────────────────
+ * 작성자: 손민정
+ * 작성일: 2026-05-07
+ * 설명: 포인트 출금 요청 Entity
+ *      - 출금 상태: PENDING → APPROVED | REJECTED | CANCELED
+ *      - 최초 생성 시 PENDING 상태로 초기화
+ * ─────────────────────────────────────────────────────
+ */
+
 @Entity
 @Table(name = "point_request")
 @Getter
