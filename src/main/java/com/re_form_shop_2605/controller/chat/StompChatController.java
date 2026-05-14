@@ -77,4 +77,12 @@ public class StompChatController {
     public void handleRead(@Payload Long chatId, @Header("sender-id") Long myId) {
         chatService.markAsRead(chatId, myId);
     }
+
+    private MemberSecurityDTO resolveMember(Principal principal) {
+        if (principal instanceof org.springframework.security.core.Authentication authentication
+                && authentication.getPrincipal() instanceof MemberSecurityDTO member) {
+            return member;
+        }
+        throw new IllegalArgumentException("STOMP 인증 정보가 없습니다.");
+    }
 }

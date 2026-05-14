@@ -22,11 +22,7 @@ import java.util.List;
 @Tag(name = "관리자 API", description = "관리자(Role.ADMIN) 관련 API)")
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
-<<<<<<<< HEAD:src/main/java/com/re_form_shop_2605/controller/admin/adminWithdrawController.java
-public class adminWithdrawController {
-========
 public class AdminWithdrawController {
->>>>>>>> payment_3rd:src/main/java/com/re_form_shop_2605/controller/admin/AdminWithdrawController.java
     /*
     14. 관리자
     | GET   | `/api/admin/members`                       | 회원 목록 (검색·필터)

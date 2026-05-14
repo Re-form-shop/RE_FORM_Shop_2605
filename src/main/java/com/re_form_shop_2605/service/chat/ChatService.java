@@ -82,10 +82,13 @@ public class ChatService {
     }
 
     /* 메시지 저장 (WebSocket 컨트롤러에서 호출) */
-    public ChatMessageDTO saveMessage(ChatSendMessageDTO chatSendMessageDTO, RiskAnalysisResultDTO riskAnalysisResultDTO, Long senderId){
+    public ChatMessageDTO saveMessage(
+            ChatSendMessageDTO chatSendMessageDTO,
+            RiskAnalysisResultDTO riskAnalysisResultDTO
+            ){
         ChatRoom chatRoom = chatRoomRepository.findById(chatSendMessageDTO.chatId()).orElseThrow();
-        validateParticipant(chatRoom, senderId);
-        Member sender = memberRepository.findById(senderId).orElseThrow();
+        validateParticipant(chatRoom, chatSendMessageDTO.senderId());
+        Member sender = memberRepository.findById(chatSendMessageDTO.senderId()).orElseThrow();
 
         ChatMessage chatMessage = ChatMessage.builder()
                 .chatRoom(chatRoom)
