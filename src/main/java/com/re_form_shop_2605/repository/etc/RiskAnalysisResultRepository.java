@@ -1,5 +1,8 @@
 package com.re_form_shop_2605.repository.etc;
 
+import com.re_form_shop_2605.dto.common.PageResponse;
+import com.re_form_shop_2605.dto.etc.RiskAnalysisResultDTO;
+import com.re_form_shop_2605.entity.Enum.RiskLevel;
 import com.re_form_shop_2605.entity.Enum.TargetType;
 import com.re_form_shop_2605.entity.etc.RiskAnalysisResult;
 import org.springframework.data.jpa.repository.JpaRepository;
