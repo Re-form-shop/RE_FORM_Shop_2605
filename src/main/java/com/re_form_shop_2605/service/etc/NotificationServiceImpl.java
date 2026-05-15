@@ -183,4 +183,35 @@ public class NotificationServiceImpl implements NotificationService {
     private String buildTradeLink(Long tradeId) {
         return "/trades/" + tradeId;
     }
+
+    /**
+     * ─────────────────────────────────────────────────────
+     * 작성자: 진혜림
+     * 작성일: 2026-05-15
+     * 설명: 채팅 메시지 수신 알림을 생성
+     * ─────────────────────────────────────────────────────
+     */
+
+    /**
+     * 채팅 알림 생성 — 채팅방 밖에 있는 상대방에게 알림
+     *
+     * @param receiverMember: 알림을 받을 상대방
+     * @param senderNickname: 발신자
+     * @param chatId: 채팅방 id
+     */
+    @Override
+    public void createChatNotification(Member receiverMember, String senderNickname, Long chatId) {
+        // 알림 내용
+        String content = senderNickname + "님이 메세지를 보냈습니다.";
+
+        // 클릭 시 해당 채팅방으로 이동
+        String linkUrl = "/chat/" + chatId;
+
+        notificationRepository.save(Notification.builder()
+                .member(receiverMember)            // 수신자
+                .type(NotificationType.CHAT)       // 알림 타입 (CHAT 이미 enum에 존재)
+                .reportContent(content)            // 알림 내용
+                .linkUrl(linkUrl)                  // 클릭 경로
+                .build());
+    }
 }

@@ -19,6 +19,7 @@ import com.re_form_shop_2605.repository.chat.ChatRoomRepository;
 import com.re_form_shop_2605.repository.AI.RiskAnalysisResultRepository;
 import com.re_form_shop_2605.repository.member.MemberRepository;
 import com.re_form_shop_2605.repository.trade.PostRepository;
+import com.re_form_shop_2605.service.etc.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -50,6 +51,7 @@ public class ChatService {
     private final PostRepository postRepository;
     private final ChatMessageMapper chatMessageMapper;
     private final RiskAnalysisResultRepository riskAnalysisResultRepository;
+    private final NotificationService notificationService;
 
     /* 채팅방 생성 */
     public ChatRoomDetailDTO getOrCreateChatRoom(Long postId, Long buyerId){
@@ -99,7 +101,25 @@ public class ChatService {
                 .isRead(false)
                 .build();
 
-        return toChatMessageDTO(chatMessageRepository.save(chatMessage), riskAnalysisResultDTO);
+        ChatMessageDTO saved = toChatMessageDTO(chatMessageRepository.save(chatMessage), riskAnalysisResultDTO);
+
+        // 발신자가 구매자이면 -> 판매자가 상대방, 발신자가 판매자이면 -> 구매자가 상대방
+        Member receiver = resolveReceiver(chatRoom, chatSendMessageDTO.senderId());
+
+        // 알림 DB 저장 (배지 카운트용)
+        notificationService.createChatNotification(
+                receiver,
+                sender.getNickname(),
+                chatSendMessageDTO.chatId()
+        );
+
+        return saved;
+    }
+
+    // StompChatController에서 receiverId만 필요할 때 사용
+    public Long resolveReceiverId(Long chatId, Long senderId){
+        ChatRoom chatRoom = chatRoomRepository.findById(chatId).orElseThrow();
+        return resolveReceiver(chatRoom, senderId).getMemberId();
     }
 
     /* 채팅방 입장 시 읽음 처리 */
@@ -285,6 +305,17 @@ public class ChatService {
                 unreadCount,
                 post
         );
+    }
+
+    //  채팅방에서 발신자(sendId)를 제외한 상대방을 반환
+    private Member resolveReceiver(ChatRoom chatRoom, Long chatId) {
+        boolean senderIsBuyer = chatRoom.getBuyer().getMemberId().equals(chatId);
+        // 구매자가 보낸 경우 -> 판매자에게 알림
+        if (senderIsBuyer) {
+            return chatRoom.getPost().getSellerId();
+        }
+        // 판매자가 보낸 경우 -> 구매자에게 알림
+        return chatRoom.getBuyer();
     }
 
     private void validateParticipant(ChatRoom chatRoom, Long memberId) {

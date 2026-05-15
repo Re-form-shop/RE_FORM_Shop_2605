@@ -17,6 +17,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * ─────────────────────────────────────────────────────
@@ -71,6 +73,29 @@ public class StompChatController {
         // 4. 해당 채팅방 구독자에게 전송
         // todo React 클라이언트는 /sub/chat/{chatId} 를 구독하고 있어야 함
         simpMessagingTemplate.convertAndSend("/sub/chat/" + chatSendMessageDTO.chatId(), saved);
+
+        // 5. 상대방 개인 구독 경로로 알림 푸시 (실시간 배지 갱신용)
+        // chatService.saveMessage 내에서 이미 DB 저장은 완료됨
+        // 여기서는 STOMP 실시간 전송만 담당
+        //
+        // 클라이언트 구독 경로: /sub/user/{receiverId}/notification
+        // convertAndSendToUser(username, destination, payload) 형태를 쓰면
+        // → 실제 전송 경로는 /sub/user/{username}/notification 이 됨
+        //
+        // STOMP 인증 시 Principal의 getName()이 memberId(String)이므로
+        // receiver의 memberId를 String으로 변환해서 사용
+        Long receiverId = chatService.resolveReceiverId(
+                chatSendMessageDTO.chatId(),
+                member.getMemberId()
+        );
+
+        // 알림 : 클라이언트가 배지 표시에 필요한 최소 정보
+        Map<String, Object> notificationPayload = Map.of(
+                "type", "CHAT", // 알림 종류
+                "chatId", chatSendMessageDTO.chatId(), // 채팅방 ID
+                "senderNickname", member.getNickname(), // 발신자 닉네임
+                "content", chatSendMessageDTO.content() // 메시지 미리보기
+        );
     }
 
     // 채팅방 입장 시 읽음 처리
