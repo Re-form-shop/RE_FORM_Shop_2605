@@ -45,6 +45,9 @@ public interface CommunityService {
     // 댓글 삭제 (soft delete)
     void removeReply(Long replyId, Long memberId);
 
+    // 댓글 수정
+    ReplyResponseDTO modifyReply(Long replyId, Long memberId, ReplyCreateRequestDTO requestDTO);
+
     // 댓글 좋아요 토글
     int toggleReplyLike(Long replyId, Long memberId);
 }

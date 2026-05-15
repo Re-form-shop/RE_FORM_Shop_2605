@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CommunityPost {
+public class CommunityPostVO {
     private Long commId;
     private Long memberId;
     private Sport Sport; // 종목

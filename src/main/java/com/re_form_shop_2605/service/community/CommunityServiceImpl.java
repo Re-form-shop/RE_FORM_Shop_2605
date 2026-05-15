@@ -235,6 +235,21 @@ public class CommunityServiceImpl implements CommunityService {
         reply.getCommunityPost().removeComment(); // 커뮤니티 댓글 수 차감
     }
 
+    /* 댓글 수정 */
+    @Override
+    public ReplyResponseDTO modifyReply(Long replyId, Long memberId, ReplyCreateRequestDTO requestDTO) {
+        Reply reply = getReply(replyId);
+        checkAuthor(reply.getMember().getMemberId(), memberId, "댓글 수정"); // 예외 던지기
+        reply.changeReply(requestDTO.replyContent());
+
+        CommunityPost post = reply.getCommunityPost();
+        Long postAuthorId = post.getMember().getMemberId();
+        List<Reply> topReplies = replyRepository.findAllByCommunityPost_CommIdAndReplyIsNullOrderByCreatedAtDesc(post.getCommId());
+        Map<Long, Integer> anonymousMap = buildAnonymousMap(topReplies, postAuthorId);
+
+        return toReplyResponseDTO(reply, postAuthorId, anonymousMap, memberId);
+    }
+
     /* 댓글 좋아요 토글 */
     @Override
     public int toggleReplyLike(Long replyId, Long memberId) {

@@ -38,7 +38,7 @@ public class CommunityController {
     // GET /api/community
     @Operation(summary = "커뮤니티 게시글 목록 조회", description = "종목 필터와 페이지 정보를 기준으로 게시글 목록을 조회합니다.")
     @GetMapping
-    public ResponseEntity<ApiResponse<PageResponse<CommunityPostListItemDTO>>> redPosts(
+    public ResponseEntity<ApiResponse<PageResponse<CommunityPostListItemDTO>>> listPosts(
             @RequestParam(required = false) Sport sport,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
@@ -144,6 +144,19 @@ public class CommunityController {
     ) {
         communityService.removeReply(replyId, principal.getMemberId());
         return ResponseEntity.ok(ApiResponse.ok(null, "댓글 삭제 완료"));
+    }
+
+    // PUT /api/community/replies/{replyId}
+    @Operation(summary = "댓글 수정", description = "본인이 작성한 댓글을 수정합니다.")
+    @PutMapping("/replies/{replyId}")
+    public ResponseEntity<ApiResponse<ReplyResponseDTO>> modifyReply(
+            @PathVariable Long replyId,
+            @AuthenticationPrincipal MemberSecurityDTO principal,
+            @Valid @RequestBody ReplyCreateRequestDTO requestDTO
+    ) {
+        return ResponseEntity.ok(
+                ApiResponse.ok(communityService.modifyReply(replyId, principal.getMemberId(), requestDTO), "댓글 수정 완료")
+        );
     }
 
     // POST /api/community/replies/{replyId}/like

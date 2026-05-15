@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Reply {
+public class ReplyVO {
     private Long replyId;
     private Long postId;
     private Long memberId;

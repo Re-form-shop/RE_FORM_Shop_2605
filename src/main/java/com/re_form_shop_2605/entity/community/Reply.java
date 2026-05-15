@@ -68,4 +68,9 @@ public class Reply extends BaseEntity {
     public void removeLike() {
         if (this.likeCount > 0) this.likeCount--;
     }
+
+    // 댓글 수정
+    public void changeReply(String replyContent) {
+        if (replyContent != null) this.replyContent = replyContent;
+    }
 }

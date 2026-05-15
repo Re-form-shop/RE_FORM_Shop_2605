@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ChatRoom {
+public class ChatRoomVO {
     private Long chatId;
     private Long tradeId;
     private Long buyerId;
