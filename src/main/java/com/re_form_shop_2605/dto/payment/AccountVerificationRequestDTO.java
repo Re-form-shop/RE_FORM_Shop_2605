@@ -13,4 +13,4 @@ public record AccountVerificationRequestDTO(
         String bankCode,   // 은행 코드
         String accountNum, // 계좌번호
         String holderInfo  // 계좌주 생년월일 6자리
-) { }
+) {}

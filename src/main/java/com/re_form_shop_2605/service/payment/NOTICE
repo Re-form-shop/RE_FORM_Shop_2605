@@ -1,6 +1,0 @@
-# PaymentService 로직 흐름
-1. 구매자가 결제하기 버튼 클릭
-2. payment 저장 (READY)
-3. 서버가 tossOrderId 생성
-4. 프론트에 결제 정보 넘기
-5. 프론트가 토스 결제창 띄움
