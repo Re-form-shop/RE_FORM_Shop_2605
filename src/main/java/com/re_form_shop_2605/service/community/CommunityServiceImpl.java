@@ -1,7 +1,7 @@
 package com.re_form_shop_2605.service.community;
 
 
-import com.re_form_shop_2605.dto.chat.MemberBriefDTO;
+import com.re_form_shop_2605.dto.member.MemberBriefDTO;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.community.*;
 import com.re_form_shop_2605.entity.Enum.CommunityPostStatus;

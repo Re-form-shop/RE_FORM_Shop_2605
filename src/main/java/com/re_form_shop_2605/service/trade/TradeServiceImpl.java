@@ -6,7 +6,7 @@ import com.re_form_shop_2605.dto.delivery.DeliveryTrackingTraceRequestDTO;
 import com.re_form_shop_2605.dto.delivery.DeliveryTrackingTraceResponseDTO;
 import com.re_form_shop_2605.dto.etc.TradeNotificationTemplateDTO;
 import com.re_form_shop_2605.dto.trade.DeliveryRequestDTO;
-import com.re_form_shop_2605.dto.chat.MemberBriefDTO;
+import com.re_form_shop_2605.dto.member.MemberBriefDTO;
 import com.re_form_shop_2605.dto.chat.PostBriefDTO;
 import com.re_form_shop_2605.dto.trade.ReviewRequestDTO;
 import com.re_form_shop_2605.dto.trade.ReviewResponseDTO;

@@ -1,6 +1,6 @@
 package com.re_form_shop_2605.dto.trade;
 
-import com.re_form_shop_2605.dto.chat.MemberBriefDTO;
+import com.re_form_shop_2605.dto.member.MemberBriefDTO;
 import com.re_form_shop_2605.dto.chat.PostBriefDTO;
 import com.re_form_shop_2605.entity.Enum.TradeDeliveryType;
 import com.re_form_shop_2605.entity.Enum.TradeStatus;

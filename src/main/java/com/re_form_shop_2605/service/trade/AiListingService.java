@@ -1,10 +1,8 @@
 package com.re_form_shop_2605.service.trade;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.re_form_shop_2605.dto.trade.AiListingSuggestResponseDTO;
+import com.re_form_shop_2605.dto.AI.AiListingSuggestResponseDTO;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.SystemMessage;

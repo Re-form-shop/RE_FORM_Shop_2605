@@ -5,6 +5,7 @@ import com.re_form_shop_2605.domain.etc.RiskAnalysisResultVO;
 import com.re_form_shop_2605.dto.chat.*;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.AI.RiskAnalysisResultDTO;
+import com.re_form_shop_2605.dto.member.MemberBriefDTO;
 import com.re_form_shop_2605.entity.Enum.MessageType;
 import com.re_form_shop_2605.entity.Enum.TargetType;
 import com.re_form_shop_2605.entity.Enum.TradeStatus;
