@@ -1,4 +1,4 @@
-package com.re_form_shop_2605.config;
+package com.re_form_shop_2605.config.payment;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

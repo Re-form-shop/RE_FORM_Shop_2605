@@ -1,5 +1,6 @@
 package com.re_form_shop_2605.controller.trade;
 
+import com.re_form_shop_2605.dto.AI.AiListingSuggestResponseDTO;
 import com.re_form_shop_2605.dto.common.ApiResponse;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.login.MemberSecurityDTO;

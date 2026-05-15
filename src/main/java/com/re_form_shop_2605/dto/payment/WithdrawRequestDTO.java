@@ -15,12 +15,18 @@ import jakarta.validation.constraints.Size;
 
 public record WithdrawRequestDTO(
         @NotNull @Min(1000)
-        int requestAmount,   // 출금 신청 금액
+        int requestAmount,    // 출금 신청 금액
 
         @NotBlank @Size(max = 50)
-        String bankName,     // 은행명
+        String bankName,      // 은행명
 
         @NotBlank @Size(max = 30)
-        String accountNumber // 계좌번호
-) {
-}
+        String accountNumber, // 계좌번호
+
+        // 05.15 추가) 계좌 실명 인증 추가 필드 2개
+        @NotBlank
+        String bankCode,      // 은행 코드
+
+        @NotBlank
+        String holderInfo     // 계좌주 생년월일 6자리
+) { }

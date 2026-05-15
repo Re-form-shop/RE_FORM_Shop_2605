@@ -1,0 +1,51 @@
+금융결제원 계좌실명조회 API
+
+
+[ 프로세스 ]
+1. 계좌실명조회 API 호출
+2. Access Token 추가
+   - 주요 요청 파라미터 : Access Token, 계좌번호, 예금주 인증번호, 개인(주민등록번호 앞 7자리)
+3. 오픈뱅킹 Access Token 검증
+4. 오픈뱅킹 거래내역조회 실행
+5. 계좌실명조회 결과 반환
+   - 반환 형태 : JSON, 주요 반환 정보 : 참가기관 정보, 계좌실명 정보
+6. 결과 수신
+
+
+[ 요청메시지 URL ]
+HTTP URL | https://openapi.openbanking.or.kr/v2.0/inquiry/real_name
+HTTP Method | POST
+Content Type | application/json; charset=UTF-8
+
+
+[ Request ]
+Header    | Authorization
+Parameter | bank_tran_id             | AN(20) | 은행거래고유번호
+	      | bank_code_std            | An(3)  | 개설기관 표준코드
+	      | account_num              | AN(16) | 계좌번호
+	      | account_seq              | AN(3)  | 회차번호
+	      | account_holder_info_type | AN(1)  | 예금주 실명번호 구분코드
+	      | account_holder_info      | AN(13) | 예금주 인증정보
+	      | tran_dtime               | N(14)  | 요청일시
+
+
+[ Response Message ]
+  Body   | api_tran_id              | aNS(40) | 거래고유번호 (API)
+         | api_tran_dtm             | N(17)   | 거래일시 (밀리세컨드)
+         | rsp_code                 | AN(5)   | 응답코드 (API)
+         | rsp_message              | AH(300) | 응답메시지 (API)
+         | bank_tran_id             | AN(20)  | 거래고유번호 (참가기관)
+         | bank_tran_date           | N(8)    | 거래일자 (참가기관)
+         | bank_code_tran           | AN(3)   | 응답코드를 부여한 참가기관 표준코드
+         | bank_rsp_code            | AN(3)   | 응답코드 (참가기관)
+         | bank_rsp_message         | AN(100) | 응답메시지 (참가기관)
+         | bank_code_std            | AN(3)   | 개설기관.표준코드
+         | bank_code_sub            | AN(7)   | 개설기관.점별코드
+         | bank_name                | AN(20)  | 개설기관명
+         | savings_bank_name        | AN(20)  | 개별저축은행명
+         | account_num              | AN(16)  | 계좌번호
+         | account_seq              | AN(3)   | 회차번호
+         | account_holder_info_type | AN(1)   | 예금주 실명번호 구분코드
+         | account_holder_info      | AN(12)  | 예금주 인증정보
+         | account_holder_name      | AH(20)  | 예금주 성명
+         | account_type             | AN(1)   | 계좌 종류 (1:수시입출금, 2:예적금, 6:수익증권)

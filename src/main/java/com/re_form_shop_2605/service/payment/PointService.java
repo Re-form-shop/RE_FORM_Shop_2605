@@ -2,10 +2,7 @@ package com.re_form_shop_2605.service.payment;
 
 import com.re_form_shop_2605.dto.admin.AdminWithdrawActionRequestDTO;
 import com.re_form_shop_2605.dto.admin.WithdrawAction;
-import com.re_form_shop_2605.dto.payment.PointHistoryItemDTO;
-import com.re_form_shop_2605.dto.payment.PointWalletResponseDTO;
-import com.re_form_shop_2605.dto.payment.WithdrawRequestDTO;
-import com.re_form_shop_2605.dto.payment.WithdrawResponseDTO;
+import com.re_form_shop_2605.dto.payment.*;
 import com.re_form_shop_2605.entity.Enum.PointHistoryType;
 import com.re_form_shop_2605.entity.Enum.PointRequestStatus;
 import com.re_form_shop_2605.entity.payment.PointHistory;
@@ -26,8 +23,8 @@ import java.util.List;
  * 작성자: 손민정
  * 작성일: 2026-05-11
  * 설명: 포인트/출금 비즈니스 로직
- *       - 포인트 지갑 조회, 이력 조회
- *       - 출금 요청/취소/승인/반려 처리
+ *      - 포인트 지갑 조회, 이력 조회
+ *      - 출금 요청/취소/승인/반려 처리
  */
 
 @Service
@@ -36,6 +33,7 @@ public class PointService {
     private final PointWalletRepository pointWalletRepository;
     private final PointHistoryRepository pointHistoryRepository;
     private final PointRequestRepository pointRequestRepository;
+    private final AccountVerificationService accountVerificationService;
     private final MemberRepository memberRepository;
 
     /* 1. 포인트 지갑 조회 */
@@ -79,22 +77,34 @@ public class PointService {
 
     /* 3. 포인트 출금 요청 */
     public WithdrawResponseDTO requestWithdraw(Long memberId, WithdrawRequestDTO request) {
-        // 1) memberId로 PointWallet 조회 -> 출금 가능 포인트 확인
+        // 1) 계좌 실명 인증 (05.15 추가된 로직)
+        AccountVerificationRequestDTO accountRequest = new AccountVerificationRequestDTO(
+                request.bankCode(),
+                request.accountNumber(),
+                request.holderInfo()
+        );
+
+        AccountVerificationResponseDTO accountResponse = accountVerificationService.verify(accountRequest);
+        if (!accountResponse.verified()) {
+            throw new IllegalArgumentException("requestWithdraw : " + accountResponse.message());
+        }
+
+        // 2) memberId로 PointWallet 조회 -> 출금 가능 포인트 확인
         PointWallet pointWallet = pointWalletRepository.findByMemberMemberId(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("requestWithdraw : 포인트 지갑이 없습니다."));
         int withdrawable = pointWallet.getWithdrawable();
 
-        // 2) 중복 요청 확인 : PENDING 상태 출금 요청 유무 확인
+        // 3) 중복 요청 확인 : PENDING 상태 출금 요청 유무 확인
         if (pointRequestRepository.existsByMemberMemberIdAndStatus(memberId, PointRequestStatus.PENDING)) {
             throw new IllegalStateException("requestWithdraw : 이미 진행 중인 출금 요청 건이 있습니다.");
         }
 
-        // 3) 출금 가능 포인트 검증
+        // 4) 출금 가능 포인트 검증
         if (request.requestAmount() > withdrawable) {
             throw new IllegalArgumentException("requestWithdraw : 출금 가능한 포인트가 부족합니다.");
         }
 
-        // 4) PointRequest 저장
+        // 5) PointRequest 저장
         PointRequest pointRequest = PointRequest.builder()
                 .member(pointWallet.getMember())
                 .requestAmount(request.requestAmount())
@@ -103,11 +113,11 @@ public class PointService {
                 .build();
         pointRequestRepository.save(pointRequest);
 
-        // 5) PointWallet 업데이트 : withdrawable 차감, pending 증가
+        // 6) PointWallet 업데이트 : withdrawable 차감, pending 증가
         pointWallet.withdraw(request.requestAmount());
         pointWalletRepository.save(pointWallet);
 
-        // 6) WithdrawResponseDTO 반환
+        // 7) WithdrawResponseDTO 반환
         return new WithdrawResponseDTO(
                 pointRequest.getWithdrawId(),
                 request.requestAmount(),
