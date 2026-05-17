@@ -412,6 +412,49 @@ public class PostServiceImpl implements PostService {
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    // 현재 회원이 찜한 판매글 목록을 최신순으로 반환 (마이페이지 찜 목록 탭)
+    public List<PostCardDTO> getMyWishes(Long memberId) {
+        List<Wish> wishes = wishRepository.findAllByMember_MemberIdOrderByCreatedAtDesc(memberId);
+        List<PostCardDTO> result = new ArrayList<>();
+
+        for (Wish wish : wishes) {
+            Post post = wish.getPost();
+
+            // 삭제·숨김 상태 글은 목록에서 제외
+            if (post.getStatus() == PostStatus.HIDDEN || post.getStatus() == PostStatus.DELETED) {
+                continue;
+            }
+
+            // 썸네일: 정렬 순서 1번 이미지 사용
+            List<PostImage> images = postImageRepository.findAllByPost_PostIdOrderBySortOrderAsc(post.getPostId());
+            String thumbnailUrl = images.isEmpty() ? null : images.get(0).getImageUrl();
+
+            SellerBriefDTO seller = toSellerBriefDTO(post.getSellerId());
+
+            result.add(new PostCardDTO(
+                    post.getPostId(),
+                    post.getTitle(),
+                    post.getTeam(),
+                    post.getSport(),
+                    post.getPrice(),
+                    post.getGrade(),
+                    post.getSize(),
+                    post.getDeliveryType(),
+                    post.getStatus(),
+                    post.getViewCount(),
+                    post.getWishCount(),
+                    true,               // 찜 목록이므로 isWished 항상 true
+                    thumbnailUrl,
+                    toTimeAgo(post.getCreatedAt()),
+                    post.getCreatedAt(),
+                    seller
+            ));
+        }
+        return result;
+    }
+
      // 찜을 추가하고 실제 찜 수를 다시 계산한다.
     private WishToggleResult addWish(Post post, Member member) {
         wishRepository.save(Wish.builder()

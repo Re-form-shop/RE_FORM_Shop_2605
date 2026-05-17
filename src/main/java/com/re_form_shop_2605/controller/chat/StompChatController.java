@@ -12,12 +12,10 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -91,10 +89,17 @@ public class StompChatController {
 
         // 알림 : 클라이언트가 배지 표시에 필요한 최소 정보
         Map<String, Object> notificationPayload = Map.of(
-                "type", "CHAT", // 알림 종류
-                "chatId", chatSendMessageDTO.chatId(), // 채팅방 ID
+                "type", "CHAT",                         // 알림 종류
+                "chatId", chatSendMessageDTO.chatId(),  // 채팅방 ID
                 "senderNickname", member.getNickname(), // 발신자 닉네임
                 "content", chatSendMessageDTO.content() // 메시지 미리보기
+        );
+
+        // 수신자 알림 채널로 push — GNB 배지 실시간 갱신용
+        // 클라이언트는 /sub/notification/{memberId} 구독 중
+        simpMessagingTemplate.convertAndSend(
+                "/sub/notification/" + receiverId,
+                (Object) notificationPayload  // (Object) 캐스트: convertAndSend(String, Object) 오버로드 명확히 지정
         );
     }
 

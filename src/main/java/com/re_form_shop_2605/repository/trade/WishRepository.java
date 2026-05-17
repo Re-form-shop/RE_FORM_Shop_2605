@@ -21,4 +21,7 @@ public interface WishRepository extends JpaRepository<Wish, Long> {
     long countByPost_PostId(Long postId);
 
     List<Wish> findAllByPost_PostId(Long postId);
+
+    // 특정 회원이 찜한 목록을 최신순으로 조회 (내 찜 목록 탭용)
+    List<Wish> findAllByMember_MemberIdOrderByCreatedAtDesc(Long memberId);
 }

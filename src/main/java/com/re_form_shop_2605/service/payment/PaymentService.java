@@ -63,35 +63,26 @@ public class PaymentService {
             throw new IllegalArgumentException("createPayment : ACCEPTED 상태가 아닌 거래 건은 결제할 수 없습니다.");
         }
 
-        // 4) 배송지 정보 검증
-        if (trade.getDeliveryType() == TradeDeliveryType.DELIVERY) {
-            if (trade.getDeliveryAddress() == null || trade.getDeliveryAddress().isBlank()) {
-                throw new IllegalArgumentException("createPayment : 배송 거래는 결제 전에 배송지 정보가 필요합니다.");
-            }
+        // 4) 결제 가능 거래 방식 및 배송지 정보 검증
+        if (trade.getDeliveryType() != TradeDeliveryType.DELIVERY) {
+            throw new IllegalArgumentException("createPayment : 택배 거래만 결제를 진행할 수 있습니다.");
+        }
+
+        if (trade.getDeliveryAddress() == null || trade.getDeliveryAddress().isBlank()) {
+            throw new IllegalArgumentException("createPayment : 배송 거래는 결제 전에 배송지 정보가 필요합니다.");
         }
 
         // 5) tossOrderId 생성 후 저장 => UUID 이용
         String tossOrderId = UUID.randomUUID().toString();
 
         // 6) Payment 생성 및 DB insert
-        // READY 단계의 payment가 있는지 확인 (결제 시도만 하고 아직 결제되지 않은 상태)
-        Payment payment = paymentRepository.findByTradeTradeId(request.tradeId())
-                .filter(p -> p.getStatus() == PaymentStatus.READY)
-                .orElse(null);
-
-        // 없으면 Payment 새로 생성
-        if (payment == null){
-            payment = Payment.builder()
-                    .trade(trade)
-                    .payMethod(request.payMethod())
-                    .tossOrderId(tossOrderId)
-                    .amount(trade.getTradePrice())
-                    .status(PaymentStatus.READY)
-                    .build();
-        } else {
-            // READY 상태의 payment가 있으면 데이터 리셋 후 tossOrderId만 갱신
-            payment.resetForRetry(tossOrderId, request.payMethod());
-        }
+        Payment payment = Payment.builder()
+                .trade(trade)
+                .payMethod(request.payMethod())
+                .tossOrderId(tossOrderId)
+                .amount(trade.getTradePrice())
+                .status(PaymentStatus.READY)
+                .build();
         paymentRepository.save(payment);
 
         // 7) PaymentInitResponseDTO 반환

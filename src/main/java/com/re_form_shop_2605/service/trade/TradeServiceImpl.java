@@ -31,6 +31,11 @@ import com.re_form_shop_2605.service.common.ServicePageResponse;
 import com.re_form_shop_2605.service.delivery.DeliveryTrackingService;
 import com.re_form_shop_2605.service.chat.ChatService;
 import com.re_form_shop_2605.service.etc.NotificationService;
+import com.re_form_shop_2605.entity.Enum.PointHistoryType;
+import com.re_form_shop_2605.entity.payment.PointHistory;
+import com.re_form_shop_2605.entity.payment.PointWallet;
+import com.re_form_shop_2605.repository.payment.PointHistoryRepository;
+import com.re_form_shop_2605.repository.payment.PointWalletRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -66,6 +71,8 @@ public class TradeServiceImpl implements TradeService {
     private final DeliveryTrackingService deliveryTrackingService;
     private final NotificationService notificationService;
     private final ChatService chatService; // 거래 이벤트 채팅방 시스템 메시지 발송용
+    private final PointWalletRepository pointWalletRepository; // 구매 확정 시 판매자 포인트 정산용
+    private final PointHistoryRepository pointHistoryRepository; // 포인트 이력 기록용
 
     @Override
     // 판매글 상태와 전달 방식 조건을 검증한 뒤 거래를 생성한다.
@@ -196,6 +203,27 @@ public class TradeServiceImpl implements TradeService {
 
         trade.confirm();
         trade.getPost().changeStatus(PostStatus.SOLD);
+
+        // ── 판매자 포인트 정산: pending → withdrawable ──────────────────────────
+        // 결제 완료 시 earnPoint()로 pending에 적립된 거래 대금을
+        // 구매 확정 시점에 withdrawable(출금 가능)로 전환한다.
+        int tradePrice = trade.getTradePrice();
+        PointWallet sellerWallet = pointWalletRepository.findByMemberMemberId(
+                trade.getSeller().getMemberId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "confirmTrade : 판매자 포인트 지갑이 존재하지 않습니다. (sellerId=" + trade.getSeller().getMemberId() + ")"));
+
+        sellerWallet.confirm(tradePrice, tradePrice); // pending -= tradePrice, withdrawable += tradePrice
+        pointWalletRepository.save(sellerWallet);
+
+        // 포인트 이력 기록 (EARN 타입, trade와 연결하여 중복 지급 방지)
+        pointHistoryRepository.save(PointHistory.builder()
+                .pointWallet(sellerWallet)
+                .type(PointHistoryType.EARN)
+                .changeAmount(tradePrice)
+                .balance(sellerWallet.getBalance())
+                .trade(trade)
+                .build());
 
         // 구매 확정 시 채팅방에 안내 메시지
         chatService.sendSystemMessage(

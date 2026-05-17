@@ -54,6 +54,9 @@ public interface PostService {
     // 판매글 찜 상태를 토글하고 최신 찜 상태와 개수를 반환
     WishToggleResult toggleWish(Long postId, Long memberId);
 
+    // 현재 회원이 찜한 판매글 목록을 최신순으로 반환 (마이페이지 찜 목록 탭)
+    List<PostCardDTO> getMyWishes(Long memberId);
+
     record WishToggleResult(boolean isLiked, long likeCount) {
     }
 }

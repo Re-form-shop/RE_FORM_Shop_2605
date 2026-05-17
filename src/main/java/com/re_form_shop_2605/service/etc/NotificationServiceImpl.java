@@ -81,7 +81,7 @@ public class NotificationServiceImpl implements NotificationService {
             return;
         }
 
-        String linkUrl = "/api/listings/" + postId;
+        String linkUrl = "/listing/" + postId;
         LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
 
         for (Wish wish : wishes) {
@@ -214,7 +214,7 @@ public class NotificationServiceImpl implements NotificationService {
         String content = senderNickname + "님이 메세지를 보냈습니다.";
 
         // 클릭 시 해당 채팅방으로 이동
-        String linkUrl = "/chat/" + chatId;
+        String linkUrl = "/chat?roomId=" + chatId;
 
         // DB에 알림 저장
         Notification saved = notificationRepository.save(Notification.builder()

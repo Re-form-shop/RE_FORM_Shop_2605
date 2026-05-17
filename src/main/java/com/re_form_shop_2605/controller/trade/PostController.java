@@ -191,6 +191,20 @@ public class PostController {
         return ResponseEntity.ok(ApiResponse.ok(null, "판매글 삭제 완료"));
     }
 
+    // GET /api/listings/my/likes
+    // 현재 로그인 사용자가 찜한 판매글 목록을 최신순으로 조회
+    @Operation(
+            summary = "내 찜 목록 조회",
+            description = "현재 회원이 찜한 판매글 목록을 최신순으로 반환합니다. 삭제·숨김 상태 글은 제외됩니다."
+    )
+    @GetMapping("/my/likes")
+    public ResponseEntity<ApiResponse<List<PostCardDTO>>> getMyWishes(
+            @AuthenticationPrincipal MemberSecurityDTO principal
+    ) {
+        List<PostCardDTO> result = postService.getMyWishes(principal.getMemberId());
+        return ResponseEntity.ok(ApiResponse.ok(result, "내 찜 목록 조회 완료"));
+    }
+
     // POST /api/listings/{id}/like
     // 판매글 찜 상태를 토글
     @Operation(
