@@ -15,6 +15,8 @@ import com.re_form_shop_2605.entity.Enum.Role;
 import com.re_form_shop_2605.entity.Enum.TradeStatus;
 import com.re_form_shop_2605.entity.member.Member;
 import com.re_form_shop_2605.entity.trade.MannerReview;
+import com.re_form_shop_2605.entity.payment.PointWallet;
+import com.re_form_shop_2605.repository.payment.PointWalletRepository;
 import com.re_form_shop_2605.repository.member.MemberRepository;
 import com.re_form_shop_2605.repository.trade.TradeRepository;
 import com.re_form_shop_2605.repository.trade.mannerReviewRepository;
@@ -47,6 +49,7 @@ public class MemberServiceImpl implements MemberService {
     private final mannerReviewRepository mannerReviewRepository;
     private final InterestSettingService interestSettingService;
     private final MemberImageService memberImageService;
+    private final PointWalletRepository pointWalletRepository; // 포인트 지갑 저장소
     private final ModelMapper modelMapper;
     private final PasswordEncoder passwordEncoder;
 
@@ -74,6 +77,10 @@ public class MemberServiceImpl implements MemberService {
         member.changeEmailEvent(memberRequestDTO.marketingAgreed());
 
         Member savedMember = memberRepository.save(member);
+
+        // 포인트 지갑 자동 생성 (신규 가입자 대상)
+        pointWalletRepository.save(PointWallet.builder().member(savedMember).build());
+
         return new MemberResponseDTO(null, null, toAuthUserDTO(savedMember));
     }
 

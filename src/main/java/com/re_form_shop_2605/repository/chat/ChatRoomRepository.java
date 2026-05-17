@@ -21,4 +21,6 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     // 구매자로 참여한 방, 판매자(post 작성자)로 참여한 방 모두 조회
     List<ChatRoom> findByBuyer_MemberIdOrderByCreatedAtDesc(Long buyerId);
     List<ChatRoom> findByPost_PostIdOrderByCreatedAtDesc(Long postId);
+    /* 판매자(memberId)로 참여한 채팅방 목록 — post.sellerId.memberId 기준 */
+    List<ChatRoom> findByPost_SellerId_MemberIdOrderByCreatedAtDesc(Long sellerId);
 }

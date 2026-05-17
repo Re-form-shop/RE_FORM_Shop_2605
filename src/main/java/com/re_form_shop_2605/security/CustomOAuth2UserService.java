@@ -8,6 +8,8 @@ import com.re_form_shop_2605.entity.member.Member;
 import com.re_form_shop_2605.entity.member.SocialMember;
 import com.re_form_shop_2605.repository.member.MemberRepository;
 import com.re_form_shop_2605.repository.member.socialMemberRepository;
+import com.re_form_shop_2605.entity.payment.PointWallet;
+import com.re_form_shop_2605.repository.payment.PointWalletRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,16 +40,19 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private final PasswordEncoder passwordEncoder;
     private final MemberRepository memberRepository;
     private final socialMemberRepository socialMemberRepository;
+    private final PointWalletRepository pointWalletRepository; // 포인트 지갑 저장소
 
     // OAuth2 로그인 시 회원/소셜 계정을 연결하는 데 필요한 저장소와 인코더를 주입한다.
     public CustomOAuth2UserService(
             PasswordEncoder passwordEncoder,
             MemberRepository memberRepository,
-            socialMemberRepository socialMemberRepository
+            socialMemberRepository socialMemberRepository,
+            PointWalletRepository pointWalletRepository
     ) {
         this.passwordEncoder = passwordEncoder;
         this.memberRepository = memberRepository;
         this.socialMemberRepository = socialMemberRepository;
+        this.pointWalletRepository = pointWalletRepository;
     }
 
     @Override
@@ -113,6 +118,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .build();
             member.setPassword(passwordEncoder.encode("1111"));
             memberRepository.save(member);
+
+            // 포인트 지갑 자동 생성 (소셜 신규 가입자 대상)
+            pointWalletRepository.save(PointWallet.builder().member(member).build());
 
             socialMemberRepository.save(
                     SocialMember.builder()

@@ -25,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,6 +53,7 @@ public class ChatService {
     private final ChatMessageMapper chatMessageMapper;
     private final RiskAnalysisResultRepository riskAnalysisResultRepository;
     private final NotificationService notificationService;
+    private final SimpMessagingTemplate messagingTemplate; // 시스템 메시지 WebSocket push용
 
     /* 채팅방 생성 */
     public ChatRoomDetailDTO getOrCreateChatRoom(Long postId, Long buyerId){
@@ -177,12 +179,14 @@ public class ChatService {
 
     /* 내 채팅방 목록 -> 구매자, 판매자 통합해서 보여주기 */
     public List<ChatRoomSummaryDTO> getMyChatRooms(Long memberId) {
+        // 내가 구매자로 참여한 방 (buyer.memberId == memberId)
         List<ChatRoom> asBuyer = chatRoomRepository.findByBuyer_MemberIdOrderByCreatedAtDesc(memberId);
-        List<ChatRoom> asSeller = chatRoomRepository.findByPost_PostIdOrderByCreatedAtDesc(memberId);
+        // 내가 판매자로 참여한 방 (post.sellerId.memberId == memberId)
+        List<ChatRoom> asSeller = chatRoomRepository.findByPost_SellerId_MemberIdOrderByCreatedAtDesc(memberId);
 
         return Stream.concat(asBuyer.stream(), asSeller.stream())
                 .sorted(Comparator.comparing(ChatRoom::getCreatedAt).reversed())
-                .map(this::toChatRoomSummaryDTO)
+                .map(room -> toChatRoomSummaryDTO(room, memberId))
                 .toList();
     }
 
@@ -264,29 +268,37 @@ public class ChatService {
         );
     }
 
-    private ChatRoomSummaryDTO toChatRoomSummaryDTO(ChatRoom chatRoom){
-        // 상대방 구하기 - 현재 로그인 유저 기준으로 상대방이 달라짐
-        // 내가 구매자면 -> seller가 상대방
-        // 내가 판매자면 -> buyer가 상대방
-        // todo (지금은 임시로 buyer 기준, Security 연동 후 수정 필요)
-        Member seller = chatRoom.getPost().getSellerId();
+    /**
+     * ChatRoomSummaryDTO 변환 — 호출자의 memberId 기반으로 상대방 결정
+     *
+     * @param chatRoom          변환할 채팅방 엔티티
+     * @param currentMemberId   현재 로그인한 유저의 memberId
+     */
+    private ChatRoomSummaryDTO toChatRoomSummaryDTO(ChatRoom chatRoom, Long currentMemberId){
+        // 내가 구매자인지 판매자인지 판별
+        boolean iAmBuyer = chatRoom.getBuyer().getMemberId().equals(currentMemberId);
+
+        // 상대방 결정: 내가 구매자면 판매자, 내가 판매자면 구매자
+        Member partnerMember = iAmBuyer
+                ? chatRoom.getPost().getSellerId()
+                : chatRoom.getBuyer();
+
         MemberBriefDTO partner = new MemberBriefDTO(
-                seller.getMemberId(),
-                seller.getNickname(),
-                seller.getProfileImageUrl()
+                partnerMember.getMemberId(),
+                partnerMember.getNickname(),
+                partnerMember.getProfileImageUrl()
         );
 
-        // 마지막 페이지
-        Page<ChatMessage> lastPage = chatMessageRepository.findByChatRoom_ChatIdOrderByCreatedAtDesc(chatRoom.getChatId(), PageRequest.of(0, 1)); // 1개만 조회
+        // 마지막 메시지 1개 조회 (createdAtDesc 이므로 첫 번째가 최신)
+        Page<ChatMessage> lastPage = chatMessageRepository
+                .findByChatRoom_ChatIdOrderByCreatedAtDesc(chatRoom.getChatId(), PageRequest.of(0, 1));
 
-        String lastMessage = lastPage.isEmpty() ? null : lastPage.getContent().getFirst().getContent(); // 어차피 한개 밖에 없다.
+        String lastMessage = lastPage.isEmpty() ? null : lastPage.getContent().getFirst().getContent();
+        LocalDateTime lastMessageAt = lastPage.isEmpty() ? null : lastPage.getContent().getFirst().getCreatedAt();
 
-        LocalDateTime lastMessageAt = lastPage.isEmpty() ? null : lastPage.getContent().getLast().getCreatedAt(); // 어차피 한개 밖에 없다.
-
-        // todo 읽지 않은 메시지 수 (Security 연동 후 myId 실제 값으로 교체)
-        Long myId = chatRoom.getBuyer().getMemberId(); // todo 임시 (내 아이디)
-        // 해당 하는 채팅룸의 읽지 않은 메세지 수 (내 아이디가 아니면서)
-        int unreadCount = (int) chatMessageRepository.countByChatRoom_ChatIdAndIsReadFalseAndMember_MemberIdNot(chatRoom.getChatId(), myId);
+        // 내가 보내지 않은 읽지 않은 메시지 수 = 내 unread 배지 카운트
+        int unreadCount = (int) chatMessageRepository
+                .countByChatRoom_ChatIdAndIsReadFalseAndMember_MemberIdNot(chatRoom.getChatId(), currentMemberId);
 
         // 판매글 요약
         PostBriefDTO post = new PostBriefDTO(
@@ -324,5 +336,41 @@ public class ChatService {
         if (!isBuyer && !isSeller) {
             throw new IllegalArgumentException("채팅방 참여자만 메시지를 처리할 수 있습니다.");
         }
+    }
+
+    /**
+     * 거래 상태 변경 등 시스템 이벤트를 채팅방에 공지한다.
+     * sender_id 는 nullable=false 제약 때문에 post 판매자를 시스템 발신자로 사용하고,
+     * type=SYSTEM 으로 구분한다.
+     *
+     * @param postId   채팅방을 특정할 판매글 ID
+     * @param buyerId  채팅방을 특정할 구매자 ID
+     * @param content  공지 메시지 내용
+     */
+    public void sendSystemMessage(Long postId, Long buyerId, String content) {
+        // 채팅방 조회 (없으면 자동 생성)
+        ChatRoom chatRoom = chatRoomRepository
+                .findByPost_PostIdAndBuyer_MemberId(postId, buyerId)
+                .orElseGet(() -> {
+                    Post post = postRepository.findById(postId).orElseThrow();
+                    Member buyer = memberRepository.findById(buyerId).orElseThrow();
+                    ChatRoom newRoom = ChatRoom.builder().post(post).buyer(buyer).build();
+                    return chatRoomRepository.save(newRoom);
+                });
+
+        // SYSTEM 메시지 저장 (sender = 판매자, type = SYSTEM)
+        Member seller = chatRoom.getPost().getSellerId();
+        ChatMessage systemMsg = ChatMessage.builder()
+                .chatRoom(chatRoom)
+                .member(seller) // sender_id non-null 제약 — 판매자를 시스템 발신자로 사용
+                .content(content)
+                .type(MessageType.SYSTEM)
+                .isRead(false)
+                .build();
+        ChatMessage saved = chatMessageRepository.save(systemMsg);
+
+        // WebSocket push — 채팅방 구독자에게 실시간 전달
+        ChatMessageDTO dto = toChatMessageDTO(saved);
+        messagingTemplate.convertAndSend("/sub/chat/" + chatRoom.getChatId(), dto);
     }
 }

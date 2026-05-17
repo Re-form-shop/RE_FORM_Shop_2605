@@ -12,12 +12,16 @@ import com.re_form_shop_2605.entity.trade.Trade;
 import com.re_form_shop_2605.repository.payment.PaymentRepository;
 import com.re_form_shop_2605.repository.payment.PointWalletRepository;
 import com.re_form_shop_2605.repository.payment.TossLogRepository;
+import com.re_form_shop_2605.dto.etc.TradeNotificationTemplateDTO;
 import com.re_form_shop_2605.repository.trade.TradeRepository;
+import com.re_form_shop_2605.service.chat.ChatService;
+import com.re_form_shop_2605.service.etc.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -37,8 +41,11 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final TradeRepository tradeRepository;
     private final TossLogRepository tossLogRepository;
+    private final ObjectMapper objectMapper; // JSON 직렬화용
     private final PointWalletRepository pointWalletRepository;
     private final WebClient tossWebClient;
+    private final NotificationService notificationService; // 거래 알림 발송용
+    private final ChatService chatService; // 결제 완료 채팅 시스템 메시지용
 
     // 1. 결제 요청
     public PaymentInitResponseDTO createPayment(Long buyerId, PaymentInitRequestDTO request) {
@@ -130,19 +137,36 @@ public class PaymentService {
 
         // 6) 판매자 pending 업데이트
         PointWallet sellerWallet = pointWalletRepository.findByMemberMemberId(trade.getSeller().getMemberId())
-                .orElseThrow(() -> new IllegalArgumentException("confirmPayment : 판매자 포인트 지갑이 존재하지 않습니다."));
+                .orElseGet(() -> pointWalletRepository.save(
+                PointWallet.builder().member(trade.getSeller()).build()
+        ));
         sellerWallet.earnPoint(trade.getTradePrice());
 
-        // 7) toss_log 저장
+        // 7) 결제 완료 알림 발송 (판매자 / 구매자)
+        String postTitle = trade.getPost().getTitle();
+        TradeNotificationTemplateDTO sellerTemplate =
+                notificationService.buildSellerPaymentCompletedTemplate(trade.getTradeId(), postTitle);
+        TradeNotificationTemplateDTO buyerTemplate =
+                notificationService.buildBuyerPaymentCompletedTemplate(trade.getTradeId(), postTitle);
+        notificationService.createTradeNotification(trade.getSeller(), sellerTemplate.content(), sellerTemplate.linkUrl());
+        notificationService.createTradeNotification(trade.getBuyer(), buyerTemplate.content(), buyerTemplate.linkUrl());
+
+        // 8) 결제 완료 채팅방 시스템 메시지
+        chatService.sendSystemMessage(
+                trade.getPost().getPostId(), trade.getBuyer().getMemberId(),
+                "[RE:FORM] 결제가 완료되었습니다. 판매자가 배송 정보를 등록할 예정입니다."
+        );
+
+        // 9) toss_log 저장
         tossLogRepository.save(
                 TossLog.builder()
                         .payment(payment)
                         .tossPaymentKey(tossPaymentKey)
-                        .rawResponse(response.toString())
+                        .rawResponse(toJson(response))
                         .build()
         );
 
-        // 7) PaymentResponseDTO 반환
+        // 10) PaymentResponseDTO 반환
         return new PaymentResponseDTO(
                 payment.getPaymentId(), trade.getTradeId(),
                 payment.getPayMethod(), payment.getAmount(), payment.getStatus(),
@@ -210,5 +234,17 @@ public class PaymentService {
         return new PaymentResponseDTO(payment.getPaymentId(), tradeId,
                 payment.getPayMethod(), payment.getAmount(), payment.getStatus(),
                 payment.getApprovalNo(), payment.getPaidAt());
+    }
+
+    /**
+     * Map을 JSON 문자열로 변환한다.
+     * writeValueAsString의 checked exception을 RuntimeException으로 래핑해 호출부를 단순하게 유지한다.
+     */
+    private String toJson(Object obj) {
+        try {
+            return objectMapper.writeValueAsString(obj);
+        } catch (Exception e) {
+            throw new RuntimeException("toss_log JSON 직렬화 실패: " + e.getMessage(), e);
+        }
     }
 }
