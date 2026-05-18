@@ -2,6 +2,7 @@ package com.re_form_shop_2605.dto.trade;
 
 import com.re_form_shop_2605.entity.Enum.DeliveryType;
 import com.re_form_shop_2605.entity.Enum.Grade;
+import com.re_form_shop_2605.entity.Enum.Sport;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -25,6 +26,17 @@ public class PostUpdateFormDTO {
 
     // 수정할 본문
     private String content;
+
+    // 수정할 종목
+    private Sport sport;
+
+    // 수정할 팀명
+    @Size(max = 50)
+    private String team;
+
+    // 수정할 유니폼명
+    @Size(max = 200)
+    private String uniformName;
 
     // 수정할 유니폼 등급
     private Grade grade;
@@ -51,6 +63,9 @@ public class PostUpdateFormDTO {
         return new PostUpdateRequestDTO(
                 title,
                 content,
+                sport,
+                team,
+                uniformName,
                 grade,
                 size,
                 marking,

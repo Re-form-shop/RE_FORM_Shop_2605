@@ -103,12 +103,22 @@ public class Post extends BaseEntity {
     @OneToOne(mappedBy = "post", fetch = FetchType.LAZY)
     private Trade trade;
 
-    public void changePost(String title, String content, Grade grade, String size, Boolean marking, Integer price, DeliveryType deliveryType) {
+    public void changePost(String title, String content, Sport sport, String team, String uniformName,
+                           Grade grade, String size, Boolean marking, Integer price, DeliveryType deliveryType) {
         if (title != null) {
             this.title = title;
         }
         if (content != null) {
             this.content = content;
+        }
+        if (sport != null) {
+            this.sport = sport;
+        }
+        if (team != null) {
+            this.team = team;
+        }
+        if (uniformName != null) {
+            this.uniformName = uniformName;
         }
         if (grade != null) {
             this.grade = grade;

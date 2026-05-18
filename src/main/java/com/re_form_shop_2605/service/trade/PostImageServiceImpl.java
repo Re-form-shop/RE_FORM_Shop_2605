@@ -15,6 +15,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 /**
  * ─────────────────────────────────────────────────────
@@ -28,6 +29,8 @@ public class PostImageServiceImpl implements PostImageService {
 
     private static final Logger log = LogManager.getLogger(PostImageServiceImpl.class);
     private static final int MAX_POST_IMAGES = 10;
+    private static final String TEMP_URL_SEGMENT = "/uploads/post/temp/";
+    private static final String FINAL_URL_PREFIX = "/uploads/post/";
     private final Path uploadRootPath;
 
     public PostImageServiceImpl(
@@ -48,6 +51,30 @@ public class PostImageServiceImpl implements PostImageService {
         Path tempDirectory = uploadRootPath.resolve("temp").resolve(String.valueOf(memberId));
         String urlPrefix = "/uploads/post/temp/" + memberId + "/";
         return saveImages(tempDirectory, urlPrefix, images);
+    }
+
+    @Override
+    public List<String> finalizePostImageUrls(Long postId, Long memberId, List<String> imageUrls) {
+        if (imageUrls == null) {
+            return null;
+        }
+
+        Path finalDirectory = uploadRootPath.resolve(String.valueOf(postId));
+        String finalUrlPrefix = FINAL_URL_PREFIX + postId + "/";
+        List<String> finalizedUrls = new ArrayList<>();
+
+        try {
+            Files.createDirectories(finalDirectory);
+
+            for (String imageUrl : imageUrls) {
+                finalizedUrls.add(finalizeSingleImageUrl(postId, memberId, imageUrl, finalDirectory, finalUrlPrefix));
+            }
+            cleanupEmptyTempDirectory(memberId);
+            return finalizedUrls;
+        } catch (IOException e) {
+            log.error("판매글 이미지 최종 경로 승격 실패. postId={}, memberId={}", postId, memberId, e);
+            throw new IllegalStateException("판매글 이미지 처리에 실패했습니다.", e);
+        }
     }
 
     // 실제 파일 저장 공통 로직을 한 곳으로 모아 게시글 업로드와 임시 업로드가 같은 규칙을 쓰게 한다.
@@ -88,6 +115,47 @@ public class PostImageServiceImpl implements PostImageService {
         } catch (IOException e) {
             log.error("판매글 이미지 저장 실패. directory={}", targetDirectory, e);
             throw new IllegalStateException("판매글 이미지 저장에 실패했습니다.", e);
+        }
+    }
+
+    private String finalizeSingleImageUrl(Long postId, Long memberId, String imageUrl, Path finalDirectory, String finalUrlPrefix) throws IOException {
+        if (!StringUtils.hasText(imageUrl)) {
+            return imageUrl;
+        }
+
+        String tempPrefix = TEMP_URL_SEGMENT + memberId + "/";
+        if (!imageUrl.startsWith(tempPrefix)) {
+            return imageUrl;
+        }
+
+        String fileName = imageUrl.substring(tempPrefix.length());
+        Path tempFile = uploadRootPath.resolve("temp").resolve(String.valueOf(memberId)).resolve(fileName).normalize();
+        Path finalFile = finalDirectory.resolve(fileName).normalize();
+
+        if (!tempFile.startsWith(uploadRootPath.resolve("temp").resolve(String.valueOf(memberId)).normalize())) {
+            throw new IllegalStateException("잘못된 임시 이미지 경로입니다.");
+        }
+
+        if (!Files.exists(tempFile)) {
+            log.warn("임시 이미지 파일이 없어 기존 URL을 유지합니다. postId={}, memberId={}, imageUrl={}", postId, memberId, imageUrl);
+            return imageUrl;
+        }
+
+        Files.createDirectories(Objects.requireNonNull(finalFile.getParent()));
+        Files.move(tempFile, finalFile, StandardCopyOption.REPLACE_EXISTING);
+        return finalUrlPrefix + fileName;
+    }
+
+    private void cleanupEmptyTempDirectory(Long memberId) throws IOException {
+        Path tempDirectory = uploadRootPath.resolve("temp").resolve(String.valueOf(memberId));
+        if (!Files.isDirectory(tempDirectory)) {
+            return;
+        }
+
+        try (var children = Files.list(tempDirectory)) {
+            if (children.findAny().isEmpty()) {
+                Files.deleteIfExists(tempDirectory);
+            }
         }
     }
 

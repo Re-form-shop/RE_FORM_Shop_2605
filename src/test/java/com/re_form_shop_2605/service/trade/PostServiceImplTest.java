@@ -118,6 +118,9 @@ class PostServiceImplTest {
         PostUpdateRequestDTO requestDTO = new PostUpdateRequestDTO(
                 "updated title",
                 "updated content",
+                null,
+                null,
+                null,
                 Grade.S,
                 "105",
                 false,
@@ -160,7 +163,7 @@ class PostServiceImplTest {
                 () -> postService.modifyPost(
                         postId,
                         seller.getMemberId(),
-                        new PostUpdateRequestDTO("new title", null, null, null, null, null, null),
+                        new PostUpdateRequestDTO("new title", null, null, null, null, null, null, null, null, null),
                         null
                 ));
 
@@ -245,7 +248,7 @@ class PostServiceImplTest {
                 () -> postService.modifyPost(
                         postId,
                         seller.getMemberId(),
-                        new PostUpdateRequestDTO("new title", null, null, null, null, 1000, null),
+                        new PostUpdateRequestDTO("new title", null, null, null, null, null, null, null, 1000, null),
                         List.of(" ")
                 ));
 
@@ -267,7 +270,7 @@ class PostServiceImplTest {
         postService.modifyPost(
                 postId,
                 seller.getMemberId(),
-                new PostUpdateRequestDTO(null, null, null, null, null, 9000, null),
+                new PostUpdateRequestDTO(null, null, null, null, null, null, null, null, 9000, null),
                 null
         );
 
@@ -294,7 +297,7 @@ class PostServiceImplTest {
         postService.modifyPost(
                 postId,
                 seller.getMemberId(),
-                new PostUpdateRequestDTO(null, null, null, null, null, 12000, null),
+                new PostUpdateRequestDTO(null, null, null, null, null, null, null, null, 12000, null),
                 null
         );
 
@@ -316,13 +319,13 @@ class PostServiceImplTest {
         postService.modifyPost(
                 postId,
                 seller.getMemberId(),
-                new PostUpdateRequestDTO(null, null, null, null, null, 9000, null),
+                new PostUpdateRequestDTO(null, null, null, null, null, null, null, null, 9000, null),
                 null
         );
         postService.modifyPost(
                 postId,
                 seller.getMemberId(),
-                new PostUpdateRequestDTO(null, null, null, null, null, 8000, null),
+                new PostUpdateRequestDTO(null, null, null, null, null, null, null, null, 8000, null),
                 null
         );
 
@@ -344,7 +347,7 @@ class PostServiceImplTest {
         postService.modifyPost(
                 postId,
                 seller.getMemberId(),
-                new PostUpdateRequestDTO(null, null, null, null, null, 9000, null),
+                new PostUpdateRequestDTO(null, null, null, null, null, null, null, null, 9000, null),
                 null
         );
 
@@ -357,7 +360,7 @@ class PostServiceImplTest {
         postService.modifyPost(
                 postId,
                 seller.getMemberId(),
-                new PostUpdateRequestDTO(null, null, null, null, null, 8000, null),
+                new PostUpdateRequestDTO(null, null, null, null, null, null, null, null, 8000, null),
                 null
         );
 

@@ -18,6 +18,9 @@ public interface PostImageService {
     // 판매글 작성 전에 임시 업로드한 이미지 파일을 저장
     List<String> saveTemporaryPostImages(Long memberId, List<MultipartFile> images);
 
+    // 임시 업로드 URL을 게시글 전용 경로로 승격하고, 이미 최종 경로인 URL은 그대로 유지한다.
+    List<String> finalizePostImageUrls(Long postId, Long memberId, List<String> imageUrls);
+
     // 게시글 전용 폴더를 삭제
     void deletePostImageDirectory(Long postId);
 }

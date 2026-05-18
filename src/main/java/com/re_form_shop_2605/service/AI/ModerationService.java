@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 public class ModerationService {
 
     private final ModerationModel moderationModel;
-    private final ModerationKorean moderationKorean;
+    private final ModerationKeyword moderationKeyword;
     private final ChatClient.Builder chatClientBuilder; // 개선 제안용 ChatGPT
     private final RiskAnalysisResultRepository riskAnalysisResultRepository;
 
@@ -53,7 +53,7 @@ public class ModerationService {
             log.info("[Moderation] start targetType={}, targetId={}, contentPreview=\"{}\"",
                     targetType, targetId, preview(content));
 
-            ModerationKorean.LocalModerationHit localHit = moderationKorean.detect(content);
+            ModerationKeyword.LocalModerationHit localHit = moderationKeyword.detect(content);
             if (localHit != null) {
                 log.info("[Moderation][LocalRule] matched targetType={}, targetId={}, riskLevel={}, reason=\"{}\", normalized=\"{}\"",
                         targetType, targetId, localHit.riskLevel(), localHit.reason(), localHit.normalizedContent());
@@ -80,7 +80,7 @@ public class ModerationService {
             log.info("[Draft Moderation] start targetType={}, contentPreview=\"{}\"",
                     targetType, preview(content));
 
-            ModerationKorean.LocalModerationHit localHit = moderationKorean.detect(content);
+            ModerationKeyword.LocalModerationHit localHit = moderationKeyword.detect(content);
             if (localHit != null) {
                 log.info("[Draft Moderation][LocalRule] matched targetType={}, riskLevel={}, reason=\"{}\", normalized=\"{}\"",
                         targetType, localHit.riskLevel(), localHit.reason(), localHit.normalizedContent());

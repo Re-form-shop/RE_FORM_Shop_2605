@@ -2,6 +2,7 @@ package com.re_form_shop_2605.dto.trade;
 
 import com.re_form_shop_2605.entity.Enum.DeliveryType;
 import com.re_form_shop_2605.entity.Enum.Grade;
+import com.re_form_shop_2605.entity.Enum.Sport;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
@@ -21,6 +22,14 @@ public record ListingUpdateRequestDTO(
 
         String description,
 
+        Sport sport,
+
+        @Size(max = 50)
+        String team,
+
+        @Size(max = 200)
+        String uniformName,
+
         Grade condition,
 
         @Size(max = 10)
@@ -39,6 +48,9 @@ public record ListingUpdateRequestDTO(
         return new PostUpdateRequestDTO(
                 title,
                 description,
+                sport,
+                team,
+                uniformName,
                 condition,
                 size,
                 null,

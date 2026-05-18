@@ -118,6 +118,14 @@ public class ChatService {
         return saved;
     }
 
+    /* 채팅방 상세 조회 */
+    @Transactional(readOnly = true)
+    public ChatRoomDetailDTO readChatRoom(Long memberId, Long chatId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatId).orElseThrow();
+        validateParticipant(chatRoom, memberId);
+        return toChatRoomDetailDTO(chatRoom);
+    }
+
     // StompChatController에서 receiverId만 필요할 때 사용
     public Long resolveReceiverId(Long chatId, Long senderId){
         ChatRoom chatRoom = chatRoomRepository.findById(chatId).orElseThrow();

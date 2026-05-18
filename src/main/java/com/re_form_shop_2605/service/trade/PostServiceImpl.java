@@ -52,6 +52,7 @@ public class PostServiceImpl implements PostService {
     private final postImageRepository postImageRepository;
     private final WishRepository wishRepository;
     private final NotificationService notificationService;
+    private final PostImageService postImageService;
     private final ModelMapper modelMapper;
     private final PostMapper postMapper;
     private final PostVectorService postVectorService;
@@ -85,13 +86,14 @@ public class PostServiceImpl implements PostService {
                 .build();
 
         Post savedPost = postRepository.save(post);
+        List<String> finalizedImageUrls = postImageService.finalizePostImageUrls(savedPost.getPostId(), sellerId, imageUrls);
 
-        if (imageUrls != null && !imageUrls.isEmpty()) {
+        if (finalizedImageUrls != null && !finalizedImageUrls.isEmpty()) {
             List<PostImage> postImages = new ArrayList<>();
-            for (int i = 0; i < imageUrls.size(); i++) {
+            for (int i = 0; i < finalizedImageUrls.size(); i++) {
                 postImages.add(PostImage.builder()
                         .post(savedPost)
-                        .imageUrl(imageUrls.get(i))
+                        .imageUrl(finalizedImageUrls.get(i))
                         .sortOrder(i + 1)
                         .build());
             }
@@ -202,9 +204,13 @@ public class PostServiceImpl implements PostService {
         validateEditable(post);
         validatePrice(postUpdateRequestDTO.price());
         validateImageUrls(imageUrls);
+        List<String> finalizedImageUrls = postImageService.finalizePostImageUrls(postId, sellerId, imageUrls);
         post.changePost(
                 postUpdateRequestDTO.title(),
                 postUpdateRequestDTO.content(),
+                postUpdateRequestDTO.sport(),
+                postUpdateRequestDTO.team(),
+                postUpdateRequestDTO.uniformName(),
                 postUpdateRequestDTO.grade(),
                 postUpdateRequestDTO.size(),
                 postUpdateRequestDTO.marking(),
@@ -212,14 +218,14 @@ public class PostServiceImpl implements PostService {
                 postUpdateRequestDTO.deliveryType()
         );
 
-        if (imageUrls != null) {
+        if (finalizedImageUrls != null) {
             postImageRepository.deleteByPost_PostId(postId);
             List<PostImage> postImages = new ArrayList<>();
 
-            for (int i = 0; i < imageUrls.size(); i++) {
+            for (int i = 0; i < finalizedImageUrls.size(); i++) {
                 postImages.add(PostImage.builder()
                         .post(post)
-                        .imageUrl(imageUrls.get(i))
+                        .imageUrl(finalizedImageUrls.get(i))
                         .sortOrder(i + 1)
                         .build());
             }

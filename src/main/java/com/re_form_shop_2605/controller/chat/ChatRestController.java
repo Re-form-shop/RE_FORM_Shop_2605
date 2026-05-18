@@ -59,6 +59,19 @@ public class ChatRestController {
         return ResponseEntity.ok(chatService.getMyChatRooms(principal.getMemberId()));
     }
 
+    // 채팅방 상세 조회
+    @Operation(
+            summary = "채팅방 상세 조회",
+            description = "현재 로그인한 회원이 참여 중인 채팅방의 상세 정보와 최근 메시지 미리보기를 조회합니다."
+    )
+    @GetMapping("/{chatId}")
+    public ResponseEntity<ChatRoomDetailDTO> getChatRoomDetail(
+            @PathVariable Long chatId,
+            @AuthenticationPrincipal MemberSecurityDTO principal
+    ) {
+        return ResponseEntity.ok(chatService.readChatRoom(principal.getMemberId(), chatId));
+    }
+
     // 메시지 이력 조회 (페이징)
     @Operation(
             summary = "채팅 메시지 이력 조회",

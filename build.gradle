@@ -43,6 +43,8 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-batch-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-webmvc-test'
+    testImplementation 'org.springframework.security:spring-security-test'
 //    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
 //    testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client-test'
 //    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
@@ -84,4 +86,12 @@ dependencyManagement {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+jar {
+    enabled = true
+}
+
+bootJar {
+    enabled = false // Executable JAR 생성을 비활성화
 }
