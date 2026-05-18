@@ -54,6 +54,10 @@ public class SecurityConfig {
     @Value("${app.auth.oauth-success-redirect-uri}")
     private String oauthSuccessRedirectUri;
 
+    // OAuth2 로그인 실패 시 리다이렉트할 프론트엔드 URL
+    @Value("${app.auth.oauth-failure-redirect-uri}")
+    private String oauthFailureRedirectUri;
+
     // 정적 리소스 보안 제외 설정
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
@@ -153,6 +157,9 @@ public class SecurityConfig {
                                 userInfo.userService(customOAuth2UserService))
                         // OAuth2 로그인 성공 시 자체 JWT를 발급해 프론트 콜백으로 보낸다.
                         .successHandler(customSocialLoginSuccessHandler)
+                        // OAuth2 로그인 실패 시 프론트 로그인 페이지로 리다이렉트 (기본값: 8080/login?error 방지)
+                        .failureHandler((request, response, exception) ->
+                                response.sendRedirect(oauthFailureRedirectUri))
                 )
                 // 인증 실패/권한 부족 응답을 브라우저 기본 HTML 대신 JSON 403으로 고정한다.
                 .exceptionHandling(exception -> exception

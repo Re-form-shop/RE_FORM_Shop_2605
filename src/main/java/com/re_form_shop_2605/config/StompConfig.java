@@ -24,7 +24,13 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
 public class StompConfig implements WebSocketMessageBrokerConfigurer {
-    /* STOMP 프로토콜을 사용한 웹소켓 메시지 브로커 설정 클래스 */
+    /**
+     * ─────────────────────────────────────────────────────
+     * 작성자: 진혜림
+     * 작성일: 2026-05-08
+     * 설명: STOMP 프로토콜을 사용한 웹소켓 메시지 브로커 설정 클래스
+     * ─────────────────────────────────────────────────────
+     */
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService customUserDetailsService;
 
@@ -33,7 +39,7 @@ public class StompConfig implements WebSocketMessageBrokerConfigurer {
         /* 클라이언트가 웹소켓 연결을 시도할 때 사용할 엔드포인트를 등록 */
         // /stomp/chat: 클라이언트가 접속할 웹소켓 URL
         registry.addEndpoint("/stomp/chat")
-                .setAllowedOriginPatterns("*"); //
+                .setAllowedOriginPatterns("*");
     }
 
     @Override

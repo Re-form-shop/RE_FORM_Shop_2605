@@ -20,7 +20,7 @@ public class WebConfig implements WebMvcConfigurer {
                 // 프론트엔드 개발 서버 주소인 http://localhost:5173의 접근을 허용
                 .allowedOrigins("http://localhost:5173")
                 // GET, POST, PUT, DELETE와 같은 CRUD 작업 및 사전 요청(OPTIONS)을 허용
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 // 'Authorization': JWT 토큰을 담아 보낼 때 사용되는 필수 헤더
                 // 'Content-Type': JSON 데이터 등을 주고받기 위해 필요한 헤더
                 .allowedHeaders("Authorization", "Content-Type")

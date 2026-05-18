@@ -29,6 +29,7 @@ import com.re_form_shop_2605.repository.trade.mannerReviewRepository;
 import com.re_form_shop_2605.repository.trade.postImageRepository;
 import com.re_form_shop_2605.service.common.ServicePageResponse;
 import com.re_form_shop_2605.service.delivery.DeliveryTrackingService;
+import com.re_form_shop_2605.service.chat.ChatService;
 import com.re_form_shop_2605.service.etc.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -64,6 +65,7 @@ public class TradeServiceImpl implements TradeService {
     private final mannerReviewRepository mannerReviewRepository;
     private final DeliveryTrackingService deliveryTrackingService;
     private final NotificationService notificationService;
+    private final ChatService chatService; // 거래 이벤트 채팅방 시스템 메시지 발송용
 
     @Override
     // 판매글 상태와 전달 방식 조건을 검증한 뒤 거래를 생성한다.
@@ -94,7 +96,15 @@ public class TradeServiceImpl implements TradeService {
                 .tradePrice(post.getPrice())
                 .build();
 
-        return tradeRepository.save(trade).getTradeId();
+        Long tradeId = tradeRepository.save(trade).getTradeId();
+
+        // 거래 생성 시 채팅방 자동 생성 및 안내 메시지 발송
+        chatService.sendSystemMessage(
+                post.getPostId(), buyer.getMemberId(),
+                "[RE:FORM] 구매 요청이 시작되었습니다. 판매자의 수락을 기다리고 있습니다."
+        );
+
+        return tradeId;
     }
 
     @Override
@@ -163,6 +173,12 @@ public class TradeServiceImpl implements TradeService {
 
         trade.accept();
         trade.getPost().changeStatus(PostStatus.RESERVED);
+
+        // 거래 수락 시 채팅방에 안내 메시지
+        chatService.sendSystemMessage(
+                trade.getPost().getPostId(), trade.getBuyer().getMemberId(),
+                "[RE:FORM] 판매자가 거래를 수락했습니다. 결제를 진행해 주세요."
+        );
     }
 
     @Override
@@ -180,6 +196,12 @@ public class TradeServiceImpl implements TradeService {
 
         trade.confirm();
         trade.getPost().changeStatus(PostStatus.SOLD);
+
+        // 구매 확정 시 채팅방에 안내 메시지
+        chatService.sendSystemMessage(
+                trade.getPost().getPostId(), trade.getBuyer().getMemberId(),
+                "[RE:FORM] 구매가 확정되었습니다. 거래가 완료되었습니다. 감사합니다!"
+        );
     }
 
     @Override
@@ -236,6 +258,13 @@ public class TradeServiceImpl implements TradeService {
 
         notificationService.createTradeNotification(trade.getBuyer(), buyerTemplate.content(), buyerTemplate.linkUrl());
         notificationService.createTradeNotification(trade.getSeller(), sellerTemplate.content(), sellerTemplate.linkUrl());
+
+        // 배송 시작 시 채팅방에 안내 메시지
+        chatService.sendSystemMessage(
+                trade.getPost().getPostId(), trade.getBuyer().getMemberId(),
+                "[RE:FORM] 판매자가 배송을 시작했습니다. 택배사: " + courierName
+                        + " / 송장번호: " + requestDTO.trackingNumber()
+        );
     }
 
     @Override

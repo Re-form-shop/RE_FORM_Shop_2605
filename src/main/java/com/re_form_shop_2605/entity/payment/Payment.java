@@ -82,4 +82,14 @@ public class Payment extends BaseEntity {
     public void refund() {
         this.status = PaymentStatus.REFUNDED;
     }
+
+    // 5) 결제 재시도 위한 데이터 리셋
+    public void resetForRetry(String newTossOrderId, PayMethod payMethod) {
+        this.tossOrderId = newTossOrderId;
+        this.payMethod = payMethod;
+        this.status = PaymentStatus.READY;
+        this.approvalNo = null;
+        this.tossPaymentKey = null;
+        this.paidAt = null;
+    }
 }

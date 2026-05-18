@@ -38,4 +38,13 @@ public interface NotificationService {
 
     // 구매자의 배송 추적 시작 안내용 공통 템플릿
     TradeNotificationTemplateDTO buildBuyerShippingRegisteredTemplate(Long tradeId, String postTitle);
+
+    /**
+     * ─────────────────────────────────────────────────────
+     * 작성자: 진혜림
+     * 작성일: 2026-05-15
+     * 설명: 채팅 메시지 수신 알림을 생성
+     * ─────────────────────────────────────────────────────
+     */
+    void createChatNotification(Member receiverMember, String senderNickname, Long chatId);
 }

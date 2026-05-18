@@ -14,6 +14,7 @@ import com.re_form_shop_2605.service.common.ServicePageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +38,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final WishRepository wishRepository;
     private final ModelMapper modelMapper;
+    private final SimpMessagingTemplate messagingTemplate; // WebSocket 실시간 push용
 
     @Override
     // 알림 목록과 읽지 않은 개수를 함께 반환
@@ -111,12 +113,19 @@ public class NotificationServiceImpl implements NotificationService {
     // 거래 알림
     @Override
     public void createTradeNotification(Member member, String content, String linkUrl) {
-        notificationRepository.save(Notification.builder()
+        // DB에 알림 저장
+        Notification saved = notificationRepository.save(Notification.builder()
                 .member(member)
                 .type(NotificationType.TRADE)
                 .reportContent(content)
                 .linkUrl(linkUrl)
                 .build());
+
+        // WebSocket으로 실시간 push — 프론트엔드 /sub/notification/{memberId} 구독 필요
+        messagingTemplate.convertAndSend(
+                "/sub/notification/" + member.getMemberId(),
+                toNotificationDTO(saved)
+        );
     }
 
     // 결제 완료 구매자 알림
@@ -181,6 +190,44 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     private String buildTradeLink(Long tradeId) {
-        return "/trades/" + tradeId;
+        return "/trade/" + tradeId; // 프론트 라우트: /trade/:id
+    }
+
+    /**
+     * ─────────────────────────────────────────────────────
+     * 작성자: 진혜림
+     * 작성일: 2026-05-15
+     * 설명: 채팅 메시지 수신 알림을 생성
+     * ─────────────────────────────────────────────────────
+     */
+
+    /**
+     * 채팅 알림 생성 — 채팅방 밖에 있는 상대방에게 알림
+     *
+     * @param receiverMember: 알림을 받을 상대방
+     * @param senderNickname: 발신자
+     * @param chatId: 채팅방 id
+     */
+    @Override
+    public void createChatNotification(Member receiverMember, String senderNickname, Long chatId) {
+        // 알림 내용
+        String content = senderNickname + "님이 메세지를 보냈습니다.";
+
+        // 클릭 시 해당 채팅방으로 이동
+        String linkUrl = "/chat/" + chatId;
+
+        // DB에 알림 저장
+        Notification saved = notificationRepository.save(Notification.builder()
+                .member(receiverMember)            // 수신자
+                .type(NotificationType.CHAT)       // 알림 타입 (CHAT 이미 enum에 존재)
+                .reportContent(content)            // 알림 내용
+                .linkUrl(linkUrl)                  // 클릭 경로
+                .build());
+
+        // WebSocket으로 실시간 push — GNB 배지 즉시 갱신
+        messagingTemplate.convertAndSend(
+                "/sub/notification/" + receiverMember.getMemberId(),
+                toNotificationDTO(saved)
+        );
     }
 }
