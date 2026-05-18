@@ -343,6 +343,21 @@ public class ChatService {
     }
 
     /**
+     * 채팅방 단건 조회
+     * — GET /api/chats/{chatId} 에서 호출
+     * — 참여자 검증 후 ChatRoomDetailDTO 반환
+     *
+     * @param chatId   조회할 채팅방 ID
+     * @param memberId 현재 로그인한 유저 ID (참여자 검증용)
+     */
+    public ChatRoomDetailDTO getChatRoomDetail(Long chatId, Long memberId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다. chatId=" + chatId));
+        validateParticipant(chatRoom, memberId);
+        return toChatRoomDetailDTO(chatRoom);
+    }
+
+    /**
      * 거래 상태 변경 등 시스템 이벤트를 채팅방에 공지한다.
      * sender_id 는 nullable=false 제약 때문에 post 판매자를 시스템 발신자로 사용하고,
      * type=SYSTEM 으로 구분한다.
