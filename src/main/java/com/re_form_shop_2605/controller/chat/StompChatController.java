@@ -44,7 +44,7 @@ public class StompChatController {
 
         // 1. 메세지 선저장 (safe 기본값)
         // Moderation 검사에 messageId가 필요하므로 먼저 저장.
-        ChatMessageDTO saved = chatService.saveMessage(chatSendMessageDTO, RiskAnalysisResultDTO.safe());
+        ChatMessageDTO saved = chatService.saveMessage(chatSendMessageDTO, null);
 
         // 2. MessageType(TEXT / IMAGE / SYSTEM) 중 TEXT 타입만 Moderation 검사
         if ("TEXT".equalsIgnoreCase(chatSendMessageDTO.type())) {

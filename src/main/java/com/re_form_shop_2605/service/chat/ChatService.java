@@ -147,8 +147,8 @@ public class ChatService {
 
                     if (vo.getRiskAnalysisResultVO() == null
                             || vo.getRiskAnalysisResultVO().getRiskLevel() == null) {
-                        // 정상 메시지 — safe() 반환
-                        moderation = RiskAnalysisResultDTO.safe();
+                        // 정상 메시지 — 프론트가 객체 존재만으로 경고 처리하지 않도록 null 반환
+                        moderation = null;
                     } else {
                         // 유해 메시지 — RiskAnalysisResultVO 값으로 DTO 구성
                         RiskAnalysisResultVO risk = vo.getRiskAnalysisResultVO();
@@ -199,7 +199,7 @@ public class ChatService {
                 chatMessage.getType().name(),
                 chatMessage.getCreatedAt(),
                 chatMessage.isRead(),
-                RiskAnalysisResultDTO.safe()
+                null
         );
     }
 
@@ -211,8 +211,12 @@ public class ChatService {
                 chatMessage.getType().name(),
                 chatMessage.getCreatedAt(),
                 chatMessage.isRead(),
-                riskAnalysisResultDTO
+                isFlagged(riskAnalysisResultDTO) ? riskAnalysisResultDTO : null
         );
+    }
+
+    private boolean isFlagged(RiskAnalysisResultDTO riskAnalysisResultDTO) {
+        return riskAnalysisResultDTO != null && riskAnalysisResultDTO.riskLevel() != null;
     }
 
     private ChatRoomDetailDTO toChatRoomDetailDTO(ChatRoom chatRoom){
