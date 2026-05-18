@@ -40,4 +40,5 @@ out/
 .env
 
 ### 개인 지침 ###
-SCOPE.md
+CLAUDE.md
+.claude
