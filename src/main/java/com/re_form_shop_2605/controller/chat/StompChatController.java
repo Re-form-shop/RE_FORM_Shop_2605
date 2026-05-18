@@ -1,6 +1,7 @@
 package com.re_form_shop_2605.controller.chat;
 
 import com.re_form_shop_2605.dto.chat.ChatMessageDTO;
+import com.re_form_shop_2605.dto.chat.ChatReadRequestDTO;
 import com.re_form_shop_2605.dto.chat.ChatSendMessageDTO;
 import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
 import com.re_form_shop_2605.dto.AI.RiskAnalysisResultDTO;
@@ -100,8 +101,8 @@ public class StompChatController {
 
     // 채팅방 입장 시 읽음 처리
     @MessageMapping("/chat/read")
-    public void handleRead(@Payload Long chatId, @Header("sender-id") Long myId) {
-        chatService.markAsRead(chatId, myId);
+    public void handleRead(@Payload ChatReadRequestDTO chatReadRequestDTO) {
+        chatService.markAsRead(chatReadRequestDTO.chatId(), chatReadRequestDTO.myId());
     }
 
     private MemberSecurityDTO resolveMember(Principal principal) {
