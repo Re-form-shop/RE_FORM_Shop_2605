@@ -48,9 +48,11 @@ public class Reply extends BaseEntity {
     @Column(columnDefinition = "INT DEFAULT 0", nullable = false)
     private int likeCount = 0; // 좋아요 수
 
+    @Builder.Default
     @OneToMany(mappedBy = "reply")
     private List<Reply> replies = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "reply")
     private List<ReplyLike> repliesLike = new ArrayList<>();
 
