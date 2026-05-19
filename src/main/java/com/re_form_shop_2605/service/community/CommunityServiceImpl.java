@@ -99,7 +99,9 @@ public class CommunityServiceImpl implements CommunityService {
                 post.getCommentCount(),
                 isLiked,
                 post.getStatus(),
-                new MemberBriefDTO(null, "글쓴이", null), // 익명 처리 todo 로그인 시 아이디 테이블에 찍히게
+                // memberId를 실제 작성자 ID로 반환 — 프론트에서 본인 글 여부 판단에 사용
+                // 닉네임은 "글쓴이"로 익명 유지, profileImageUrl은 null 유지
+                new MemberBriefDTO(post.getMember().getMemberId(), "글쓴이", null),
                 post.getCreatedAt()
         );
     }

@@ -48,14 +48,17 @@ public class CommunityController {
     }
 
     // GET /api/community/{commId}
+    // /api/community/** 는 permitAll() 이므로 비로그인 요청도 도달할 수 있음
+    // principal이 null이면 memberId = null -> isLiked = false 처리
     @Operation(summary = "커뮤니티 게시글 상세 조회", description = "게시글 ID로 상세 정보를 조회합니다. 비로그인 시 isLiked = false")
     @GetMapping("/{commId}")
     public ResponseEntity<ApiResponse<CommunityPostDetailDTO>> readPosts(
             @PathVariable Long commId,
             @AuthenticationPrincipal MemberSecurityDTO principal
     ) {
+        Long memberId = (principal != null) ? principal.getMemberId() : null;
         return ResponseEntity.ok(
-                ApiResponse.ok(communityService.readPost(commId, principal.getMemberId()), "게시글 상세 조회 완료")
+                ApiResponse.ok(communityService.readPost(commId, memberId), "게시글 상세 조회 완료")
         );
     }
 
@@ -109,14 +112,17 @@ public class CommunityController {
     }
 
     // GET /api/community/{commId}/replies
+    // /api/community/** 는 permitAll() 이므로 비로그인 요청도 도달할 수 있음
+    // principal이 null이면 memberId = null -> isLiked = false 처리
     @Operation(summary = "댓글 목록 조회", description = "게시글의 댓글과 대댓글 목록을 조회합니다. 작성자는 익명 처리됩니다.")
     @GetMapping("/{commId}/replies")
     public ResponseEntity<ApiResponse<List<ReplyResponseDTO>>> readReplies(
             @PathVariable Long commId,
             @AuthenticationPrincipal MemberSecurityDTO principal
     ) {
+        Long memberId = (principal != null) ? principal.getMemberId() : null;
         return ResponseEntity.ok(
-                ApiResponse.ok(communityService.readReplies(commId, principal.getMemberId()), "댓글 목록 조회 완료")
+                ApiResponse.ok(communityService.readReplies(commId, memberId), "댓글 목록 조회 완료")
         );
     }
 
