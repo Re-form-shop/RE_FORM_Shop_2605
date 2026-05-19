@@ -72,12 +72,12 @@ INSERT INTO post (
     (6, 8, 'T1 2025 월즈 기념 져지', '미개봉 새상품입니다.', 'ESPORTS', 'T1', '2025 월즈 우승 기념', 'S', '105', TRUE, 249000, 'DELIVERY', 'ON_SALE', 312, 2, NULL, DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY));
 
 INSERT INTO post_image (image_id, post_id, image_url, sort_order) VALUES
-    (1, 1, 'https://cdn.reform.test/posts/1-1.jpg', 1),
-    (2, 1, 'https://cdn.reform.test/posts/1-2.jpg', 2),
-    (3, 2, 'https://cdn.reform.test/posts/2-1.jpg', 1),
-    (4, 3, 'https://cdn.reform.test/posts/3-1.jpg', 1),
-    (5, 4, 'https://cdn.reform.test/posts/4-1.jpg', 1),
-    (6, 6, 'https://cdn.reform.test/posts/6-1.jpg', 1);
+    (1, 1, 'z://reform.test/posts/1-1.jpg', 1),
+    (2, 1, 'z://reform.test/posts/1-2.jpg', 2),
+    (3, 2, 'z://reform.test/posts/2-1.jpg', 1),
+    (4, 3, 'z://reform.test/posts/3-1.jpg', 1),
+    (5, 4, 'z://reform.test/posts/4-1.jpg', 1),
+    (6, 6, 'z://reform.test/posts/6-1.jpg', 1);
 
 INSERT INTO wish (wish_id, member_id, post_id, created_at) VALUES
     (1, 3, 1, DATE_SUB(NOW(), INTERVAL 4 DAY)),
