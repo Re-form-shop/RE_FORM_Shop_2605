@@ -32,14 +32,14 @@ INSERT INTO member (
     member_id, email, password, nickname, profile_image_url, bio,
     manner_score, role, status, warning_count, email_event, created_at
 ) VALUES -- pw: 1234
-    (1, 'admin@reform.com', '$2a$10$Birbp2MlRmeg3fZ614YDLuG/uYx6ZQEFP.gRH6diToCmJPX/WVmQe', '관리자계정', 'https://cdn.reform.test/profiles/admin.png', '운영자 계정', 5.00, 'ADMIN', 'ACTIVE', 0, TRUE, DATE_SUB(NOW(), INTERVAL 120 DAY)),
-    (2, 'seller1@reform.com', '$2a$10$Birbp2MlRmeg3fZ614YDLuG/uYx6ZQEFP.gRH6diToCmJPX/WVmQe', '판매왕민수', 'https://cdn.reform.test/profiles/seller1.png', '레어 유니폼 수집가', 4.80, 'USER', 'ACTIVE', 0, TRUE, DATE_SUB(NOW(), INTERVAL 90 DAY)),
-    (3, 'buyer1@reform.com', '$2a$10$Birbp2MlRmeg3fZ614YDLuG/uYx6ZQEFP.gRH6diToCmJPX/WVmQe', '구매요정지은', 'https://cdn.reform.test/profiles/buyer1.png', '축구 유니폼 위주로 봅니다.', 4.60, 'USER', 'ACTIVE', 0, TRUE, DATE_SUB(NOW(), INTERVAL 80 DAY)),
-    (4, 'seller2@reform.com', '$2a$10$Birbp2MlRmeg3fZ614YDLuG/uYx6ZQEFP.gRH6diToCmJPX/WVmQe', '야구덕후현우', 'https://cdn.reform.test/profiles/seller2.png', '야구 한정판 전문', 4.30, 'USER', 'ACTIVE', 1, FALSE, DATE_SUB(NOW(), INTERVAL 70 DAY)),
-    (5, 'buyer2@reform.com', '$2a$10$Birbp2MlRmeg3fZ614YDLuG/uYx6ZQEFP.gRH6diToCmJPX/WVmQe', '농구좋아소영', 'https://cdn.reform.test/profiles/buyer2.png', '농구 굿즈와 유니폼 환영', 4.10, 'USER', 'ACTIVE', 0, TRUE, DATE_SUB(NOW(), INTERVAL 65 DAY)),
-    (6, 'suspended@reform.com', '$2a$10$Birbp2MlRmeg3fZ614YDLuG/uYx6ZQEFP.gRH6diToCmJPX/WVmQe', '정지회원테스트', 'https://cdn.reform.test/profiles/suspended.png', '신고 누적 회원', 2.50, 'USER', 'SUSPENDED', 3, FALSE, DATE_SUB(NOW(), INTERVAL 60 DAY)),
+    (1, 'admin@reform.com', '$2a$10$Birbp2MlRmeg3fZ614YDLuG/uYx6ZQEFP.gRH6diToCmJPX/WVmQe', '관리자계정', null, '운영자 계정', 5.00, 'ADMIN', 'ACTIVE', 0, TRUE, DATE_SUB(NOW(), INTERVAL 120 DAY)),
+    (2, 'seller1@reform.com', '$2a$10$Birbp2MlRmeg3fZ614YDLuG/uYx6ZQEFP.gRH6diToCmJPX/WVmQe', '판매왕민수', null, '레어 유니폼 수집가', 4.80, 'USER', 'ACTIVE', 0, TRUE, DATE_SUB(NOW(), INTERVAL 90 DAY)),
+    (3, 'buyer1@reform.com', '$2a$10$Birbp2MlRmeg3fZ614YDLuG/uYx6ZQEFP.gRH6diToCmJPX/WVmQe', '구매요정지은', null, '축구 유니폼 위주로 봅니다.', 4.60, 'USER', 'ACTIVE', 0, TRUE, DATE_SUB(NOW(), INTERVAL 80 DAY)),
+    (4, 'seller2@reform.com', '$2a$10$Birbp2MlRmeg3fZ614YDLuG/uYx6ZQEFP.gRH6diToCmJPX/WVmQe', '야구덕후현우', null, '야구 한정판 전문', 4.30, 'USER', 'ACTIVE', 1, FALSE, DATE_SUB(NOW(), INTERVAL 70 DAY)),
+    (5, 'buyer2@reform.com', '$2a$10$Birbp2MlRmeg3fZ614YDLuG/uYx6ZQEFP.gRH6diToCmJPX/WVmQe', '농구좋아소영', null, '농구 굿즈와 유니폼 환영', 4.10, 'USER', 'ACTIVE', 0, TRUE, DATE_SUB(NOW(), INTERVAL 65 DAY)),
+    (6, 'suspended@reform.com', '$2a$10$Birbp2MlRmeg3fZ614YDLuG/uYx6ZQEFP.gRH6diToCmJPX/WVmQe', '정지회원테스트', null, '신고 누적 회원', 2.50, 'USER', 'SUSPENDED', 3, FALSE, DATE_SUB(NOW(), INTERVAL 60 DAY)),
     (7, 'withdrawn@reform.com', '$2a$10$Birbp2MlRmeg3fZ614YDLuG/uYx6ZQEFP.gRH6diToCmJPX/WVmQe', '탈퇴회원샘플', NULL, '탈퇴 처리된 계정', 3.00, 'USER', 'WITHDRAWN', 0, FALSE, DATE_SUB(NOW(), INTERVAL 55 DAY)),
-    (8, 'social@reform.com', '$2a$10$Birbp2MlRmeg3fZ614YDLuG/uYx6ZQEFP.gRH6diToCmJPX/WVmQe', '소셜로그인유저', 'https://cdn.reform.test/profiles/social.png', '카카오/구글 연동 테스트용', 4.55, 'USER', 'ACTIVE', 0, TRUE, DATE_SUB(NOW(), INTERVAL 50 DAY));
+    (8, 'social@reform.com', '$2a$10$Birbp2MlRmeg3fZ614YDLuG/uYx6ZQEFP.gRH6diToCmJPX/WVmQe', '소셜로그인유저', null, '카카오/구글 연동 테스트용', 4.55, 'USER', 'ACTIVE', 0, TRUE, DATE_SUB(NOW(), INTERVAL 50 DAY));
 
 INSERT INTO social_member (social_id, member_id, provider, provider_id) VALUES
     (1, 8, 'KAKAO', 'kakao-10001'),
@@ -72,12 +72,12 @@ INSERT INTO post (
     (6, 8, 'T1 2025 월즈 기념 져지', '미개봉 새상품입니다.', 'ESPORTS', 'T1', '2025 월즈 우승 기념', 'S', '105', TRUE, 249000, 'DELIVERY', 'ON_SALE', 312, 2, NULL, DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY));
 
 INSERT INTO post_image (image_id, post_id, image_url, sort_order) VALUES
-    (1, 1, 'z://reform.test/posts/1-1.jpg', 1),
-    (2, 1, 'z://reform.test/posts/1-2.jpg', 2),
-    (3, 2, 'z://reform.test/posts/2-1.jpg', 1),
-    (4, 3, 'z://reform.test/posts/3-1.jpg', 1),
-    (5, 4, 'z://reform.test/posts/4-1.jpg', 1),
-    (6, 6, 'z://reform.test/posts/6-1.jpg', 1);
+    (1, 1, 'https://cdn.reform.test/posts/1-1.jpg', 1),
+    (2, 1, 'https://cdn.reform.test/posts/1-2.jpg', 2),
+    (3, 2, 'https://cdn.reform.test/posts/2-1.jpg', 1),
+    (4, 3, 'https://cdn.reform.test/posts/3-1.jpg', 1),
+    (5, 4, 'https://cdn.reform.test/posts/4-1.jpg', 1),
+    (6, 6, 'https://cdn.reform.test/posts/6-1.jpg', 1);
 
 INSERT INTO wish (wish_id, member_id, post_id, created_at) VALUES
     (1, 3, 1, DATE_SUB(NOW(), INTERVAL 4 DAY)),
