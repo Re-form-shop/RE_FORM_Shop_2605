@@ -30,6 +30,7 @@ import com.re_form_shop_2605.service.common.ServicePageResponse;
 import com.re_form_shop_2605.service.delivery.DeliveryTrackingService;
 import com.re_form_shop_2605.service.chat.ChatService;
 import com.re_form_shop_2605.service.etc.NotificationService;
+import com.re_form_shop_2605.service.mail.MailService;
 import com.re_form_shop_2605.entity.Enum.PointHistoryType;
 import com.re_form_shop_2605.entity.payment.PointHistory;
 import com.re_form_shop_2605.entity.payment.PointWallet;
@@ -69,9 +70,12 @@ public class TradeServiceImpl implements TradeService {
     private final mannerReviewRepository mannerReviewRepository;
     private final DeliveryTrackingService deliveryTrackingService;
     private final NotificationService notificationService;
+    private final MailService mailService;
     private final ChatService chatService; // 거래 이벤트 채팅방 시스템 메시지 발송용
+    private final TradeRealtimeEventService tradeRealtimeEventService;
     private final PointWalletRepository pointWalletRepository; // 구매 확정 시 판매자 포인트 정산용
     private final PointHistoryRepository pointHistoryRepository; // 포인트 이력 기록용
+    private final PostImageService postImageService;
 
     @Override
     // 판매글 상태와 전달 방식 조건을 검증한 뒤 거래를 생성한다.
@@ -102,15 +106,23 @@ public class TradeServiceImpl implements TradeService {
                 .tradePrice(post.getPrice())
                 .build();
 
-        Long tradeId = tradeRepository.save(trade).getTradeId();
+        trade = tradeRepository.save(trade);
+        tradeRealtimeEventService.ensureTradeChatRoom(trade);
 
         // 거래 생성 시 채팅방 자동 생성 및 안내 메시지 발송
         chatService.sendSystemMessage(
                 post.getPostId(), buyer.getMemberId(),
                 "[RE:FORM] 구매 요청이 시작되었습니다. 판매자의 수락을 기다리고 있습니다."
         );
+        TradeNotificationTemplateDTO sellerCreatedTemplate = notificationService.buildSellerTradeCreatedTemplate(
+                trade.getTradeId(),
+                trade.getPost().getTitle()
+        );
+        sendTradeNotice(trade.getSeller(), sellerCreatedTemplate);
 
-        return tradeId;
+        tradeRealtimeEventService.publishTradeUpdated(trade, "TRADE_CREATED");
+
+        return trade.getTradeId();
     }
 
     @Override
@@ -183,8 +195,17 @@ public class TradeServiceImpl implements TradeService {
         // 거래 수락 시 채팅방에 안내 메시지
         chatService.sendSystemMessage(
                 trade.getPost().getPostId(), trade.getBuyer().getMemberId(),
-                "[RE:FORM] 판매자가 거래를 수락했습니다. 결제를 진행해 주세요."
+                trade.getDeliveryType() == TradeDeliveryType.DIRECT
+                        ? "[RE:FORM] 판매자가 거래를 수락했습니다. 채팅으로 장소와 시간을 조율해 주세요."
+                        : "[RE:FORM] 판매자가 거래를 수락했습니다. 결제를 진행해 주세요."
         );
+        TradeNotificationTemplateDTO buyerAcceptedTemplate = notificationService.buildBuyerTradeAcceptedTemplate(
+                trade.getTradeId(),
+                trade.getPost().getTitle(),
+                trade.getDeliveryType() == TradeDeliveryType.DIRECT
+        );
+        sendTradeNotice(trade.getBuyer(), buyerAcceptedTemplate);
+        tradeRealtimeEventService.publishTradeUpdated(trade, "TRADE_ACCEPTED");
     }
 
     @Override
@@ -196,47 +217,44 @@ public class TradeServiceImpl implements TradeService {
             throw new IllegalArgumentException("구매 확정 권한이 없습니다.");
         }
 
-        if (!isConfirmableStatus(trade.getStatus())) {
+        if (!isConfirmableStatus(trade)) {
             throw new IllegalArgumentException("구매 확정이 가능한 거래 상태가 아닙니다.");
         }
 
         trade.confirm();
         trade.getPost().changeStatus(PostStatus.SOLD);
-
-        // ── 판매자 포인트 정산: pending → withdrawable ──────────────────────────
-        // 결제 완료 시 earnPoint()로 pending에 적립된 거래 대금을
-        // 구매 확정 시점에 withdrawable(출금 가능)로 전환한다.
-
-        // 중복 정산 방어: PointHistory.trade는 DB unique constraint지만, 동시 요청 시
-        // DataIntegrityViolationException(500)이 노출되는 것을 방지하기 위해 코드 레벨 체크 선행.
-        if (pointHistoryRepository.existsByTrade_TradeId(trade.getTradeId())) {
-            throw new IllegalStateException(
-                    "이미 정산 처리된 거래입니다. (tradeId=" + trade.getTradeId() + ")");
-        }
-
-        int tradePrice = trade.getTradePrice();
-        PointWallet sellerWallet = pointWalletRepository.findByMemberMemberId(
-                trade.getSeller().getMemberId())
-                .orElseThrow(() -> new IllegalStateException(
-                        "confirmTrade : 판매자 포인트 지갑이 존재하지 않습니다. (sellerId=" + trade.getSeller().getMemberId() + ")"));
-
-        sellerWallet.confirm(tradePrice, tradePrice); // pending -= tradePrice, withdrawable += tradePrice
-        pointWalletRepository.save(sellerWallet);
-
-        // 포인트 이력 기록 (EARN 타입, trade와 연결하여 중복 지급 방지)
-        pointHistoryRepository.save(PointHistory.builder()
-                .pointWallet(sellerWallet)
-                .type(PointHistoryType.EARN)
-                .changeAmount(tradePrice)
-                .balance(sellerWallet.getBalance())
-                .trade(trade)
-                .build());
+        settleSellerPoint(trade);
 
         // 구매 확정 시 채팅방에 안내 메시지
         chatService.sendSystemMessage(
                 trade.getPost().getPostId(), trade.getBuyer().getMemberId(),
                 "[RE:FORM] 구매가 확정되었습니다. 거래가 완료되었습니다. 감사합니다!"
         );
+        TradeNotificationTemplateDTO sellerConfirmedTemplate = notificationService.buildSellerTradeConfirmedTemplate(
+                trade.getTradeId(),
+                trade.getPost().getTitle()
+        );
+        TradeNotificationTemplateDTO buyerConfirmedTemplate = notificationService.buildBuyerTradeConfirmedTemplate(
+                trade.getTradeId(),
+                trade.getPost().getTitle()
+        );
+        sendTradeNotice(trade.getSeller(), sellerConfirmedTemplate);
+        sendTradeNotice(trade.getBuyer(), buyerConfirmedTemplate);
+        tradeRealtimeEventService.publishTradeUpdated(trade, "TRADE_CONFIRMED");
+    }
+
+    @Override
+    public void completeTradeByAdmin(Long tradeId) {
+        Trade trade = getTrade(tradeId);
+
+        if (trade.getStatus() != TradeStatus.CONFIRMED) {
+            throw new IllegalArgumentException("관리자 완료 처리는 CONFIRMED 상태의 거래만 가능합니다.");
+        }
+
+        trade.getPost().changeStatus(PostStatus.SOLD);
+        settleSellerPoint(trade);
+        trade.complete();
+        tradeRealtimeEventService.publishTradeUpdated(trade, "TRADE_COMPLETED");
     }
 
     @Override
@@ -259,6 +277,28 @@ public class TradeServiceImpl implements TradeService {
         }
 
         trade.changeDeliveryAddress(deliveryRequestDTO.deliveryAddress());
+        if (trade.getDeliveryType() == TradeDeliveryType.DELIVERY) {
+            sendTradeNotice(
+                    trade.getSeller(),
+                    notificationService.buildTradeDeliveryUpdatedTemplate(
+                            trade.getTradeId(),
+                            trade.getPost().getTitle(),
+                            true,
+                            true
+                    )
+            );
+        } else {
+            sendTradeNotice(
+                    trade.getBuyer(),
+                    notificationService.buildTradeDeliveryUpdatedTemplate(
+                            trade.getTradeId(),
+                            trade.getPost().getTitle(),
+                            false,
+                            false
+                    )
+            );
+        }
+        tradeRealtimeEventService.publishTradeUpdated(trade, "TRADE_DELIVERY_UPDATED");
     }
 
     @Override
@@ -292,8 +332,8 @@ public class TradeServiceImpl implements TradeService {
                 trade.getPost().getTitle()
         );
 
-        notificationService.createTradeNotification(trade.getBuyer(), buyerTemplate.content(), buyerTemplate.linkUrl());
-        notificationService.createTradeNotification(trade.getSeller(), sellerTemplate.content(), sellerTemplate.linkUrl());
+        sendTradeNotice(trade.getBuyer(), buyerTemplate);
+        sendTradeNotice(trade.getSeller(), sellerTemplate);
 
         // 배송 시작 시 채팅방에 안내 메시지
         chatService.sendSystemMessage(
@@ -301,6 +341,7 @@ public class TradeServiceImpl implements TradeService {
                 "[RE:FORM] 판매자가 배송을 시작했습니다. 택배사: " + requestDTO.courierName()
                         + " / 송장번호: " + requestDTO.trackingNumber()
         );
+        tradeRealtimeEventService.publishTradeUpdated(trade, "TRADE_SHIPPING_STARTED");
     }
 
     @Override
@@ -435,7 +476,7 @@ public class TradeServiceImpl implements TradeService {
     // 거래/채팅 화면에서 공통으로 쓰는 판매글 요약 DTO를 생성한다.
     private PostBriefDTO toPostBriefDTO(Post post) {
         List<PostImage> postImages = postImageRepository.findAllByPost_PostIdOrderBySortOrderAsc(post.getPostId());
-        String thumbnailUrl = postImages.isEmpty() ? null : postImages.get(0).getImageUrl();
+        String thumbnailUrl = postImages.isEmpty() ? null : postImageService.getThumbnailUrl(postImages.get(0).getImageUrl());
 
         return new PostBriefDTO(
                 post.getPostId(),
@@ -495,10 +536,13 @@ public class TradeServiceImpl implements TradeService {
     }
 
     // 거래가 구매 확정 가능한 상태인지 확인한다.
-    private boolean isConfirmableStatus(TradeStatus status) {
-        return status == TradeStatus.PAID
-                || status == TradeStatus.IN_PROGRESS
-                || status == TradeStatus.RECEIVED;
+    private boolean isConfirmableStatus(Trade trade) {
+        if (trade.getDeliveryType() == TradeDeliveryType.DIRECT) {
+            return trade.getStatus() == TradeStatus.ACCEPTED;
+        }
+        return trade.getStatus() == TradeStatus.PAID
+                || trade.getStatus() == TradeStatus.IN_PROGRESS
+                || trade.getStatus() == TradeStatus.RECEIVED;
     }
 
     // 거래 주소 정보를 수정할 수 있는 상태인지 확인한다.
@@ -536,6 +580,34 @@ public class TradeServiceImpl implements TradeService {
                 ? BigDecimal.ZERO
                 : BigDecimal.valueOf(averageScore).setScale(2, RoundingMode.HALF_UP);
         seller.updateMannerScore(mannerScore);
+    }
+
+    private void sendTradeNotice(Member member, TradeNotificationTemplateDTO template) {
+        notificationService.createTradeNotification(member, template.content(), template.linkUrl());
+        mailService.sendTradeNotificationEmail(member, template);
+    }
+
+    private void settleSellerPoint(Trade trade) {
+        if (pointHistoryRepository.existsByTrade_TradeId(trade.getTradeId())) {
+            return;
+        }
+
+        PointWallet sellerWallet = pointWalletRepository.findByMemberMemberId(
+                        trade.getSeller().getMemberId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "settleSellerPoint : 판매자 포인트 지갑이 존재하지 않습니다. (sellerId=" + trade.getSeller().getMemberId() + ")"));
+
+        int tradePrice = trade.getTradePrice();
+        sellerWallet.confirm(tradePrice, tradePrice);
+        pointWalletRepository.save(sellerWallet);
+
+        pointHistoryRepository.save(PointHistory.builder()
+                .pointWallet(sellerWallet)
+                .type(PointHistoryType.EARN)
+                .changeAmount(tradePrice)
+                .balance(sellerWallet.getBalance())
+                .trade(trade)
+                .build());
     }
 
 

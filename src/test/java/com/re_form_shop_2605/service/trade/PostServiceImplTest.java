@@ -9,14 +9,19 @@ import com.re_form_shop_2605.dto.trade.PostUpdateRequestDTO;
 import com.re_form_shop_2605.entity.Enum.DeliveryType;
 import com.re_form_shop_2605.entity.Enum.Grade;
 import com.re_form_shop_2605.entity.Enum.MemberStatus;
+import com.re_form_shop_2605.entity.Enum.MessageType;
 import com.re_form_shop_2605.entity.Enum.NotificationType;
 import com.re_form_shop_2605.entity.Enum.PostStatus;
 import com.re_form_shop_2605.entity.Enum.Role;
 import com.re_form_shop_2605.entity.Enum.Sport;
+import com.re_form_shop_2605.entity.chat.ChatMessage;
+import com.re_form_shop_2605.entity.chat.ChatRoom;
 import com.re_form_shop_2605.entity.etc.Notification;
 import com.re_form_shop_2605.entity.member.Member;
 import com.re_form_shop_2605.entity.trade.Post;
 import com.re_form_shop_2605.entity.trade.Wish;
+import com.re_form_shop_2605.repository.chat.ChatMessageRepository;
+import com.re_form_shop_2605.repository.chat.ChatRoomRepository;
 import com.re_form_shop_2605.repository.etc.NotificationRepository;
 import com.re_form_shop_2605.repository.member.MemberRepository;
 import com.re_form_shop_2605.repository.trade.PostRepository;
@@ -26,6 +31,7 @@ import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -61,6 +67,10 @@ class PostServiceImplTest {
     private WishRepository wishRepository;
     @Autowired
     private NotificationRepository notificationRepository;
+    @Autowired
+    private ChatRoomRepository chatRoomRepository;
+    @Autowired
+    private ChatMessageRepository chatMessageRepository;
 
     @Test
     void addPostTest() {
@@ -139,6 +149,35 @@ class PostServiceImplTest {
         assertEquals(12000, postDetailDTO.price());
         assertEquals(Grade.S, postDetailDTO.grade());
         assertEquals(updatedImageUrls, postDetailDTO.imageUrls());
+    }
+
+    @Test
+    void modifyPostSendsSystemNoticeToExistingChatRooms() {
+        Member seller = createSeller("modify_notice_seller");
+        Member buyer = createSeller("modify_notice_buyer");
+        Long postId = postService.addPost(seller.getMemberId(), createPostRequestDTO("notice title"), List.of());
+
+        Post post = postRepository.findById(postId).orElseThrow();
+        ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.builder()
+                .post(post)
+                .buyer(buyer)
+                .build());
+
+        postService.modifyPost(
+                postId,
+                seller.getMemberId(),
+                new PostUpdateRequestDTO("notice updated", null, null, null, null, null, null, null, 9000, DeliveryType.DELIVERY),
+                null
+        );
+
+        List<ChatMessage> messages = chatMessageRepository
+                .findByChatRoom_ChatIdOrderByCreatedAtDesc(chatRoom.getChatId(), PageRequest.of(0, 10))
+                .getContent();
+
+        assertFalse(messages.isEmpty());
+        assertEquals(MessageType.SYSTEM, messages.get(0).getType());
+        assertTrue(messages.get(0).getContent().contains("판매글 수정 안내"));
+        assertTrue(messages.get(0).getContent().contains("가격 10000원 -> 9000원"));
     }
 
     @Test

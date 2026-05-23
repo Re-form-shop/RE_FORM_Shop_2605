@@ -23,17 +23,19 @@ import java.util.List;
 /**
  * ─────────────────────────────────────────────────────
  * 작성자: 김민기
- * 작성일: 2026-05-07
- * 설명: 거래 JPA 엔티티
+ * 작성일: 2026-05-24
+ * 설명: 거래 진행 상태와 배송 정보를 관리하는 JPA 엔티티
  * ─────────────────────────────────────────────────────
  */
 public class Trade extends BaseEntity {
 
+    // 거래 번호
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "trade_id", nullable = false)
     private Long tradeId;
 
+    // 연결 판매글
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
             name = "post_id",
@@ -43,6 +45,7 @@ public class Trade extends BaseEntity {
     )
     private Post post;
 
+    // 구매자 회원
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
             name = "buyer_id",
@@ -51,6 +54,7 @@ public class Trade extends BaseEntity {
     )
     private Member buyer;
 
+    // 판매자 회원
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
             name = "seller_id",
@@ -59,14 +63,17 @@ public class Trade extends BaseEntity {
     )
     private Member seller;
 
+    // 거래 상태
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private TradeStatus status;
 
+    // 배송 방식
     @Enumerated(EnumType.STRING)
     @Column(name = "delivery_type")
     private TradeDeliveryType deliveryType;
 
+    // 배송지
     @Column(name = "delivery_address", length = 300)
     private String deliveryAddress;
 
@@ -74,34 +81,42 @@ public class Trade extends BaseEntity {
         this.deliveryAddress = deliveryAddress;
     }
 
+    // 택배사 코드
     @Column(name = "courier_code", length = 50)
     private String courierCode;
 
+    // 택배사명
     @Column(name = "courier_name", length = 100)
     private String courierName;
 
+    // 송장번호
     @Column(name = "tracking_number", length = 100)
     private String trackingNumber;
 
+    // 배송 시작 시각
     @Column(name = "shipping_started_at")
     private LocalDateTime shippingStartedAt;
 
+    // 거래 금액
     @Column(name = "trade_price", nullable = false)
     private Integer tradePrice;
 
+    // 거래 완료 시각
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
+    // 구매 확정 시각
     @Column(name = "confirmed_at")
     private LocalDateTime confirmedAt;
 
-    // 부모
+    // 연결 채팅방 목록
     @OneToMany(mappedBy = "trade")
     private List<ChatRoom> chatRooms = new ArrayList<>();
 
 //    @OneToOne(mappedBy = "trade", fetch = FetchType.LAZY)
 //    private MannerReview mannerReview;
 
+    // 수령 완료 시각
     @Column(name = "received_at")
     private LocalDateTime receivedAt;
 
@@ -138,7 +153,10 @@ public class Trade extends BaseEntity {
     }
 
     public void confirm() {
-        if (this.status != TradeStatus.PAID
+        boolean directTradeConfirmable = this.deliveryType == TradeDeliveryType.DIRECT
+                && this.status == TradeStatus.ACCEPTED;
+        if (!directTradeConfirmable
+                && this.status != TradeStatus.PAID
                 && this.status != TradeStatus.IN_PROGRESS
                 && this.status != TradeStatus.RECEIVED) {
             throw new IllegalStateException("구매 확정이 가능한 거래 상태가 아닙니다.");
@@ -158,6 +176,18 @@ public class Trade extends BaseEntity {
             throw new IllegalStateException("구매 확정 이후 거래는 취소할 수 없습니다.");
         }
         this.status = TradeStatus.CANCELED;
+    }
+
+    public void resolveDispute(TradeStatus status) {
+        if (status != TradeStatus.DISPUTED
+                && status != TradeStatus.CONFIRMED
+                && status != TradeStatus.CANCELED) {
+            throw new IllegalArgumentException("분쟁 처리 가능한 상태가 아닙니다.");
+        }
+        this.status = status;
+        if (status == TradeStatus.CONFIRMED && this.confirmedAt == null) {
+            this.confirmedAt = LocalDateTime.now();
+        }
     }
 
     private void validateCurrentStatus(TradeStatus expected, String message) {

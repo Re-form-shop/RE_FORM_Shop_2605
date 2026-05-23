@@ -167,7 +167,17 @@ public class ChatService {
                                 risk.getRiskLevel(),
                                 risk.getReason(),
                                 risk.getSuggestion(),
-                                null  // todo createdAt — 필요 시 RiskAnalysisResultVO에 추가
+                                null,  // todo createdAt — 필요 시 RiskAnalysisResultVO에 추가
+                                null,
+                                null,
+                                vo.getMessageId(),
+                                vo.getSenderId(),
+                                null,
+                                vo.getContent(),
+                                null,
+                                null,
+                                null,
+                                null
                         );
                     }
                     return new ChatMessageDTO(
@@ -385,6 +395,22 @@ public class ChatService {
                     return chatRoomRepository.save(newRoom);
                 });
 
+        sendSystemMessage(chatRoom, content);
+    }
+
+    /**
+     * 이미 생성된 채팅방들에만 시스템 공지를 전송한다.
+     * 판매글 수정처럼 "현재 대화 중인 방"에만 알려야 하는 흐름에서 사용한다.
+     *
+     * @param postId  채팅방들을 특정할 판매글 ID
+     * @param content 공지 메시지 내용
+     */
+    public void sendSystemMessageToExistingRooms(Long postId, String content) {
+        chatRoomRepository.findByPost_PostIdOrderByCreatedAtDesc(postId)
+                .forEach(chatRoom -> sendSystemMessage(chatRoom, content));
+    }
+
+    private void sendSystemMessage(ChatRoom chatRoom, String content) {
         // SYSTEM 메시지 저장 (sender = 판매자, type = SYSTEM)
         Member seller = chatRoom.getPost().getSellerId();
         ChatMessage systemMsg = ChatMessage.builder()

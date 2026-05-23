@@ -224,6 +224,16 @@ public class ModerationService {
                 riskLevel,
                 reason,
                 suggestion,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 null
         );
     }

@@ -37,7 +37,7 @@ public class DraftService {
 
     // 회원별 게시글 초안을 저장
     public PostDraftStateDTO savePostDraft(Long memberId, PostDraftDTO draftDTO) {
-        PostDraftDTO mergedDraft = mergePostDraft(getExistingDraft(memberId), draftDTO);
+        PostDraftDTO mergedDraft = sanitizePostDraft(mergePostDraft(getExistingDraft(memberId), draftDTO));
         RiskAnalysisResultDTO moderation = toFlaggedModeration(moderationService.checkDraft(
                 buildPostDraftModerationContent(mergedDraft),
                 TargetType.POST
@@ -69,7 +69,7 @@ public class DraftService {
         try {
             PostDraftStateDTO state = objectMapper.convertValue(value, PostDraftStateDTO.class);
             if (state != null && state.draft() != null) {
-                return state;
+                return new PostDraftStateDTO(sanitizePostDraft(state.draft()), state.moderation());
             }
         } catch (IllegalArgumentException e) {
             log.info("기존 형식 게시글 초안 감지. legacy draft 로 fallback 합니다. memberId={}", memberId);
@@ -79,7 +79,7 @@ public class DraftService {
         if (legacyDraft == null) {
             return null;
         }
-        return new PostDraftStateDTO(legacyDraft, null);
+        return new PostDraftStateDTO(sanitizePostDraft(legacyDraft), null);
     }
 
     // 회원별 게시글 초안을 삭제
@@ -137,6 +137,26 @@ public class DraftService {
                 firstNonNull(incomingDraft.price(), existingDraft.price()),
                 firstNonNull(incomingDraft.directTradeLocation(), existingDraft.directTradeLocation()),
                 firstNonNull(incomingDraft.imageUrls(), existingDraft.imageUrls())
+        );
+    }
+
+    private PostDraftDTO sanitizePostDraft(PostDraftDTO draftDTO) {
+        if (draftDTO == null) {
+            return null;
+        }
+
+        return new PostDraftDTO(
+                draftDTO.title(),
+                draftDTO.content(),
+                draftDTO.sport(),
+                draftDTO.team(),
+                draftDTO.uniformNumber(),
+                draftDTO.condition(),
+                draftDTO.size(),
+                draftDTO.tradeType(),
+                draftDTO.price(),
+                draftDTO.directTradeLocation(),
+                null
         );
     }
 

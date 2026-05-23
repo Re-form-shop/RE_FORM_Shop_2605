@@ -1,6 +1,7 @@
 package com.re_form_shop_2605.controller.admin;
 
-import com.re_form_shop_2605.dto.admin.AdminReportRequestDTO;
+import com.re_form_shop_2605.dto.admin.AdminReportDetailDTO;
+import com.re_form_shop_2605.dto.admin.AdminReportActionRequestDTO;
 import com.re_form_shop_2605.dto.common.ApiResponse;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.etc.ReportResponseDTO;
@@ -25,16 +26,16 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * ─────────────────────────────────────────────────────
  * 작성자: 김민기
- * 작성일: 2026-05-12
- * 설명: 관리자 권한으로 신고 목록을 조회하고 처리 상태를 변경하는 API를 제공
+ * 작성일: 2026-05-24
+ * 설명: 관리자 신고 목록/상세/처리 API
  * ─────────────────────────────────────────────────────
  */
-// 관리자 신고 검토/처리 API
 @RestController
 @RequestMapping("/api/admin/reports")
 @Tag(name = "관리자 신고 API", description = "관리자의 신고 목록 조회와 처리 관련 API")
 public class AdminReportController {
 
+    // 관리자 신고 처리 서비스
     private final ReportService reportService;
 
     public AdminReportController(ReportService reportService) {
@@ -64,6 +65,22 @@ public class AdminReportController {
     }
 
     @Operation(
+            summary = "관리자 신고 상세 조회",
+            description = "관리자가 신고자와 대상자 정보를 포함한 신고 상세를 조회합니다."
+    )
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<AdminReportDetailDTO>> readReport(
+            @AuthenticationPrincipal MemberSecurityDTO principal,
+            @PathVariable("id") Long reportId
+    ) {
+        validateAdmin(principal);
+        return ResponseEntity.ok(ApiResponse.ok(
+                reportService.readAdminReport(reportId),
+                "관리자 신고 상세 조회 완료"
+        ));
+    }
+
+    @Operation(
             summary = "관리자 신고 처리",
             description = "관리자가 신고 상태를 NORMAL, WARNING, DELETED 중 하나로 처리합니다."
     )
@@ -72,19 +89,19 @@ public class AdminReportController {
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "관리자 신고 처리 성공")
     })
-    public ResponseEntity<ApiResponse<ReportResponseDTO>> processReport(
+    public ResponseEntity<ApiResponse<AdminReportDetailDTO>> processReport(
             @AuthenticationPrincipal MemberSecurityDTO principal,
             @PathVariable("id") Long reportId,
-            @Valid @RequestBody AdminReportRequestDTO requestDTO
+            @Valid @RequestBody AdminReportActionRequestDTO requestDTO
     ) {
         validateAdmin(principal);
         return ResponseEntity.ok(ApiResponse.ok(
-                reportService.processReport(reportId, requestDTO.action()),
+                reportService.processReport(reportId, requestDTO.action(), requestDTO.adminMemo(), principal.getNickname()),
                 "관리자 신고 처리 완료"
         ));
     }
 
-    // 현재 로그인 사용자가 관리자 권한을 가졌는지 확인한다.
+    // 현재 로그인 사용자가 관리자 권한을 가졌는지 확인
     private void validateAdmin(MemberSecurityDTO principal) {
         boolean isAdmin = principal.getAuthorities().stream()
                 .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));

@@ -1,21 +1,19 @@
 package com.re_form_shop_2605.dto.admin;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 /**
  * ─────────────────────────────────────────────────────
  * 작성자: 김민기
- * 작성일: 2026-05-08
- * 설명: 관리자 회원 제재 요청 DTO
+ * 작성일: 2026-05-24
+ * 설명: 관리자 분쟁 처리 액션 ENUM
  * ─────────────────────────────────────────────────────
  */
-public record AdminMemberRequestDTO(
-        // 수행할 제재 액션
-        @NotNull
-        MemberAction action,
-
-        // 제재 사유
-        @Size(max = 300)
-        String reason
-) {
+public enum AdminDisputeAction {
+    // 분쟁 처리 기한 연장
+    EXTEND,
+    // 구매자 분쟁 반려
+    REJECT,
+    // 결제 환불 후 거래 취소
+    REFUND,
+    // 에스크로 해제 및 거래 완료
+    COMPLETE
 }

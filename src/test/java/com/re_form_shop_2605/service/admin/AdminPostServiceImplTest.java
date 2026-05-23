@@ -2,7 +2,7 @@ package com.re_form_shop_2605.service.admin;
 
 import com.re_form_shop_2605.dto.admin.AdminPostDetailDTO;
 import com.re_form_shop_2605.dto.admin.AdminPostListDTO;
-import com.re_form_shop_2605.dto.admin.AdminPostRequestDTO;
+import com.re_form_shop_2605.dto.admin.AdminPostActionRequestDTO;
 import com.re_form_shop_2605.dto.admin.PostAction;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.entity.Enum.DeliveryType;
@@ -89,7 +89,7 @@ class AdminPostServiceImplTest {
 
         AdminPostDetailDTO response = adminPostService.processPost(
                 post.getPostId(),
-                new AdminPostRequestDTO(PostAction.HIDE, "숨김 처리")
+                new AdminPostActionRequestDTO(PostAction.HIDE, "숨김 처리")
         );
 
         assertEquals(PostStatus.HIDDEN, response.status());
@@ -107,7 +107,7 @@ class AdminPostServiceImplTest {
 
         AdminPostDetailDTO response = adminPostService.processPost(
                 post.getPostId(),
-                new AdminPostRequestDTO(PostAction.DELETE, "삭제 처리")
+                new AdminPostActionRequestDTO(PostAction.DELETE, "삭제 처리")
         );
 
         assertEquals(PostStatus.DELETED, response.status());

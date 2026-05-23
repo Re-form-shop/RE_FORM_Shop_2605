@@ -233,6 +233,21 @@ public class PaymentService {
         );
     }
 
+    // 거래 번호 기준 관리자 환불 처리
+    public PaymentResponseDTO refundPaymentByTrade(Long tradeId, String cancelReason) {
+        Payment payment = paymentRepository.findByTradeTradeId(tradeId)
+                .orElseThrow(() -> new IllegalArgumentException("refundPaymentByTrade : 해당 거래의 결제 내역이 존재하지 않습니다."));
+
+        if (payment.getTossPaymentKey() == null || payment.getTossPaymentKey().isBlank()) {
+            throw new IllegalArgumentException("refundPaymentByTrade : 토스 결제 키가 없어 환불할 수 없습니다.");
+        }
+
+        return cancelPayment(
+                payment.getTossPaymentKey(),
+                new PaymentCancelRequestDTO(cancelReason, "REFUND")
+        );
+    }
+
     // 4. 결제 정보 조회
     public PaymentResponseDTO getPayment(Long tradeId) {
         // 1) 해당 거래의 결제 내역이 존재 여부 확인

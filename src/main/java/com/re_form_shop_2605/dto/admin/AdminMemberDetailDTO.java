@@ -7,6 +7,7 @@ import com.re_form_shop_2605.entity.Enum.Role;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+
 /**
  * ─────────────────────────────────────────────────────
  * 작성자: 김민기
@@ -35,11 +36,15 @@ public record AdminMemberDetailDTO(
         Role role,
         // 가입일
         LocalDateTime createdAt,
+        // 마지막 로그인 시각 (현재 데이터 없으면 null)
+        LocalDateTime lastLoginAt,
         // 해당 회원 관련 신고 내역
         List<ReportResponseDTO> receivedReports,
         // 총 판매 건수
         int totalSales,
         // 총 구매 건수
-        int totalPurchases
+        int totalPurchases,
+        // 최근 거래 내역
+        List<AdminTradeSummaryDTO> recentTrades
 ) {
 }

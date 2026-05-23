@@ -2,6 +2,7 @@ package com.re_form_shop_2605.repository.trade;
 
 import com.re_form_shop_2605.entity.Enum.TradeStatus;
 import com.re_form_shop_2605.entity.trade.Trade;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 /**
  * ─────────────────────────────────────────────────────
  * 작성자: 김민기
@@ -32,9 +34,16 @@ public interface TradeRepository extends JpaRepository<Trade, Long> {
     @Query("SELECT t FROM Trade t WHERE t.status = :status " +
             "AND NOT EXISTS (SELECT p FROM PointHistory p WHERE p.trade = t)")
     List<Trade> findConfirmedUnsettledTrades(@Param("status")TradeStatus status);
+    long countByStatus(TradeStatus status);
     int countBySeller_MemberIdAndStatus(Long memberId, TradeStatus status);
 
     int countByBuyer_MemberIdAndStatus(Long memberId, TradeStatus status);
+
+    long countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(LocalDateTime startInclusive, LocalDateTime endExclusive);
+
+    long countByCompletedAtGreaterThanEqualAndCompletedAtLessThan(LocalDateTime startInclusive, LocalDateTime endExclusive);
+
+    long countByStatusAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(TradeStatus status, LocalDateTime startInclusive, LocalDateTime endExclusive);
 
     // 2. 자동 구매 확정 처리 대상 조회
     @Query("SELECT t FROM Trade t WHERE t.status = :status " +
@@ -59,4 +68,42 @@ public interface TradeRepository extends JpaRepository<Trade, Long> {
     List<Trade> findAllByBuyer_MemberIdAndStatusOrderByTradeIdDesc(Long buyerId, TradeStatus status);
 
     List<Trade> findAllBySeller_MemberIdAndStatusOrderByTradeIdDesc(Long sellerId, TradeStatus status);
+
+    @EntityGraph(attributePaths = {"post", "buyer", "seller"})
+    List<Trade> findTop5ByOrderByCreatedAtDesc();
+
+    @EntityGraph(attributePaths = {"post", "buyer", "seller"})
+    Optional<Trade> findWithPostAndBuyerAndSellerByTradeId(Long tradeId);
+
+    @EntityGraph(attributePaths = {"post", "buyer", "seller"})
+    List<Trade> findAllByStatusOrderByCreatedAtDesc(TradeStatus status);
+
+    @EntityGraph(attributePaths = {"post", "buyer", "seller"})
+    List<Trade> findAllBySeller_MemberIdOrBuyer_MemberIdOrderByTradeIdDesc(Long sellerId, Long buyerId);
+
+    @EntityGraph(attributePaths = {"post", "buyer", "seller"})
+    @Query("""
+            SELECT t
+            FROM Trade t
+            WHERE t.seller.memberId = :memberId
+               OR t.buyer.memberId = :memberId
+            ORDER BY t.createdAt DESC, t.tradeId DESC
+            """)
+    List<Trade> findRecentTradesForAdminMember(@Param("memberId") Long memberId);
+
+    @Query("""
+            SELECT t.tradeId
+            FROM Trade t
+            WHERE t.post.postId = :postId
+            """)
+    Optional<Long> findTradeIdByPostId(@Param("postId") Long postId);
+
+    @Query("""
+            SELECT COALESCE(SUM(t.tradePrice), 0)
+            FROM Trade t
+            WHERE t.createdAt >= :startInclusive
+              AND t.createdAt < :endExclusive
+            """)
+    Long sumTradePriceByCreatedAtBetween(@Param("startInclusive") LocalDateTime startInclusive,
+                                         @Param("endExclusive") LocalDateTime endExclusive);
 }

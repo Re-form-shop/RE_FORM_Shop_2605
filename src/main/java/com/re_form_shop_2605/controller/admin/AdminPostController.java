@@ -2,7 +2,7 @@ package com.re_form_shop_2605.controller.admin;
 
 import com.re_form_shop_2605.dto.admin.AdminPostDetailDTO;
 import com.re_form_shop_2605.dto.admin.AdminPostListDTO;
-import com.re_form_shop_2605.dto.admin.AdminPostRequestDTO;
+import com.re_form_shop_2605.dto.admin.AdminPostActionRequestDTO;
 import com.re_form_shop_2605.dto.common.ApiResponse;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.login.MemberSecurityDTO;
@@ -96,7 +96,7 @@ public class AdminPostController {
     public ResponseEntity<ApiResponse<AdminPostDetailDTO>> processPost(
             @AuthenticationPrincipal MemberSecurityDTO principal,
             @PathVariable("id") Long postId,
-            @Valid @RequestBody AdminPostRequestDTO requestDTO
+            @Valid @RequestBody AdminPostActionRequestDTO requestDTO
     ) {
         validateAdmin(principal);
         return ResponseEntity.ok(ApiResponse.ok(

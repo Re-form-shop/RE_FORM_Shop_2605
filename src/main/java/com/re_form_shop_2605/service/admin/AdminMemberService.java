@@ -2,7 +2,7 @@ package com.re_form_shop_2605.service.admin;
 
 import com.re_form_shop_2605.dto.admin.AdminMemberDetailDTO;
 import com.re_form_shop_2605.dto.admin.AdminMemberListDTO;
-import com.re_form_shop_2605.dto.admin.AdminMemberRequestDTO;
+import com.re_form_shop_2605.dto.admin.AdminMemberActionRequestDTO;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.entity.Enum.MemberStatus;
 
@@ -22,5 +22,5 @@ public interface AdminMemberService {
     AdminMemberDetailDTO readMember(Long memberId);
 
     // 신고 회원 상태 처리
-    AdminMemberDetailDTO processMember(Long memberId, AdminMemberRequestDTO requestDTO);
+    AdminMemberDetailDTO processMember(Long memberId, AdminMemberActionRequestDTO requestDTO);
 }

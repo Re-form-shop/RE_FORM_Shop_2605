@@ -20,6 +20,7 @@ import com.re_form_shop_2605.repository.trade.WishRepository;
 import com.re_form_shop_2605.repository.trade.postImageRepository;
 import com.re_form_shop_2605.service.common.ServicePageResponse;
 import com.re_form_shop_2605.service.AI.ModerationService;
+import com.re_form_shop_2605.service.chat.ChatService;
 import com.re_form_shop_2605.service.etc.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -31,6 +32,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * ─────────────────────────────────────────────────────
@@ -57,6 +59,7 @@ public class PostServiceImpl implements PostService {
     private final PostMapper postMapper;
     private final PostVectorService postVectorService;
     private final ModerationService moderationService;
+    private final ChatService chatService;
 
     @Override
     // 판매글을 저장하고, 프론트가 이미 업로드한 이미지 URL 목록을 함께 저장한다.
@@ -160,7 +163,7 @@ public class PostServiceImpl implements PostService {
             List<PostImage> postImages = postImageRepository.findAllByPost_PostIdOrderBySortOrderAsc(post.getPostId());
             String thumbnailUrl = null;
             if (!postImages.isEmpty()) {
-                thumbnailUrl = postImages.get(0).getImageUrl();
+                thumbnailUrl = postImageService.getThumbnailUrl(postImages.get(0).getImageUrl());
             }
 
             boolean isWished = false;
@@ -197,6 +200,7 @@ public class PostServiceImpl implements PostService {
     public void modifyPost(Long postId, Long sellerId, PostUpdateRequestDTO postUpdateRequestDTO, List<String> imageUrls) {
         Post post = getPost(postId);
         int oldPrice = post.getPrice();
+        PostSnapshot beforeUpdate = PostSnapshot.from(post);
 
         if (!post.getSellerId().getMemberId().equals(sellerId)) {
             throw new IllegalArgumentException("판매글 수정 권한이 없습니다.");
@@ -230,6 +234,11 @@ public class PostServiceImpl implements PostService {
                         .build());
             }
             postImageRepository.saveAll(postImages);
+        }
+
+        String chatNotice = buildPostUpdateNotice(beforeUpdate, post, finalizedImageUrls != null);
+        if (chatNotice != null) {
+            chatService.sendSystemMessageToExistingRooms(post.getPostId(), chatNotice);
         }
 
         if (postUpdateRequestDTO.price() != null && post.getPrice() < oldPrice) {
@@ -368,7 +377,7 @@ public class PostServiceImpl implements PostService {
                     post.getViewCount(),
                     post.getLikeCount(),
                     post.isLiked(),
-                    post.getThumbnailUrl(),
+                    postImageService.getThumbnailUrl(post.getThumbnailUrl()),
                     null,
                     post.getCreatedAt(),
                     seller
@@ -422,6 +431,92 @@ public class PostServiceImpl implements PostService {
         }
     }
 
+    private String buildPostUpdateNotice(PostSnapshot beforeUpdate, Post post, boolean imagesChanged) {
+        List<String> changes = new ArrayList<>();
+
+        if (!Objects.equals(beforeUpdate.title(), post.getTitle())) {
+            changes.add("제목");
+        }
+        if (beforeUpdate.price() != post.getPrice()) {
+            changes.add(String.format("가격 %d원 -> %d원", beforeUpdate.price(), post.getPrice()));
+        }
+        if (!Objects.equals(beforeUpdate.deliveryType(), post.getDeliveryType())) {
+            changes.add(String.format("수령 방식 %s -> %s",
+                    formatDeliveryType(beforeUpdate.deliveryType()),
+                    formatDeliveryType(post.getDeliveryType())));
+        }
+        if (!Objects.equals(beforeUpdate.grade(), post.getGrade())) {
+            changes.add(String.format("등급 %s -> %s", beforeUpdate.grade(), post.getGrade()));
+        }
+        if (!Objects.equals(beforeUpdate.size(), post.getSize())) {
+            changes.add(String.format("사이즈 %s -> %s", nullSafe(beforeUpdate.size()), nullSafe(post.getSize())));
+        }
+        if (!Objects.equals(beforeUpdate.marking(), post.getMarking())) {
+            changes.add(String.format("마킹 %s -> %s",
+                    Boolean.TRUE.equals(beforeUpdate.marking()) ? "있음" : "없음",
+                    Boolean.TRUE.equals(post.getMarking()) ? "있음" : "없음"));
+        }
+        if (!Objects.equals(beforeUpdate.team(), post.getTeam()) || !Objects.equals(beforeUpdate.uniformName(), post.getUniformName())) {
+            changes.add("상품 정보");
+        }
+        if (!Objects.equals(beforeUpdate.content(), post.getContent())) {
+            changes.add("설명");
+        }
+        if (imagesChanged) {
+            changes.add("이미지");
+        }
+
+        if (changes.isEmpty()) {
+            return null;
+        }
+
+        return String.format("[판매글 수정 안내] '%s' 게시글 정보가 변경되었습니다. 변경 항목: %s",
+                post.getTitle(),
+                String.join(", ", changes));
+    }
+
+    private String formatDeliveryType(DeliveryType deliveryType) {
+        if (deliveryType == null) {
+            return "-";
+        }
+
+        return switch (deliveryType) {
+            case DIRECT -> "직거래";
+            case DELIVERY -> "택배";
+            case BOTH -> "직거래/택배";
+        };
+    }
+
+    private String nullSafe(String value) {
+        return value == null || value.isBlank() ? "-" : value;
+    }
+
+    private record PostSnapshot(
+            String title,
+            String content,
+            String team,
+            String uniformName,
+            Grade grade,
+            String size,
+            Boolean marking,
+            int price,
+            DeliveryType deliveryType
+    ) {
+        private static PostSnapshot from(Post post) {
+            return new PostSnapshot(
+                    post.getTitle(),
+                    post.getContent(),
+                    post.getTeam(),
+                    post.getUniformName(),
+                    post.getGrade(),
+                    post.getSize(),
+                    post.getMarking(),
+                    post.getPrice(),
+                    post.getDeliveryType()
+            );
+        }
+    }
+
     @Override
     @Transactional(readOnly = true)
     // 현재 회원이 찜한 판매글 목록을 최신순으로 반환 (마이페이지 찜 목록 탭)
@@ -439,7 +534,7 @@ public class PostServiceImpl implements PostService {
 
             // 썸네일: 정렬 순서 1번 이미지 사용
             List<PostImage> images = postImageRepository.findAllByPost_PostIdOrderBySortOrderAsc(post.getPostId());
-            String thumbnailUrl = images.isEmpty() ? null : images.get(0).getImageUrl();
+            String thumbnailUrl = images.isEmpty() ? null : postImageService.getThumbnailUrl(images.get(0).getImageUrl());
 
             SellerBriefDTO seller = toSellerBriefDTO(post.getSellerId());
 

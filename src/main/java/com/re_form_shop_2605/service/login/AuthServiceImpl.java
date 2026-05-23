@@ -19,13 +19,11 @@ import com.re_form_shop_2605.repository.member.MemberRepository;
 import com.re_form_shop_2605.security.AuthException;
 import com.re_form_shop_2605.security.JWT.CustomUserDetailsService;
 import com.re_form_shop_2605.security.JWT.JwtTokenProvider;
+import com.re_form_shop_2605.service.mail.MailService;
 import com.re_form_shop_2605.service.member.MemberService;
 import lombok.extern.log4j.Log4j2;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -65,13 +63,7 @@ public class AuthServiceImpl implements AuthService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final CustomUserDetailsService customUserDetailsService;
     private final AuthTokenService authTokenService;
-    private final JavaMailSender javaMailSender;
-
-    @Value("${spring.mail.username:ppaapp220022@gmail.com}")
-    private String mailFrom;
-
-    @Value("${app.auth.login-code-delivery-mode:console}")
-    private String loginCodeDeliveryMode;
+    private final MailService mailService;
 
     @Override
     public LoginChallengeResponseDTO login(LoginRequestDTO requestDTO) {
@@ -100,7 +92,7 @@ public class AuthServiceImpl implements AuthService {
                 LOGIN_CODE_EXPIRATION_SECONDS,
                 TimeUnit.SECONDS
         );
-        sendLoginCodeEmail(principal.getEmail(), code);
+        mailService.sendLoginCodeEmail(principal.getEmail(), code);
 
         log.info("[AuthServiceImpl] login challenge sent email={} memberId={} challengeId={}",
                 principal.getEmail(),
@@ -349,33 +341,6 @@ public class AuthServiceImpl implements AuthService {
 
     private String generateLoginCode() {
         return String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
-    }
-
-    private void sendLoginCodeEmail(String email, String code) {
-        if (!"mail".equalsIgnoreCase(loginCodeDeliveryMode)) {
-            log.info("[AuthServiceImpl] login verification code email={} code={} mode={}",
-                    email,
-                    code,
-                    loginCodeDeliveryMode);
-            return;
-        }
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(mailFrom);
-        message.setTo(email);
-        message.setSubject("[RE:FORM] 로그인 2차 인증코드");
-        message.setText("""
-                안녕하세요. RE:FORM 입니다.
-
-                로그인 2차 인증코드는 아래와 같습니다.
-
-                인증코드: %s
-
-                이 코드는 5분 동안만 유효합니다.
-                
-                본인이 요청하지 않았다면 비밀번호를 변경하고 고객센터에 문의해 주세요.
-                """.formatted(code));
-        javaMailSender.send(message);
     }
 
     private void removeSession(Long memberId, String sessionId) {

@@ -33,11 +33,26 @@ public interface NotificationService {
     // 결제 완료 후 구매자 안내용 알림/이메일 공통 템플릿
     TradeNotificationTemplateDTO buildBuyerPaymentCompletedTemplate(Long tradeId, String postTitle);
 
+    // 거래 생성 직후 판매자 안내용 템플릿
+    TradeNotificationTemplateDTO buildSellerTradeCreatedTemplate(Long tradeId, String postTitle);
+
+    // 거래 수락 직후 구매자 안내용 템플릿
+    TradeNotificationTemplateDTO buildBuyerTradeAcceptedTemplate(Long tradeId, String postTitle, boolean directTrade);
+
+    // 배송지/직거래 장소 수정 직후 상대방 안내용 템플릿
+    TradeNotificationTemplateDTO buildTradeDeliveryUpdatedTemplate(Long tradeId, String postTitle, boolean deliveryTrade, boolean receiverIsSeller);
+
     // 판매자의 배송 정보 등록 완료 안내용 공통 템플릿
     TradeNotificationTemplateDTO buildSellerShippingRegisteredTemplate(Long tradeId, String postTitle);
 
     // 구매자의 배송 추적 시작 안내용 공통 템플릿
     TradeNotificationTemplateDTO buildBuyerShippingRegisteredTemplate(Long tradeId, String postTitle);
+
+    // 구매 확정 직후 판매자 안내용 공통 템플릿
+    TradeNotificationTemplateDTO buildSellerTradeConfirmedTemplate(Long tradeId, String postTitle);
+
+    // 구매 확정 직후 구매자 안내용 공통 템플릿
+    TradeNotificationTemplateDTO buildBuyerTradeConfirmedTemplate(Long tradeId, String postTitle);
 
     /**
      * ─────────────────────────────────────────────────────

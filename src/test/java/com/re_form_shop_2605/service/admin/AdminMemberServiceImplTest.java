@@ -2,7 +2,7 @@ package com.re_form_shop_2605.service.admin;
 
 import com.re_form_shop_2605.dto.admin.AdminMemberDetailDTO;
 import com.re_form_shop_2605.dto.admin.AdminMemberListDTO;
-import com.re_form_shop_2605.dto.admin.AdminMemberRequestDTO;
+import com.re_form_shop_2605.dto.admin.AdminMemberActionRequestDTO;
 import com.re_form_shop_2605.dto.admin.MemberAction;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.entity.Enum.MemberStatus;
@@ -76,7 +76,7 @@ class AdminMemberServiceImplTest {
 
         AdminMemberDetailDTO response = adminMemberService.processMember(
                 member.getMemberId(),
-                new AdminMemberRequestDTO(MemberAction.WARN, "경고 테스트")
+                new AdminMemberActionRequestDTO(MemberAction.WARN, "경고 테스트")
         );
 
         assertEquals(1, response.warningCount());
@@ -94,7 +94,7 @@ class AdminMemberServiceImplTest {
 
         AdminMemberDetailDTO response = adminMemberService.processMember(
                 member.getMemberId(),
-                new AdminMemberRequestDTO(MemberAction.SUSPEND, "정지 테스트")
+                new AdminMemberActionRequestDTO(MemberAction.SUSPEND, "정지 테스트")
         );
 
         assertEquals(MemberStatus.SUSPENDED, response.status());
@@ -111,7 +111,7 @@ class AdminMemberServiceImplTest {
 
         AdminMemberDetailDTO response = adminMemberService.processMember(
                 member.getMemberId(),
-                new AdminMemberRequestDTO(MemberAction.WITHDRAW, "탈퇴 테스트")
+                new AdminMemberActionRequestDTO(MemberAction.WITHDRAW, "탈퇴 테스트")
         );
 
         assertEquals(MemberStatus.WITHDRAWN, response.status());
