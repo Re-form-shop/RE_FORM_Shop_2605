@@ -98,7 +98,8 @@ public class AuthServiceImpl implements AuthService {
                 principal.getEmail(),
                 principal.getMemberId(),
                 challengeId);
-        return new LoginChallengeResponseDTO(challengeId, principal.getEmail(), LOGIN_CODE_EXPIRATION_SECONDS);
+        // verificationCode: 개발 편의용 — 프론트 로그인 화면 DEV 힌트 박스에 코드 직접 표시
+        return new LoginChallengeResponseDTO(challengeId, principal.getEmail(), LOGIN_CODE_EXPIRATION_SECONDS, code);
     }
 
     // 2차 로그인 인증
