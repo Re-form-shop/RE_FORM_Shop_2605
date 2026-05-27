@@ -42,3 +42,6 @@ out/
 ### 개인 지침 ###
 CLAUDE.md
 .claude
+BACKEND_API_HANDOFF_2026-05-14.md
+FRONTEND_API_SPEC.md
+UseCase.md
