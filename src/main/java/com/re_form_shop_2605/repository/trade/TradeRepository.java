@@ -32,13 +32,16 @@ public interface TradeRepository extends JpaRepository<Trade, Long> {
     @Query("SELECT t FROM Trade t WHERE t.status = :status " +
             "AND NOT EXISTS (SELECT p FROM PointHistory p WHERE p.trade = t)")
     List<Trade> findConfirmedUnsettledTrades(@Param("status")TradeStatus status);
-    int countBySeller_MemberIdAndStatus(Long memberId, TradeStatus status);
-
-    int countByBuyer_MemberIdAndStatus(Long memberId, TradeStatus status);
 
     // 2. 자동 구매 확정 처리 대상 조회
     @Query("SELECT t FROM Trade t WHERE t.status = :status " +
             "AND t.receivedAt <= :dueDate")
+    List<Trade> findAutoConfirmTargets(@Param("status") TradeStatus status,
+                                       @Param("dueDate")LocalDateTime dueDate);
+
+    // 3. status에 따른 거래 건수 조회 (통계 배치용)
+    // 용도 1) StatisticsJobConfig 배치 사용 (누적 거래 건수 조회)
+    long countByStatus(TradeStatus status);
 
     /**
      * ─────────────────────────────────────────────────────
@@ -47,8 +50,10 @@ public interface TradeRepository extends JpaRepository<Trade, Long> {
      * 설명: 거래 JPA 리포지토리 인터페이스
      * ─────────────────────────────────────────────────────
      */
-    List<Trade> findAutoConfirmTargets(@Param("status") TradeStatus status,
-                                       @Param("dueDate")LocalDateTime dueDate);
+    int countBySeller_MemberIdAndStatus(Long memberId, TradeStatus status);
+
+    int countByBuyer_MemberIdAndStatus(Long memberId, TradeStatus status);
+
     boolean existsByPost_PostId(Long postId);
 
     List<Trade> findAllByBuyer_MemberIdOrderByTradeIdDesc(Long buyerId);

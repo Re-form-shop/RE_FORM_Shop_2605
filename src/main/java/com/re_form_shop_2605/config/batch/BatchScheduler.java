@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
  *       - 자동 구매 확정 및 미정산 거래 정산 처리 (매일 새벽 4시)
  *       - 커뮤니티 인기글 집계 (1시간마다)
  *       - 게시물 위험 탐지 배치 (6시간마다)
+ *       - 메인 화면 통계 집계 배치 (매일 자정마다)
  * ─────────────────────────────────────────────────────
  */
 
@@ -26,6 +27,7 @@ public class BatchScheduler {
     private final Job dailyBatchJob;           // 자동구매 확정 + 정산 자동화
     private final Job popularCommunityPostJob; // 커뮤니티 인기글 조회
     private final Job riskDetectionJob;        // 위험 탐지 배치
+    private final Job statisticsJob;           // 메인 화면 통계 배치
 
     /* 1. 자동 구매 확정 -> 미정산 거래 정산 처리 */
     // 1) 5일 경과된 미구매확정 거래 자동 구매확정 처리
@@ -55,5 +57,14 @@ public class BatchScheduler {
                 .addLong("time", System.currentTimeMillis())
                 .toJobParameters();
         jobOperator.start(riskDetectionJob, params);
+    }
+
+    /* 4. 매일 자정 메인 화면 통계 집계 */
+    @Scheduled(cron = "0 0 0 * * *")
+    public void runStatisticsJob() throws Exception {
+        JobParameters params = new JobParametersBuilder()
+                .addLong("time", System.currentTimeMillis())
+                .toJobParameters();
+        jobOperator.start(statisticsJob, params);
     }
 }

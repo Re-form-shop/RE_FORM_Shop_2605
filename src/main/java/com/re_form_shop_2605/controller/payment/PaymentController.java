@@ -14,10 +14,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 /**
+ * ─────────────────────────────────────────────────────
  * 작성자: 손민정
  * 작성일: 2026-05-09
  * 설명: 결제 API (토스페이먼츠 연동)
  *       - 결제 초기화, 승인, 조회, 취소
+ * ─────────────────────────────────────────────────────
  */
 
 @Log4j2
