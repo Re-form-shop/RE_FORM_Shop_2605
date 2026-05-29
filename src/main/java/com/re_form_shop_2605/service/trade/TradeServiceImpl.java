@@ -387,16 +387,16 @@ public class TradeServiceImpl implements TradeService {
         }
 
         // DeliveryTrackingTraceRequestDTO(items, includeProgresses, skipCache)
-        // includeProgresses=null → API 기본값 true (진행 이력 포함)
-        // skipCache=null         → API 기본값 false (캐시 사용, 실시간 조회 시 과금 주의)
+        // includeProgresses=true  → 배송 이력(progresses) 전체 포함 — null 전송 시 API가 이력 생략할 수 있으므로 명시
+        // skipCache=false         → 캐시 사용 (실시간 조회는 과금 발생하므로 캐시 우선)
         DeliveryTrackingTraceRequestDTO requestDTO = new DeliveryTrackingTraceRequestDTO(
                 List.of(new DeliveryTrackingTraceRequestDTO.TraceItemRequestDTO(
                         String.valueOf(trade.getTradeId()),
                         trade.getCourierCode(),
                         trade.getTrackingNumber()
                 )),
-                null, // includeProgresses
-                null  // skipCache
+                true,  // includeProgresses — 단계별 배송 이력을 프론트 타임라인 UI에 표시하기 위해 필수
+                false  // skipCache — 캐시 사용으로 응답 속도 향상 및 API 호출 비용 절약
         );
         return deliveryTrackingService.trace(requestDTO);
     }
