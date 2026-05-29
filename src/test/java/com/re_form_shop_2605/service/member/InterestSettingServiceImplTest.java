@@ -18,7 +18,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
- * 작성자: 민기
+ * 작성자: 김민기
  * 작성일: 2026-05-10
  * 설명:
  */

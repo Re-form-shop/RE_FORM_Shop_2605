@@ -40,15 +40,13 @@ public class InterestSettingServiceImpl implements InterestSettingService{
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."));
 
-        InterestSetting mappedInterestSetting = modelMapper.map(onboardingRequestDTO, InterestSetting.class);
         InterestSetting interestSetting = InterestSetting.builder()
-                .memberId(memberId)
                 .member(member)
-                .sport(mappedInterestSetting.getSport())
-                .team(mappedInterestSetting.getTeam())
+                .sport(onboardingRequestDTO.sport())
+                .team(onboardingRequestDTO.team())
                 .build();
 
-        interestSettingRepository.save(interestSetting);
+        interestSettingRepository.saveAndFlush(interestSetting);
         interestKeywordRepository.deleteByMember_MemberId(memberId);
 
         List<String> keywords = onboardingRequestDTO.keywords();

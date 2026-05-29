@@ -1,5 +1,6 @@
 package com.re_form_shop_2605.service.etc;
 
+import com.re_form_shop_2605.ReFormShop2605Application;
 import com.re_form_shop_2605.dto.etc.NotificationResponseDTO;
 import com.re_form_shop_2605.entity.Enum.MemberStatus;
 import com.re_form_shop_2605.entity.Enum.NotificationType;
@@ -19,12 +20,12 @@ import java.math.BigDecimal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 /**
- * 작성자: 민기
+ * 작성자: 김민기
  * 작성일: 2026-05-10
  * 설명:
  */
 @Log4j2
-@SpringBootTest
+@SpringBootTest(classes = ReFormShop2605Application.class)
 //@Transactional
 class NotificationServiceImplTest {
 

@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 작성자: 민기
+ * 작성자: 김민기
  * 작성일: 2026-05-12
  * 설명: 관리자 회원 관리 서비스의 목록 조회와 제재 처리 동작을 검증하는 테스트
  */
@@ -34,7 +34,7 @@ class AdminMemberServiceImplTest {
 
     @Test
     /**
-     * 작성자: 민기
+     * 작성자: 김민기
      * 작성일: 2026-05-12
      * 설명: 관리자 회원 목록 조회가 키워드와 상태 조건으로 필터링되는지 검증한다.
      */
@@ -52,7 +52,7 @@ class AdminMemberServiceImplTest {
 
     @Test
     /**
-     * 작성자: 민기
+     * 작성자: 김민기
      * 작성일: 2026-05-12
      * 설명: 관리자 회원 상세 조회가 기본 회원 정보를 반환하는지 검증한다.
      */
@@ -67,7 +67,7 @@ class AdminMemberServiceImplTest {
 
     @Test
     /**
-     * 작성자: 민기
+     * 작성자: 김민기
      * 작성일: 2026-05-12
      * 설명: 경고 처리 시 경고 횟수가 1 증가하는지 검증한다.
      */
@@ -85,7 +85,7 @@ class AdminMemberServiceImplTest {
 
     @Test
     /**
-     * 작성자: 민기
+     * 작성자: 김민기
      * 작성일: 2026-05-12
      * 설명: 정지 처리 시 회원 상태가 SUSPENDED로 변경되는지 검증한다.
      */
@@ -102,7 +102,7 @@ class AdminMemberServiceImplTest {
 
     @Test
     /**
-     * 작성자: 민기
+     * 작성자: 김민기
      * 작성일: 2026-05-12
      * 설명: 탈퇴 처리 시 회원 상태가 WITHDRAWN으로 변경되는지 검증한다.
      */
@@ -118,7 +118,7 @@ class AdminMemberServiceImplTest {
     }
 
     /**
-     * 작성자: 민기
+     * 작성자: 김민기
      * 작성일: 2026-05-12
      * 설명: 관리자 회원 관리 테스트에 사용할 회원 엔티티를 생성한다.
      */

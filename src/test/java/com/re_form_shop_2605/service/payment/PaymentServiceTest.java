@@ -75,16 +75,15 @@ class PaymentServiceTest {
      * 작성일: 2026-05-12
      * 설명: 직거래는 결제를 진행할 수 없도록 막히는지 검증한다.
      */
-    void createPaymentFailsWhenTradeIsDirect() {
+    void createPaymentSucceedsWhenTradeIsDirect() {
         Trade trade = createTrade(TradeDeliveryType.DIRECT, "서울 잠실종합운동장");
         when(tradeRepository.findById(1L)).thenReturn(Optional.of(trade));
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> paymentService.createPayment(2L, new PaymentInitRequestDTO(1L, PayMethod.Card))
-        );
+        PaymentInitResponseDTO response = paymentService.createPayment(2L, new PaymentInitRequestDTO(1L, PayMethod.Card));
 
-        assertEquals("createPayment : 택배 거래만 결제를 진행할 수 있습니다.", exception.getMessage());
+        assertNotNull(response.tossOrderId());
+        assertEquals("테스트 상품", response.orderName());
+        assertEquals(10000, response.amount());
     }
 
     @Test

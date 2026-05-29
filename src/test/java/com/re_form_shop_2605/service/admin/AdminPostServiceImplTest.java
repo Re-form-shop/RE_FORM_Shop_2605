@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 작성자: 민기
+ * 작성자: 김민기
  * 작성일: 2026-05-12
  * 설명: 관리자 게시글 관리 서비스의 목록 조회와 상태 처리 동작을 검증하는 테스트
  */
@@ -43,7 +43,7 @@ class AdminPostServiceImplTest {
 
     @Test
     /**
-     * 작성자: 민기
+     * 작성자: 김민기
      * 작성일: 2026-05-12
      * 설명: 관리자 게시글 목록 조회가 키워드와 상태 조건으로 필터링되는지 검증한다.
      */
@@ -62,7 +62,7 @@ class AdminPostServiceImplTest {
 
     @Test
     /**
-     * 작성자: 민기
+     * 작성자: 김민기
      * 작성일: 2026-05-12
      * 설명: 관리자 게시글 상세 조회가 판매자 정보까지 반환하는지 검증한다.
      */
@@ -79,7 +79,7 @@ class AdminPostServiceImplTest {
 
     @Test
     /**
-     * 작성자: 민기
+     * 작성자: 김민기
      * 작성일: 2026-05-12
      * 설명: 숨김 처리 시 게시글 상태가 HIDDEN으로 변경되는지 검증한다.
      */
@@ -97,7 +97,7 @@ class AdminPostServiceImplTest {
 
     @Test
     /**
-     * 작성자: 민기
+     * 작성자: 김민기
      * 작성일: 2026-05-12
      * 설명: 삭제 처리 시 게시글 상태가 DELETED로 변경되는지 검증한다.
      */
@@ -114,7 +114,7 @@ class AdminPostServiceImplTest {
     }
 
     /**
-     * 작성자: 민기
+     * 작성자: 김민기
      * 작성일: 2026-05-12
      * 설명: 관리자 게시글 관리 테스트에 사용할 판매자 회원을 생성한다.
      */
@@ -133,7 +133,7 @@ class AdminPostServiceImplTest {
     }
 
     /**
-     * 작성자: 민기
+     * 작성자: 김민기
      * 작성일: 2026-05-12
      * 설명: 관리자 게시글 관리 테스트에 사용할 판매글 엔티티를 생성한다.
      */

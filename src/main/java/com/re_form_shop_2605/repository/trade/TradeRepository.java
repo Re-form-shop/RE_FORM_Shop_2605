@@ -45,6 +45,16 @@ public interface TradeRepository extends JpaRepository<Trade, Long> {
     // 용도 1) StatisticsJobConfig 배치 사용 (누적 거래 건수 조회)
     long countByStatus(TradeStatus status);
 
+    long countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(LocalDateTime startInclusive,
+                                                              LocalDateTime endExclusive);
+
+    long countByCompletedAtGreaterThanEqualAndCompletedAtLessThan(LocalDateTime startInclusive,
+                                                                  LocalDateTime endExclusive);
+
+    long countByStatusAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(TradeStatus status,
+                                                                       LocalDateTime startInclusive,
+                                                                       LocalDateTime endExclusive);
+
     /**
      * ─────────────────────────────────────────────────────
      * 작성자: 김민기

@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
- * 작성자: 민기
+ * 작성자: 김민기
  * 작성일: 2026-05-10
  * 설명:
  */
@@ -318,7 +318,7 @@ class PostServiceImplTest {
 
         assertEquals(1, notifications.size());
         assertEquals(NotificationType.PRICE_DROP, notifications.get(0).getType());
-        assertEquals("/api/listings/" + postId, notifications.get(0).getLinkUrl());
+        assertEquals("/listing/" + postId, notifications.get(0).getLinkUrl());
     }
 
     @Test
