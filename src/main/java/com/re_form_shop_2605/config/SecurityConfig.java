@@ -146,6 +146,7 @@ public class SecurityConfig {
                 )
                 // csrf 토큰을 사용 안함
                 .csrf(csrf -> csrf.disable())
+                .cors(org.springframework.security.config.Customizer.withDefaults())
                 // JWT를 쓰므로 서버 세션은 만들지 않는다.
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
