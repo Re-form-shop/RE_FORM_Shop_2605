@@ -22,4 +22,15 @@ public interface mannerReviewRepository extends JpaRepository<MannerReview, Long
 
     @Query("select avg(review.score) from MannerReview review where review.seller.memberId = :sellerId")
     Double findAverageScoreBySellerId(@Param("sellerId") Long sellerId);
+
+    /**
+     * ─────────────────────────────────────────────────────
+     * 작성자: 손민정
+     * 작성일: 2026-05-27
+     * 설명: 매너 리뷰 JPA 리포지토리 인터페이스
+     * ─────────────────────────────────────────────────────
+     */
+    /* 매너 점수 전체 평균 (통계 배치용) */
+    @Query("select avg(review.score) from MannerReview review")
+    Double findAverageScore();
 }

@@ -40,6 +40,9 @@ public interface TradeService {
     // 구매자가 거래를 구매 확정 처리
     void confirmTrade(Long buyerId, Long tradeId);
 
+    // 관리자가 분쟁 거래를 최종 완료 처리
+    void completeTradeByAdmin(Long tradeId);
+
     // 수령 주소 정보 수정
     void modifyDelivery(Long requesterId, Long tradeId, DeliveryRequestDTO deliveryRequestDTO);
 
@@ -57,4 +60,7 @@ public interface TradeService {
 
     // 판매자 기준 매너 리뷰 목록 조회
     PageResponse<ReviewResponseDTO> readSellerReviews(Long sellerId, int page, int size);
+
+    // 판매자가 거래를 취소/거절 (REQUESTED 또는 ACCEPTED 상태에서만 가능)
+    void cancelTrade(Long sellerId, Long tradeId);
 }

@@ -2,7 +2,7 @@ package com.re_form_shop_2605.service.admin;
 
 import com.re_form_shop_2605.dto.admin.AdminMemberDetailDTO;
 import com.re_form_shop_2605.dto.admin.AdminMemberListDTO;
-import com.re_form_shop_2605.dto.admin.AdminMemberRequestDTO;
+import com.re_form_shop_2605.dto.admin.AdminMemberActionRequestDTO;
 import com.re_form_shop_2605.dto.admin.MemberAction;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.entity.Enum.MemberStatus;
@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 작성자: 민기
+ * 작성자: 김민기
  * 작성일: 2026-05-12
  * 설명: 관리자 회원 관리 서비스의 목록 조회와 제재 처리 동작을 검증하는 테스트
  */
@@ -34,7 +34,7 @@ class AdminMemberServiceImplTest {
 
     @Test
     /**
-     * 작성자: 민기
+     * 작성자: 김민기
      * 작성일: 2026-05-12
      * 설명: 관리자 회원 목록 조회가 키워드와 상태 조건으로 필터링되는지 검증한다.
      */
@@ -52,7 +52,7 @@ class AdminMemberServiceImplTest {
 
     @Test
     /**
-     * 작성자: 민기
+     * 작성자: 김민기
      * 작성일: 2026-05-12
      * 설명: 관리자 회원 상세 조회가 기본 회원 정보를 반환하는지 검증한다.
      */
@@ -67,7 +67,7 @@ class AdminMemberServiceImplTest {
 
     @Test
     /**
-     * 작성자: 민기
+     * 작성자: 김민기
      * 작성일: 2026-05-12
      * 설명: 경고 처리 시 경고 횟수가 1 증가하는지 검증한다.
      */
@@ -76,7 +76,7 @@ class AdminMemberServiceImplTest {
 
         AdminMemberDetailDTO response = adminMemberService.processMember(
                 member.getMemberId(),
-                new AdminMemberRequestDTO(MemberAction.WARN, "경고 테스트")
+                new AdminMemberActionRequestDTO(MemberAction.WARN, "경고 테스트")
         );
 
         assertEquals(1, response.warningCount());
@@ -85,7 +85,7 @@ class AdminMemberServiceImplTest {
 
     @Test
     /**
-     * 작성자: 민기
+     * 작성자: 김민기
      * 작성일: 2026-05-12
      * 설명: 정지 처리 시 회원 상태가 SUSPENDED로 변경되는지 검증한다.
      */
@@ -94,7 +94,7 @@ class AdminMemberServiceImplTest {
 
         AdminMemberDetailDTO response = adminMemberService.processMember(
                 member.getMemberId(),
-                new AdminMemberRequestDTO(MemberAction.SUSPEND, "정지 테스트")
+                new AdminMemberActionRequestDTO(MemberAction.SUSPEND, "정지 테스트")
         );
 
         assertEquals(MemberStatus.SUSPENDED, response.status());
@@ -102,7 +102,7 @@ class AdminMemberServiceImplTest {
 
     @Test
     /**
-     * 작성자: 민기
+     * 작성자: 김민기
      * 작성일: 2026-05-12
      * 설명: 탈퇴 처리 시 회원 상태가 WITHDRAWN으로 변경되는지 검증한다.
      */
@@ -111,14 +111,14 @@ class AdminMemberServiceImplTest {
 
         AdminMemberDetailDTO response = adminMemberService.processMember(
                 member.getMemberId(),
-                new AdminMemberRequestDTO(MemberAction.WITHDRAW, "탈퇴 테스트")
+                new AdminMemberActionRequestDTO(MemberAction.WITHDRAW, "탈퇴 테스트")
         );
 
         assertEquals(MemberStatus.WITHDRAWN, response.status());
     }
 
     /**
-     * 작성자: 민기
+     * 작성자: 김민기
      * 작성일: 2026-05-12
      * 설명: 관리자 회원 관리 테스트에 사용할 회원 엔티티를 생성한다.
      */

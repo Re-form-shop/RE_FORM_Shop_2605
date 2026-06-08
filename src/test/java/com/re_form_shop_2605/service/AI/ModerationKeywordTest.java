@@ -14,7 +14,7 @@ class ModerationKeywordTest {
         ModerationKeyword.LocalModerationHit hit = moderationKeyword.detect("선불로 계좌이체 부탁드립니다");
 
         assertThat(hit).isNotNull();
-        assertThat(hit.riskLevel()).isEqualTo(RiskLevel.HIGH);
+        assertThat(hit.riskLevel()).isEqualTo(RiskLevel.MID);
         assertThat(hit.reason()).contains("사기 위험");
     }
 

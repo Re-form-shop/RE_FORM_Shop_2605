@@ -1,8 +1,10 @@
 package com.re_form_shop_2605.repository.member;
 
+import com.re_form_shop_2605.entity.Enum.MemberStatus;
 import com.re_form_shop_2605.entity.member.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 /**
  * ─────────────────────────────────────────────────────
@@ -12,6 +14,8 @@ import java.util.Optional;
  * ─────────────────────────────────────────────────────
  */
 public interface MemberRepository extends JpaRepository<Member, Long> {
+    List<Member> findAllByOrderByMemberIdDesc();
+
     Optional<Member> findByEmail(String email);
 
     Optional<Member> findByNickname(String nickname);
@@ -19,4 +23,14 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByEmail(String email);
 
     boolean existsByNickname(String nickname);
+
+    /**
+     * ─────────────────────────────────────────────────────
+     * 작성자: 손민정
+     * 작성일: 2026-05-27
+     * 설명: 회원 JPA 리포지토리 인터페이스
+     * ─────────────────────────────────────────────────────
+     */
+    /* status에 따른 회원 수 (통계 배치용) */
+    long countByStatus(MemberStatus status);
 }

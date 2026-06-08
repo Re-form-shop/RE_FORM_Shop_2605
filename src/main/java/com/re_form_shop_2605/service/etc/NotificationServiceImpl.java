@@ -150,6 +150,59 @@ public class NotificationServiceImpl implements NotificationService {
         );
     }
 
+    @Override
+    public TradeNotificationTemplateDTO buildSellerTradeCreatedTemplate(Long tradeId, String postTitle) {
+        return new TradeNotificationTemplateDTO(
+                NotificationType.TRADE,
+                "[RE:FORM] 새로운 거래 요청이 도착했습니다.",
+                "'" + postTitle + "' 상품에 새로운 거래 요청이 도착했습니다. 거래 내용을 확인해 주세요.",
+                buildTradeLink(tradeId)
+        );
+    }
+
+    @Override
+    public TradeNotificationTemplateDTO buildBuyerTradeAcceptedTemplate(Long tradeId, String postTitle, boolean directTrade) {
+        return new TradeNotificationTemplateDTO(
+                NotificationType.TRADE,
+                directTrade
+                        ? "[RE:FORM] 거래가 수락되었습니다. 직거래 일정을 조율해 주세요."
+                        : "[RE:FORM] 거래가 수락되었습니다. 결제를 진행해 주세요.",
+                directTrade
+                        ? "'" + postTitle + "' 거래가 수락되었습니다. 채팅으로 직거래 장소와 시간을 조율해 주세요."
+                        : "'" + postTitle + "' 거래가 수락되었습니다. 결제를 진행해 주세요.",
+                buildTradeLink(tradeId)
+        );
+    }
+
+    @Override
+    public TradeNotificationTemplateDTO buildTradeDeliveryUpdatedTemplate(
+            Long tradeId,
+            String postTitle,
+            boolean deliveryTrade,
+            boolean receiverIsSeller
+    ) {
+        String subject;
+        String content;
+
+        if (deliveryTrade && receiverIsSeller) {
+            subject = "[RE:FORM] 구매자가 배송지를 입력하거나 수정했습니다.";
+            content = "'" + postTitle + "' 거래의 배송지가 입력 또는 수정되었습니다. 배송 준비 전에 내용을 확인해 주세요.";
+        } else if (!deliveryTrade && !receiverIsSeller) {
+            subject = "[RE:FORM] 판매자가 직거래 장소를 입력하거나 수정했습니다.";
+            content = "'" + postTitle + "' 거래의 직거래 장소가 입력 또는 수정되었습니다. 채팅에서 일정을 다시 확인해 주세요.";
+        } else {
+            subject = "[RE:FORM] 거래 정보가 변경되었습니다.";
+            content = "'" + postTitle + "' 거래 정보가 변경되었습니다. 상세 내용을 확인해 주세요.";
+        }
+
+        return new TradeNotificationTemplateDTO(
+                NotificationType.TRADE,
+                subject,
+                content,
+                buildTradeLink(tradeId)
+        );
+    }
+
     // 판매자 배송정보 등록 알림
     @Override
     public TradeNotificationTemplateDTO buildSellerShippingRegisteredTemplate(Long tradeId, String postTitle) {
@@ -168,6 +221,26 @@ public class NotificationServiceImpl implements NotificationService {
                 NotificationType.TRADE,
                 "[RE:FORM] 배송 추적이 시작되었습니다.",
                 "'" + postTitle + "' 거래의 송장 정보가 등록되었습니다. 배송 추적을 확인해 주세요.",
+                buildTradeLink(tradeId)
+        );
+    }
+
+    @Override
+    public TradeNotificationTemplateDTO buildSellerTradeConfirmedTemplate(Long tradeId, String postTitle) {
+        return new TradeNotificationTemplateDTO(
+                NotificationType.TRADE,
+                "[RE:FORM] 구매자가 거래를 확정했습니다. 거래가 완료되었습니다.",
+                "'" + postTitle + "' 거래를 구매자가 확정했습니다. 거래가 완료되었습니다.",
+                buildTradeLink(tradeId)
+        );
+    }
+
+    @Override
+    public TradeNotificationTemplateDTO buildBuyerTradeConfirmedTemplate(Long tradeId, String postTitle) {
+        return new TradeNotificationTemplateDTO(
+                NotificationType.TRADE,
+                "[RE:FORM] 구매 확정이 완료되었습니다.",
+                "'" + postTitle + "' 거래의 구매 확정이 완료되었습니다.",
                 buildTradeLink(tradeId)
         );
     }

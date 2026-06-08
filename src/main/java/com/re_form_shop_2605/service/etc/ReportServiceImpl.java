@@ -1,5 +1,6 @@
 package com.re_form_shop_2605.service.etc;
 
+import com.re_form_shop_2605.dto.admin.AdminReportDetailDTO;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.etc.ReportRequestDTO;
 import com.re_form_shop_2605.dto.etc.ReportResponseDTO;
@@ -27,8 +28,8 @@ import java.util.List;
 /**
  * ─────────────────────────────────────────────────────
  * 작성자: 김민기
- * 작성일: 2026-05-10
- * 설명: 신고 기능을 제공하는 서비스 구현체
+ * 작성일: 2026-05-24
+ * 설명: 신고 등록/조회와 관리자 신고 처리 기능을 제공하는 서비스 구현체
  * ─────────────────────────────────────────────────────
  */
 @Service
@@ -36,12 +37,18 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class ReportServiceImpl implements ReportService{
+    // 경고 누적 시 정지 처리 기준
     private static final int SUSPEND_WARNING_THRESHOLD = 3;
 
+    // 신고 저장소
     private final ReportRepository reportRepository;
+    // 회원 저장소
     private final MemberRepository memberRepository;
+    // 판매글 저장소
     private final PostRepository postRepository;
+    // 커뮤니티 게시글 저장소
     private final CommunityPostRepository communityPostRepository;
+    // 기존 프로젝트 공통 매퍼
     private final ModelMapper modelMapper;
 
     @Override
@@ -67,6 +74,35 @@ public class ReportServiceImpl implements ReportService{
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new IllegalArgumentException("신고가 존재하지 않습니다."));
         return toReportResponseDTO(report);
+    }
+
+    @Override
+    public AdminReportDetailDTO readAdminReport(Long reportId) {
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new IllegalArgumentException("신고가 존재하지 않습니다."));
+
+        Member targetOwner = resolveTargetAuthor(report);
+
+        return new AdminReportDetailDTO(
+                report.getReportId(),
+                report.getTargetType(),
+                report.getTargetId(),
+                report.getReason(),
+                report.getDetail(),
+                report.getStatus(),
+                report.getCreatedAt(),
+                report.getMember().getMemberId(),
+                report.getMember().getNickname(),
+                report.getMember().getEmail(),
+                targetOwner.getMemberId(),
+                targetOwner.getNickname(),
+                targetOwner.getEmail(),
+                resolveTargetTitle(report),
+                resolveTargetSnapshot(report),
+                report.getProcessedAt(),
+                report.getProcessedBy(),
+                report.getAdminMemo()
+        );
     }
 
     @Override
@@ -97,7 +133,7 @@ public class ReportServiceImpl implements ReportService{
     }
 
     @Override
-    public ReportResponseDTO processReport(Long reportId, ReportStatus action) {
+    public AdminReportDetailDTO processReport(Long reportId, ReportStatus action, String adminMemo, String processedBy) {
         if (action == null || action == ReportStatus.PENDING) {
             throw new IllegalArgumentException("신고 처리 상태는 NORMAL, WARNING, DELETED 중 하나여야 합니다.");
         }
@@ -109,19 +145,19 @@ public class ReportServiceImpl implements ReportService{
         }
 
         switch (action) {
-            case NORMAL -> report.normal();
+            case NORMAL -> report.normal(adminMemo, processedBy);
             case WARNING -> {
-                report.warn();
+                report.warn(adminMemo, processedBy);
                 applyWarningToTargetAuthor(report);
             }
             case DELETED -> {
-                report.delete();
+                report.delete(adminMemo, processedBy);
                 deleteTargetContent(report);
             }
             default -> throw new IllegalArgumentException("지원하지 않는 신고 처리 상태입니다.");
         }
 
-        return toReportResponseDTO(report);
+        return readAdminReport(reportId);
     }
 
     private void applyWarningToTargetAuthor(Report report) {
@@ -158,6 +194,32 @@ public class ReportServiceImpl implements ReportService{
             case COMMUNITY_POST -> communityPostRepository.findById(report.getTargetId())
                     .orElseThrow(() -> new IllegalArgumentException("신고 대상 커뮤니티 게시글이 존재하지 않습니다."))
                     .getMember();
+        };
+    }
+
+    private String resolveTargetTitle(Report report) {
+        return switch (report.getTargetType()) {
+            case POST -> postRepository.findById(report.getTargetId())
+                    .orElseThrow(() -> new IllegalArgumentException("신고 대상 판매글이 존재하지 않습니다."))
+                    .getTitle();
+            case COMMUNITY_POST -> communityPostRepository.findById(report.getTargetId())
+                    .orElseThrow(() -> new IllegalArgumentException("신고 대상 커뮤니티 게시글이 존재하지 않습니다."))
+                    .getCommTitle();
+        };
+    }
+
+    private String resolveTargetSnapshot(Report report) {
+        return switch (report.getTargetType()) {
+            case POST -> {
+                Post post = postRepository.findById(report.getTargetId())
+                        .orElseThrow(() -> new IllegalArgumentException("신고 대상 판매글이 존재하지 않습니다."));
+                yield post.getTitle();
+            }
+            case COMMUNITY_POST -> {
+                CommunityPost communityPost = communityPostRepository.findById(report.getTargetId())
+                        .orElseThrow(() -> new IllegalArgumentException("신고 대상 커뮤니티 게시글이 존재하지 않습니다."));
+                yield communityPost.getCommTitle();
+            }
         };
     }
 

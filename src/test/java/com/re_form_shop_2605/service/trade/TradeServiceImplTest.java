@@ -12,9 +12,11 @@ import com.re_form_shop_2605.entity.Enum.Sport;
 import com.re_form_shop_2605.entity.Enum.TradeDeliveryType;
 import com.re_form_shop_2605.entity.Enum.TradeStatus;
 import com.re_form_shop_2605.entity.member.Member;
+import com.re_form_shop_2605.entity.payment.PointWallet;
 import com.re_form_shop_2605.entity.trade.Post;
 import com.re_form_shop_2605.entity.trade.Trade;
 import com.re_form_shop_2605.repository.member.MemberRepository;
+import com.re_form_shop_2605.repository.payment.PointWalletRepository;
 import com.re_form_shop_2605.repository.trade.PostRepository;
 import com.re_form_shop_2605.repository.trade.TradeRepository;
 import lombok.extern.log4j.Log4j2;
@@ -30,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
- * 작성자: 민기
+ * 작성자: 김민기
  * 작성일: 2026-05-10
  * 설명:
  */
@@ -47,6 +49,8 @@ class TradeServiceImplTest {
     private PostRepository postRepository;
     @Autowired
     private TradeRepository tradeRepository;
+    @Autowired
+    private PointWalletRepository pointWalletRepository;
 
     @Test
     void addTradeTest() {
@@ -221,6 +225,7 @@ class TradeServiceImplTest {
     void confirmTradeTest() {
         Member seller = createMember("confirm_trade_seller");
         Member buyer = createMember("confirm_trade_buyer");
+        pointWalletRepository.save(PointWallet.builder().member(seller).build());
         Trade trade = createPaidTrade(seller, buyer, "confirm trade");
         tradeService.confirmTrade(buyer.getMemberId(), trade.getTradeId());
 

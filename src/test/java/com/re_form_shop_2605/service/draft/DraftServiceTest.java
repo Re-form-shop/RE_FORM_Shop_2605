@@ -102,7 +102,7 @@ class DraftServiceTest {
         assertThat(result.draft().tradeType()).isEqualTo(DeliveryType.DIRECT);
         assertThat(result.draft().price()).isEqualTo(120000);
         assertThat(result.draft().directTradeLocation()).isEqualTo("서울");
-        assertThat(result.draft().imageUrls()).containsExactly("/uploads/post/1/a.png");
+        assertThat(result.draft().imageUrls()).isNull();
         assertThat(result.moderation()).isNull();
     }
 
@@ -118,6 +118,55 @@ class DraftServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.draft().title()).isEqualTo("legacy title");
         assertThat(result.draft().content()).isEqualTo("legacy content");
+        assertThat(result.draft().imageUrls()).isNull();
         assertThat(result.moderation()).isNull();
+    }
+
+    @Test
+    void savePostDraft_doesNotPersistIncomingImageUrls() {
+        PostDraftDTO incomingDraft = new PostDraftDTO(
+                "이미지 포함 제목",
+                "이미지 포함 내용",
+                Sport.SOCCER,
+                "토트넘",
+                "7",
+                Grade.A,
+                "L",
+                DeliveryType.DIRECT,
+                120000,
+                "서울",
+                List.of("/uploads/post/temp/2/a.png")
+        );
+
+        when(moderationService.checkDraft("이미지 포함 제목 이미지 포함 내용", TargetType.POST))
+                .thenReturn(RiskAnalysisResultDTO.safe());
+
+        PostDraftStateDTO result = draftService.savePostDraft(2L, incomingDraft);
+
+        assertThat(result.draft().imageUrls()).isNull();
+        assertThat(((PostDraftStateDTO) storedValue.get()).draft().imageUrls()).isNull();
+    }
+
+    @Test
+    void getPostDraft_removesImageUrlsFromStoredState() {
+        PostDraftDTO storedDraft = new PostDraftDTO(
+                "저장된 제목",
+                "저장된 내용",
+                Sport.SOCCER,
+                "토트넘",
+                "7",
+                Grade.A,
+                "L",
+                DeliveryType.DIRECT,
+                120000,
+                "서울",
+                List.of("/uploads/post/1/a.png")
+        );
+        storedValue.set(new PostDraftStateDTO(storedDraft, RiskAnalysisResultDTO.safe()));
+
+        PostDraftStateDTO result = draftService.getPostDraft(2L);
+
+        assertThat(result).isNotNull();
+        assertThat(result.draft().imageUrls()).isNull();
     }
 }

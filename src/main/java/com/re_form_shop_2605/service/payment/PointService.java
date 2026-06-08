@@ -180,7 +180,7 @@ public class PointService {
         }
 
         // 3) action에 따라 처리
-        if (request.action() == WithdrawAction.APPROVED) {
+        if (request.action() == WithdrawAction.APPROVE) {
             pointRequest.approve();
             PointWallet wallet = pointWalletRepository.findByMemberMemberId(pointRequest.getMember().getMemberId())
                     .orElseThrow(() -> new IllegalArgumentException("withdrawalApprovalRejection : 포인트 지갑이 존재하지 않습니다."));
@@ -194,7 +194,7 @@ public class PointService {
                     .balance(wallet.getBalance())
                     .build());
 
-        } else if (request.action() == WithdrawAction.REJECTED) {
+        } else if (request.action() == WithdrawAction.REJECT) {
             pointRequest.reject(request.rejectReason());
             PointWallet wallet = pointWalletRepository.findByMemberMemberId(pointRequest.getMember().getMemberId())
                     .orElseThrow(() -> new IllegalArgumentException("withdrawalApprovalRejection : 포인트 지갑이 존재하지 않습니다."));

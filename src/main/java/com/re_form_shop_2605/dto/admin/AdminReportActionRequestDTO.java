@@ -1,20 +1,20 @@
 package com.re_form_shop_2605.dto.admin;
 
+import com.re_form_shop_2605.entity.Enum.ReportStatus;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
 /**
  * ─────────────────────────────────────────────────────
  * 작성자: 김민기
- * 작성일: 2026-05-12
- * 설명: 관리자 게시글 숨김/삭제 처리 요청 DTO
+ * 작성일: 2026-05-24
+ * 설명: 관리자 신고 처리 요청 DTO
  * ─────────────────────────────────────────────────────
  */
-public record AdminPostRequestDTO(
+public record AdminReportActionRequestDTO(
+        // 적용할 신고 처리 상태
         @NotNull
-        PostAction action,
-
-        @Size(max = 300)
-        String reason
+        ReportStatus action,
+        // 관리자 처리 메모
+        String adminMemo
 ) {
 }

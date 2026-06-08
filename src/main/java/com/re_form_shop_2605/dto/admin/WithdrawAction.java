@@ -1,4 +1,9 @@
 package com.re_form_shop_2605.dto.admin;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+
+import java.util.Locale;
+
 /**
  * ─────────────────────────────────────────────────────
  * 작성자: 김민기
@@ -7,6 +12,21 @@ package com.re_form_shop_2605.dto.admin;
  * ─────────────────────────────────────────────────────
  */
 public enum WithdrawAction {
-    APPROVED,
-    REJECTED
+    APPROVE,
+    REJECT;
+
+    @JsonCreator
+    public static WithdrawAction from(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        return switch (value.toUpperCase(Locale.ROOT)) {
+            case "APPROVE", "APPROVED" -> APPROVE;
+            case "REJECT", "REJECTED" -> REJECT;
+            default -> throw new IllegalArgumentException(
+                    "지원하지 않는 출금 처리 액션입니다. (APPROVE, REJECT)"
+            );
+        };
+    }
 }

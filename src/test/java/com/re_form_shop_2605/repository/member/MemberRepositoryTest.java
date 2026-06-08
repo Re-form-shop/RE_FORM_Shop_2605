@@ -7,7 +7,6 @@ import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
 
@@ -22,10 +21,11 @@ class MemberRepositoryTest {
 
     @Test
     void insert() {
+        String seed = String.valueOf(System.nanoTime());
         Member  member = Member.builder()
-                .email("123@gmail.com")
+                .email("member-" + seed + "@gmail.com")
                 .password("1234")
-                .nickname("tom")
+                .nickname("tom-" + seed)
                 .profileImageUrl("https://avatars.githubusercontent.com/u/2605?v=4")
                 .bio("Hi")
                 .mannerScore(BigDecimal.valueOf(2))
@@ -34,12 +34,32 @@ class MemberRepositoryTest {
                 .warningCount(0)
                 .emailEvent(true)
                 .build();
-        memberRepository.save(member);
+        Member savedMember = memberRepository.save(member);
+
+        assertNotNull(savedMember.getMemberId());
+        assertEquals(member.getEmail(), savedMember.getEmail());
     }
 
     @Test
     void findById() {
-        Member member = memberRepository.findById(2L).get();
+        String seed = String.valueOf(System.nanoTime());
+        Member savedMember = memberRepository.save(Member.builder()
+                .email("find-" + seed + "@gmail.com")
+                .password("1234")
+                .nickname("member-" + seed)
+                .profileImageUrl("https://avatars.githubusercontent.com/u/2605?v=4")
+                .bio("Hi")
+                .mannerScore(BigDecimal.valueOf(2))
+                .role(Role.USER)
+                .status(MemberStatus.ACTIVE)
+                .warningCount(0)
+                .emailEvent(true)
+                .build());
+
+        Member member = memberRepository.findById(savedMember.getMemberId()).orElseThrow();
+
+        assertEquals(savedMember.getMemberId(), member.getMemberId());
+        assertEquals(savedMember.getEmail(), member.getEmail());
     }
 
 }

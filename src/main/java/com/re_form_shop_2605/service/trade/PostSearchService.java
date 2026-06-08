@@ -28,6 +28,7 @@ import java.util.*;
 public class PostSearchService {
     private final VectorStore vectorStore;
     private final PostMapper postMapper;
+    private final PostImageService postImageService;
 
     /* 검색어 적용 결과 목록 반환 */
     public PageResponse<PostCardDTO> search(String query, Sport sport, Grade condition,
@@ -93,7 +94,7 @@ public class PostSearchService {
                     post.getPostId(), post.getTitle(), post.getTeam(), post.getSport(),
                     post.getPrice(), post.getCondition(), post.getSize(), post.getTradeType(),
                     post.getStatus(), post.getViewCount(), post.getLikeCount(), post.isLiked(),
-                    post.getThumbnailUrl(), null, post.getCreatedAt(), seller
+                    postImageService.getThumbnailUrl(post.getThumbnailUrl()), null, post.getCreatedAt(), seller
             );
         }).toList();
 

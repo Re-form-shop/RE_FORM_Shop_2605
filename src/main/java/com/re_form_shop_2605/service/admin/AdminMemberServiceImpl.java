@@ -2,8 +2,9 @@ package com.re_form_shop_2605.service.admin;
 
 import com.re_form_shop_2605.dto.admin.AdminMemberDetailDTO;
 import com.re_form_shop_2605.dto.admin.AdminMemberListDTO;
-import com.re_form_shop_2605.dto.admin.AdminMemberRequestDTO;
+import com.re_form_shop_2605.dto.admin.AdminMemberActionRequestDTO;
 import com.re_form_shop_2605.dto.admin.MemberAction;
+import com.re_form_shop_2605.dto.admin.AdminTradeSummaryDTO;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.etc.ReportResponseDTO;
 import com.re_form_shop_2605.entity.Enum.MemberStatus;
@@ -11,6 +12,7 @@ import com.re_form_shop_2605.entity.Enum.ReportStatus;
 import com.re_form_shop_2605.entity.Enum.TradeStatus;
 import com.re_form_shop_2605.entity.etc.Report;
 import com.re_form_shop_2605.entity.member.Member;
+import com.re_form_shop_2605.entity.trade.Trade;
 import com.re_form_shop_2605.repository.etc.ReportRepository;
 import com.re_form_shop_2605.repository.member.MemberRepository;
 import com.re_form_shop_2605.repository.trade.TradeRepository;
@@ -21,32 +23,35 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
 /**
  * ─────────────────────────────────────────────────────
  * 작성자: 김민기
- * 작성일: 2026-05-12
- * 설명: 관리자 회원 관리 기능의 조회와 제재 로직을 제공하는 서비스 구현체
+ * 작성일: 2026-05-24
+ * 설명: 관리자 회원 조회와 제재 처리를 제공하는 서비스 구현체
  * ─────────────────────────────────────────────────────
  */
 @Service
 @RequiredArgsConstructor
 @Transactional
-// 관리자 회원 관리 서비스
 public class AdminMemberServiceImpl implements AdminMemberService {
 
+    // 회원 저장소
     private final MemberRepository memberRepository;
+    // 거래 저장소
     private final TradeRepository tradeRepository;
+    // 신고 저장소
     private final ReportRepository reportRepository;
+    // 회원 도메인 서비스
     private final MemberService memberService;
 
     @Override
+    @Transactional(readOnly = true)
     // 키워드와 상태 조건으로 관리자용 회원 목록을 조회한다.
     public PageResponse<AdminMemberListDTO> readMembers(String keyword, MemberStatus status, int page, int size) {
-        List<Member> members = memberRepository.findAll();
+        List<Member> members = memberRepository.findAllByOrderByMemberIdDesc();
         List<AdminMemberListDTO> filteredMembers = new ArrayList<>();
 
         for (Member member : members) {
@@ -56,7 +61,6 @@ public class AdminMemberServiceImpl implements AdminMemberService {
             filteredMembers.add(toAdminMemberListDTO(member));
         }
 
-        filteredMembers.sort(Comparator.comparing(AdminMemberListDTO::memberId).reversed());
         return ServicePageResponse.of(filteredMembers, page, size);
     }
 
@@ -70,13 +74,15 @@ public class AdminMemberServiceImpl implements AdminMemberService {
 
     @Override
     // 관리자 액션에 따라 회원 경고, 정지, 탈퇴 처리를 수행한다.
-    public AdminMemberDetailDTO processMember(Long memberId, AdminMemberRequestDTO requestDTO) {
+    public AdminMemberDetailDTO processMember(Long memberId, AdminMemberActionRequestDTO requestDTO) {
         Member member = getMember(memberId);
 
         if (requestDTO.action() == MemberAction.WARN) {
             memberService.modifyWarningCount(memberId, member.getWarningCount() + 1);
         } else if (requestDTO.action() == MemberAction.SUSPEND) {
             memberService.modifyStatus(memberId, MemberStatus.SUSPENDED);
+        } else if (requestDTO.action() == MemberAction.UNSUSPEND) {
+            memberService.modifyStatus(memberId, MemberStatus.ACTIVE);
         } else if (requestDTO.action() == MemberAction.WITHDRAW) {
             memberService.remove(memberId);
         }
@@ -132,9 +138,11 @@ public class AdminMemberServiceImpl implements AdminMemberService {
                 member.getMannerScore(),
                 member.getRole(),
                 member.getCreatedAt(),
+                null,
                 readMemberReports(member.getMemberId()),
                 tradeRepository.countBySeller_MemberIdAndStatus(member.getMemberId(), TradeStatus.COMPLETED),
-                tradeRepository.countByBuyer_MemberIdAndStatus(member.getMemberId(), TradeStatus.COMPLETED)
+                tradeRepository.countByBuyer_MemberIdAndStatus(member.getMemberId(), TradeStatus.COMPLETED),
+                readRecentTrades(member.getMemberId())
         );
     }
 
@@ -156,5 +164,26 @@ public class AdminMemberServiceImpl implements AdminMemberService {
         }
 
         return reportResponseDTOList;
+    }
+
+    private List<AdminTradeSummaryDTO> readRecentTrades(Long memberId) {
+        return tradeRepository.findRecentTradesForAdminMember(memberId).stream()
+                .limit(10)
+                .map(trade -> new AdminTradeSummaryDTO(
+                        trade.getTradeId(),
+                        trade.getPost().getPostId(),
+                        trade.getPost().getTitle(),
+                        trade.getSeller().getMemberId().equals(memberId) ? "SELLER" : "BUYER",
+                        trade.getTradePrice(),
+                        trade.getStatus(),
+                        trade.getCreatedAt(),
+                        trade.getConfirmedAt(),
+                        trade.getCompletedAt(),
+                        trade.getBuyer().getMemberId(),
+                        trade.getBuyer().getNickname(),
+                        trade.getSeller().getMemberId(),
+                        trade.getSeller().getNickname()
+                ))
+                .toList();
     }
 }

@@ -1,17 +1,16 @@
-package com.re_form_shop_2605.dto.admin;
+package com.re_form_shop_2605.service.admin;
 
-import com.re_form_shop_2605.entity.Enum.ReportStatus;
-import jakarta.validation.constraints.NotNull;
+import com.re_form_shop_2605.dto.admin.AdminDashboardSummaryDTO;
+
 /**
  * ─────────────────────────────────────────────────────
  * 작성자: 김민기
- * 작성일: 2026-05-08
- * 설명: 관리자 신고 처리 요청 DTO
+ * 작성일: 2026-05-23
+ * 설명: 관리자 대시보드 서비스 인터페이스
  * ─────────────────────────────────────────────────────
  */
-public record AdminReportRequestDTO(
-        // 적용할 신고 처리 상태
-        @NotNull
-        ReportStatus action
-) {
+public interface AdminDashboardService {
+
+    // 관리자 대시보드 요약 정보를 조회
+    AdminDashboardSummaryDTO readSummary();
 }

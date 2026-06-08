@@ -7,13 +7,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -29,13 +38,17 @@ public class PostImageServiceImpl implements PostImageService {
 
     private static final Logger log = LogManager.getLogger(PostImageServiceImpl.class);
     private static final int MAX_POST_IMAGES = 10;
+    private static final int MAX_THUMBNAIL_WIDTH = 480;
+    private static final int MAX_THUMBNAIL_HEIGHT = 480;
     private static final String TEMP_URL_SEGMENT = "/uploads/post/temp/";
     private static final String FINAL_URL_PREFIX = "/uploads/post/";
+    private static final String THUMBNAIL_PREFIX = "thumb_";
     private final Path uploadRootPath;
 
     public PostImageServiceImpl(
             @Value("${spring.servlet.multipart.location}") String uploadRoot
     ) {
+        ImageIO.setUseCache(false);
         this.uploadRootPath = Paths.get(uploadRoot).toAbsolutePath().normalize().resolve("post");
     }
 
@@ -77,6 +90,25 @@ public class PostImageServiceImpl implements PostImageService {
         }
     }
 
+    @Override
+    public String getThumbnailUrl(String imageUrl) {
+        if (!StringUtils.hasText(imageUrl)) {
+            return imageUrl;
+        }
+
+        int slashIndex = imageUrl.lastIndexOf('/');
+        if (slashIndex < 0 || slashIndex == imageUrl.length() - 1) {
+            return imageUrl;
+        }
+
+        String fileName = imageUrl.substring(slashIndex + 1);
+        String thumbnailFileName = buildThumbnailFileName(fileName);
+        if (thumbnailFileName.equals(fileName)) {
+            return imageUrl;
+        }
+        return imageUrl.substring(0, slashIndex + 1) + thumbnailFileName;
+    }
+
     // 실제 파일 저장 공통 로직을 한 곳으로 모아 게시글 업로드와 임시 업로드가 같은 규칙을 쓰게 한다.
     private List<String> saveImages(Path targetDirectory, String urlPrefix, List<MultipartFile> images) {
         if (images == null || images.isEmpty()) {
@@ -109,6 +141,7 @@ public class PostImageServiceImpl implements PostImageService {
                 try (InputStream inputStream = image.getInputStream()) {
                     Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
                 }
+                createThumbnailIfPossible(targetPath);
                 savedImageUrls.add(urlPrefix + savedFileName);
             }
             return savedImageUrls;
@@ -143,6 +176,7 @@ public class PostImageServiceImpl implements PostImageService {
 
         Files.createDirectories(Objects.requireNonNull(finalFile.getParent()));
         Files.move(tempFile, finalFile, StandardCopyOption.REPLACE_EXISTING);
+        moveThumbnailIfExists(tempFile, finalFile);
         return finalUrlPrefix + fileName;
     }
 
@@ -195,5 +229,155 @@ public class PostImageServiceImpl implements PostImageService {
         }
 
         return originalFilename.substring(dotIndex);
+    }
+
+    private void createThumbnailIfPossible(Path originalImagePath) {
+        try {
+            BufferedImage originalImage = ImageIO.read(originalImagePath.toFile());
+            if (originalImage == null) {
+                log.warn("썸네일 생성 대상이 이미지가 아닙니다. path={}", originalImagePath);
+                return;
+            }
+
+            BufferedImage thumbnailImage = resizeImage(originalImage);
+            String thumbnailFileName = buildThumbnailFileName(originalImagePath.getFileName().toString());
+            if (thumbnailFileName.equals(originalImagePath.getFileName().toString())) {
+                return;
+            }
+
+            Path thumbnailPath = originalImagePath.resolveSibling(thumbnailFileName);
+            writeThumbnail(thumbnailImage, thumbnailPath);
+        } catch (IOException e) {
+            log.warn("썸네일 생성에 실패해 원본 이미지를 그대로 사용합니다. path={}", originalImagePath, e);
+        }
+    }
+
+    private BufferedImage resizeImage(BufferedImage originalImage) {
+        int originalWidth = originalImage.getWidth();
+        int originalHeight = originalImage.getHeight();
+        double scale = Math.min(
+                1.0,
+                Math.min(
+                        (double) MAX_THUMBNAIL_WIDTH / originalWidth,
+                        (double) MAX_THUMBNAIL_HEIGHT / originalHeight
+                )
+        );
+
+        int targetWidth = Math.max(1, (int) Math.round(originalWidth * scale));
+        int targetHeight = Math.max(1, (int) Math.round(originalHeight * scale));
+        int imageType = originalImage.getColorModel().hasAlpha() ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
+
+        BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, imageType);
+        Graphics2D graphics = resizedImage.createGraphics();
+        try {
+            if (!originalImage.getColorModel().hasAlpha()) {
+                graphics.setColor(Color.WHITE);
+                graphics.fillRect(0, 0, targetWidth, targetHeight);
+            }
+            graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            graphics.drawImage(originalImage, 0, 0, targetWidth, targetHeight, null);
+        } finally {
+            graphics.dispose();
+        }
+        return resizedImage;
+    }
+
+    private void writeThumbnail(BufferedImage thumbnailImage, Path thumbnailPath) throws IOException {
+        String format = resolveThumbnailFormat(thumbnailPath.getFileName().toString());
+        Files.createDirectories(Objects.requireNonNull(thumbnailPath.getParent()));
+
+        if ("jpg".equals(format)) {
+            writeJpegThumbnail(thumbnailImage, thumbnailPath);
+            return;
+        }
+
+        try (OutputStream outputStream = Files.newOutputStream(thumbnailPath)) {
+            if (!ImageIO.write(thumbnailImage, format, outputStream)) {
+                throw new IOException("지원하지 않는 썸네일 포맷입니다. format=" + format);
+            }
+        }
+    }
+
+    private void writeJpegThumbnail(BufferedImage thumbnailImage, Path thumbnailPath) throws IOException {
+        BufferedImage jpegImage = new BufferedImage(
+                thumbnailImage.getWidth(),
+                thumbnailImage.getHeight(),
+                BufferedImage.TYPE_INT_RGB
+        );
+        Graphics2D graphics = jpegImage.createGraphics();
+        try {
+            graphics.setColor(Color.WHITE);
+            graphics.fillRect(0, 0, jpegImage.getWidth(), jpegImage.getHeight());
+            graphics.drawImage(thumbnailImage, 0, 0, null);
+        } finally {
+            graphics.dispose();
+        }
+
+        Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
+        if (!writers.hasNext()) {
+            throw new IOException("JPEG ImageWriter를 찾을 수 없습니다.");
+        }
+
+        ImageWriter writer = writers.next();
+        try (OutputStream outputStream = Files.newOutputStream(thumbnailPath);
+             ImageOutputStream imageOutputStream = ImageIO.createImageOutputStream(outputStream)) {
+            writer.setOutput(imageOutputStream);
+            ImageWriteParam writeParam = writer.getDefaultWriteParam();
+            if (writeParam.canWriteCompressed()) {
+                writeParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                writeParam.setCompressionQuality(0.82f);
+            }
+            writer.write(null, new IIOImage(jpegImage, null, null), writeParam);
+        } finally {
+            writer.dispose();
+        }
+    }
+
+    private void moveThumbnailIfExists(Path sourceOriginalPath, Path targetOriginalPath) throws IOException {
+        Path sourceThumbnailPath = sourceOriginalPath.resolveSibling(
+                buildThumbnailFileName(sourceOriginalPath.getFileName().toString())
+        );
+        Path targetThumbnailPath = targetOriginalPath.resolveSibling(
+                buildThumbnailFileName(targetOriginalPath.getFileName().toString())
+        );
+
+        if (!Files.exists(sourceThumbnailPath)) {
+            return;
+        }
+
+        Files.createDirectories(Objects.requireNonNull(targetThumbnailPath.getParent()));
+        Files.move(sourceThumbnailPath, targetThumbnailPath, StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    private String buildThumbnailFileName(String originalFileName) {
+        String thumbnailExtension = resolveThumbnailExtension(originalFileName);
+        if (thumbnailExtension == null) {
+            return originalFileName;
+        }
+
+        int dotIndex = originalFileName.lastIndexOf('.');
+        String baseName = dotIndex < 0 ? originalFileName : originalFileName.substring(0, dotIndex);
+        return THUMBNAIL_PREFIX + baseName + thumbnailExtension;
+    }
+
+    private String resolveThumbnailExtension(String originalFileName) {
+        String extension = extractExtension(originalFileName).toLowerCase();
+        return switch (extension) {
+            case ".png" -> ".png";
+            case ".jpg", ".jpeg", ".bmp" -> ".jpg";
+            case ".gif" -> ".gif";
+            default -> null;
+        };
+    }
+
+    private String resolveThumbnailFormat(String fileName) {
+        String extension = extractExtension(fileName).toLowerCase();
+        return switch (extension) {
+            case ".png" -> "png";
+            case ".gif" -> "gif";
+            default -> "jpg";
+        };
     }
 }

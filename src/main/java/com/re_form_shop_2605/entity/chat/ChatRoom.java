@@ -45,4 +45,8 @@ public class ChatRoom extends BaseEntity {
 
     @OneToMany(mappedBy = "chatRoom")
     private List<ChatMessage> chatMessages = new ArrayList<>();
+
+    public void connectTrade(Trade trade) {
+        this.trade = trade;
+    }
 }

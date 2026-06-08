@@ -1,5 +1,6 @@
 package com.re_form_shop_2605.service.etc;
 
+import com.re_form_shop_2605.dto.admin.AdminReportDetailDTO;
 import com.re_form_shop_2605.dto.common.PageResponse;
 import com.re_form_shop_2605.dto.etc.ReportRequestDTO;
 import com.re_form_shop_2605.dto.etc.ReportResponseDTO;
@@ -86,7 +87,12 @@ class ReportServiceImplTest {
                 new ReportRequestDTO(ReportTargetType.POST, post.getPostId(), ReportReason.FRAUD, "사기 의심")
         );
 
-        ReportResponseDTO responseDTO = reportService.processReport(reportId, ReportStatus.WARNING);
+        AdminReportDetailDTO responseDTO = reportService.processReport(
+                reportId,
+                ReportStatus.WARNING,
+                "경고 처리",
+                "admin"
+        );
         Member updatedSeller = memberRepository.findById(seller.getMemberId()).orElseThrow();
 
         assertEquals(ReportStatus.WARNING, responseDTO.status());
@@ -108,7 +114,12 @@ class ReportServiceImplTest {
                 new ReportRequestDTO(ReportTargetType.COMMUNITY_POST, communityPost.getCommId(), ReportReason.INAPPROPRIATE, "부적절")
         );
 
-        ReportResponseDTO responseDTO = reportService.processReport(reportId, ReportStatus.WARNING);
+        AdminReportDetailDTO responseDTO = reportService.processReport(
+                reportId,
+                ReportStatus.WARNING,
+                "누적 경고",
+                "admin"
+        );
         Member updatedAuthor = memberRepository.findById(author.getMemberId()).orElseThrow();
 
         assertEquals(ReportStatus.WARNING, responseDTO.status());
@@ -127,7 +138,12 @@ class ReportServiceImplTest {
                 new ReportRequestDTO(ReportTargetType.POST, post.getPostId(), ReportReason.FAKE, "허위 매물")
         );
 
-        ReportResponseDTO responseDTO = reportService.processReport(reportId, ReportStatus.DELETED);
+        AdminReportDetailDTO responseDTO = reportService.processReport(
+                reportId,
+                ReportStatus.DELETED,
+                "게시글 삭제",
+                "admin"
+        );
         Post updatedPost = postRepository.findById(post.getPostId()).orElseThrow();
 
         assertEquals(ReportStatus.DELETED, responseDTO.status());
@@ -145,7 +161,12 @@ class ReportServiceImplTest {
                 new ReportRequestDTO(ReportTargetType.COMMUNITY_POST, communityPost.getCommId(), ReportReason.ETC, "운영 정책 위반")
         );
 
-        ReportResponseDTO responseDTO = reportService.processReport(reportId, ReportStatus.DELETED);
+        AdminReportDetailDTO responseDTO = reportService.processReport(
+                reportId,
+                ReportStatus.DELETED,
+                "커뮤니티 글 삭제",
+                "admin"
+        );
         CommunityPost updatedPost = communityPostRepository.findById(communityPost.getCommId()).orElseThrow();
 
         assertEquals(ReportStatus.DELETED, responseDTO.status());
@@ -162,11 +183,11 @@ class ReportServiceImplTest {
                 reporter.getMemberId(),
                 new ReportRequestDTO(ReportTargetType.POST, post.getPostId(), ReportReason.ETC, "중복 처리 방지")
         );
-        reportService.processReport(reportId, ReportStatus.WARNING);
+        reportService.processReport(reportId, ReportStatus.WARNING, "1차 처리", "admin");
 
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> reportService.processReport(reportId, ReportStatus.DELETED)
+                () -> reportService.processReport(reportId, ReportStatus.DELETED, "재처리 시도", "admin")
         );
 
         assertEquals("이미 처리된 신고는 다시 처리할 수 없습니다.", ex.getMessage());

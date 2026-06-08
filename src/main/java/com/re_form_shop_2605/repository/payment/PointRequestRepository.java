@@ -28,4 +28,6 @@ public interface PointRequestRepository extends JpaRepository<PointRequest, Long
 
     // 3. 전체 회원의 Pending 상태 목록 조회 (관리자 뷰)
     List<PointRequest> findByStatusOrderByCreatedAtAsc(PointRequestStatus status);
+
+    long countByStatus(PointRequestStatus status);
 }

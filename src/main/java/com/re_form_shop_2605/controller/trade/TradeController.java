@@ -98,6 +98,21 @@ public class TradeController {
         return ResponseEntity.ok(ApiResponse.ok(new TradeStatusOnlyResponse(TradeStatus.ACCEPTED), "거래 요청 수락 완료"));
     }
 
+    // PATCH /api/trades/{id}/cancel
+    // 판매자가 거래 요청을 거절하거나 수락한 거래를 취소
+    @Operation(
+            summary = "거래 취소/거절",
+            description = "판매자가 REQUESTED 상태의 구매 요청을 거절하거나, ACCEPTED 상태의 거래를 취소합니다."
+    )
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<ApiResponse<TradeStatusOnlyResponse>> cancelTrade(
+            @PathVariable("id") Long tradeId,
+            @AuthenticationPrincipal MemberSecurityDTO principal
+    ) {
+        tradeService.cancelTrade(principal.getMemberId(), tradeId);
+        return ResponseEntity.ok(ApiResponse.ok(new TradeStatusOnlyResponse(TradeStatus.CANCELED), "거래 취소 완료"));
+    }
+
     // PATCH /api/trades/{id}/confirm
     // 거래를 구매 확정 상태로 변경
     @Operation(

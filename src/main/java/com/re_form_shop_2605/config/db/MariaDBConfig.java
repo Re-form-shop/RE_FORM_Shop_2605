@@ -1,6 +1,7 @@
 package com.re_form_shop_2605.config.db;
 
 import com.zaxxer.hikari.HikariDataSource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -17,18 +18,31 @@ import javax.sql.DataSource;
 
 @Configuration
 public class MariaDBConfig {
+
+    @Value("${spring.datasource.driver-class-name}")
+    private String driverClassName;
+
+    @Value("${spring.datasource.url}")
+    private String jdbcUrl;
+
+    @Value("${spring.datasource.username}")
+    private String username;
+
+    @Value("${spring.datasource.password}")
+    private String password;
+
     /* 일반 데이터
        - Primary : 기본 DataSource (JPA, MyBatis)
-       - spring.datasource.* 값 읽어옴
+       - spring.datasource.* 값만 사용해 접속 정보를 한 곳에서 관리한다.
      */
     @Primary
     @Bean(name = "mariadbDataSource")
     public DataSource mariadbDataSource() {
         HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setDriverClassName("org.mariadb.jdbc.Driver");
-        dataSource.setJdbcUrl("jdbc:mariadb://localhost:3306/reform_shop_2605");
-        dataSource.setUsername("admin");
-        dataSource.setPassword("0507");
+        dataSource.setDriverClassName(driverClassName);
+        dataSource.setJdbcUrl(jdbcUrl);
+        dataSource.setUsername(username);
+        dataSource.setPassword(password);
         return dataSource;
     }
 }

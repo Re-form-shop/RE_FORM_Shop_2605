@@ -21,6 +21,9 @@ public interface PostImageService {
     // 임시 업로드 URL을 게시글 전용 경로로 승격하고, 이미 최종 경로인 URL은 그대로 유지한다.
     List<String> finalizePostImageUrls(Long postId, Long memberId, List<String> imageUrls);
 
+    // 원본 이미지 URL에 대응하는 썸네일 URL을 반환한다.
+    String getThumbnailUrl(String imageUrl);
+
     // 게시글 전용 폴더를 삭제
     void deletePostImageDirectory(Long postId);
 }

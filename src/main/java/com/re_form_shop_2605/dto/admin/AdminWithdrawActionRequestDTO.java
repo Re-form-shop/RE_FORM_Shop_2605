@@ -13,8 +13,7 @@ public record AdminWithdrawActionRequestDTO(
         // 수행할 출금 처리 액션
         @NotNull
         WithdrawAction action,
-
-        // 반려 사유
+        // 반려 사유 (REJECT 시 사용)
         @Size(max = 300)
         String rejectReason
 ) {
