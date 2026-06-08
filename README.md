@@ -27,11 +27,11 @@
 
 ## 팀원 소개
 
-| 이름 | 기획 | 백엔드 | 비고 |
-|------|------|--------|------|
-| 김민기 | 프로젝트 설계 리딩, 유스케이스 정의, ERD 구성 및 DB 설계 | JWT 인증/인가, OAuth2, 판매글 CRUD, 거래, Delivery API, Redis, Spring AOP 성능 모니터링, AI 위험 탐지 | |
-| 손민정 | 요구사항 정의서, 유스케이스, 테이블 정의서, 스토리보드 | Toss Payments 에스크로 결제, Spring Batch 정산 자동화, OpenAI Embedding + PGVector 의미 검색, AI 위험 탐지, 인기글 집계 | |
-| 진혜림 | 테이블 설계서, 기능 설명서 작성 | WebSocket + STOMP 실시간 채팅, 커뮤니티 CRUD, OpenAI GPT-4o Vision 판매글 이미지 자동 분석, OpenAI Moderation 유해성 검사 | |
+| 이름 | 기획 | 백엔드 | 비고  |
+|------|------|--------|-----|
+| 김민기 | 프로젝트 설계 리딩, 유스케이스 정의, ERD 구성 및 DB 설계 | JWT 인증/인가, OAuth2, 판매글 CRUD, 거래, Delivery API, Redis, Spring AOP 성능 모니터링, AI 위험 탐지 | 백엔드 |
+| 손민정 | 요구사항 정의서, 유스케이스, 테이블 정의서, 스토리보드 | Toss Payments 에스크로 결제, Spring Batch 정산 자동화, OpenAI Embedding + PGVector 의미 검색, AI 위험 탐지, 인기글 집계 | 백엔드 |
+| 진혜림 | 테이블 설계서, 기능 설명서 작성 | WebSocket + STOMP 실시간 채팅, 커뮤니티 CRUD, OpenAI GPT-4o Vision 판매글 이미지 자동 분석, OpenAI Moderation 유해성 검사 | 백엔드 |
 | 최민종 | UI/UX 설계, 디자인 시스템 구축 | React + TypeScript 전체 뷰 개발 전담, Zustand 전역 상태 관리, TanStack Query, 반응형 + 다크모드 | 프론트엔드 |
 
 ---
@@ -137,222 +137,6 @@ graph TD
 
 ---
 
-## ERD
-
-```mermaid
-erDiagram
-    member {
-        BIGINT member_id PK
-        VARCHAR email UK
-        VARCHAR nickname UK
-        ENUM role
-        ENUM status
-        DECIMAL manner_score
-    }
-    social_member {
-        BIGINT social_id PK
-        BIGINT member_id FK
-        ENUM provider
-        VARCHAR provider_id
-    }
-    interest_setting {
-        BIGINT member_id PK FK
-        ENUM sport
-        VARCHAR team
-    }
-    interest_keyword {
-        BIGINT keyword_id PK
-        BIGINT member_id FK
-        VARCHAR keyword
-    }
-    post {
-        BIGINT post_id PK
-        BIGINT seller_id FK
-        VARCHAR title
-        ENUM sport
-        VARCHAR team
-        ENUM grade
-        INT price
-        ENUM status
-        ENUM risk_level
-    }
-    post_image {
-        BIGINT image_id PK
-        BIGINT post_id FK
-        VARCHAR image_url
-        INT sort_order
-    }
-    wish {
-        BIGINT wish_id PK
-        BIGINT member_id FK
-        BIGINT post_id FK
-    }
-    trade {
-        BIGINT trade_id PK
-        BIGINT post_id FK UK
-        BIGINT buyer_id FK
-        BIGINT seller_id FK
-        ENUM status
-        VARCHAR tracking_number
-        INT trade_price
-    }
-    manner_review {
-        BIGINT manner_id PK
-        BIGINT trade_id FK
-        BIGINT buyer_id FK
-        BIGINT seller_id FK
-        DOUBLE score
-    }
-    chat_room {
-        BIGINT chat_id PK
-        BIGINT post_id FK
-        BIGINT buyer_id FK
-        BIGINT trade_id FK
-    }
-    chat_message {
-        BIGINT message_id PK
-        BIGINT chat_id FK
-        BIGINT sender_id FK
-        ENUM type
-        BOOLEAN is_read
-    }
-    payment {
-        BIGINT payment_id PK
-        BIGINT trade_id FK UK
-        VARCHAR toss_order_id UK
-        INT amount
-        ENUM status
-    }
-    toss_log {
-        BIGINT log_id PK
-        BIGINT payment_id FK
-        JSON raw_response
-    }
-    point_wallet {
-        BIGINT wallet_id PK
-        BIGINT member_id FK UK
-        INT balance
-        INT withdrawable
-        INT pending
-    }
-    point_history {
-        BIGINT point_id PK
-        BIGINT wallet_id FK
-        BIGINT trade_id FK UK
-        ENUM type
-        INT change_amount
-    }
-    point_request {
-        BIGINT withdraw_id PK
-        BIGINT member_id FK
-        INT request_amount
-        ENUM status
-    }
-    community_post {
-        BIGINT comm_id PK
-        BIGINT member_id FK
-        ENUM sport_category
-        VARCHAR comm_title
-        ENUM status
-        INT like_count
-        INT comment_count
-    }
-    reply {
-        BIGINT reply_id PK
-        BIGINT post_id FK
-        BIGINT member_id FK
-        BIGINT parent_id FK
-        INT like_count
-    }
-    community_like {
-        BIGINT like_id PK
-        BIGINT member_id FK
-        BIGINT comm_id FK
-    }
-    reply_like {
-        BIGINT like_id PK
-        BIGINT member_id FK
-        BIGINT reply_id FK
-    }
-    report {
-        BIGINT report_id PK
-        BIGINT reporter_id FK
-        ENUM target_type
-        BIGINT target_id
-        ENUM reason
-        ENUM status
-    }
-    notification {
-        BIGINT noti_id PK
-        BIGINT member_id FK
-        ENUM type
-        BOOLEAN is_read
-    }
-    risk_analysis_result {
-        BIGINT risk_id PK
-        ENUM target_type
-        BIGINT target_id
-        ENUM risk_level
-    }
-
-    member ||--o{ social_member : "소셜 로그인"
-    member ||--o| interest_setting : "관심 설정"
-    member ||--o{ interest_keyword : "관심 키워드"
-    member ||--o{ post : "판매"
-    member ||--o{ wish : "찜"
-    member ||--o{ trade : "구매"
-    member ||--o{ chat_room : "채팅"
-    member ||--o{ point_wallet : "포인트 지갑"
-    member ||--o{ point_request : "출금 신청"
-    member ||--o{ community_post : "커뮤니티"
-    member ||--o{ reply : "댓글"
-    member ||--o{ notification : "알림"
-    post ||--o{ post_image : "이미지"
-    post ||--o{ wish : "찜"
-    post ||--o| trade : "거래"
-    post ||--o{ chat_room : "채팅방"
-    trade ||--o| payment : "결제"
-    trade ||--o{ manner_review : "매너 평가"
-    trade ||--o{ point_history : "포인트 정산"
-    payment ||--o{ toss_log : "Toss 로그"
-    point_wallet ||--o{ point_history : "이력"
-    chat_room ||--o{ chat_message : "메시지"
-    community_post ||--o{ reply : "댓글"
-    community_post ||--o{ community_like : "좋아요"
-    reply ||--o{ reply : "대댓글"
-    reply ||--o{ reply_like : "좋아요"
-```
-
-### 테이블 목록 (총 23개)
-
-| 도메인 | 테이블 | 설명 |
-|--------|--------|------|
-| 회원 | `member` | 회원 기본 정보 |
-| 회원 | `social_member` | 카카오/구글 OAuth2 연동 |
-| 회원 | `interest_setting` | 관심 종목·구단 설정 |
-| 회원 | `interest_keyword` | 관심 키워드 목록 |
-| 거래 | `post` | 유니폼 판매글 |
-| 거래 | `post_image` | 판매글 이미지 |
-| 거래 | `wish` | 찜하기 |
-| 거래 | `trade` | 거래 상태 관리 |
-| 거래 | `manner_review` | 매너 평가 |
-| 채팅 | `chat_room` | 채팅방 |
-| 채팅 | `chat_message` | 채팅 메시지 |
-| 결제 | `payment` | Toss 결제 정보 |
-| 결제 | `toss_log` | Toss API 원문 응답 (append-only) |
-| 결제 | `point_wallet` | 포인트 지갑 |
-| 결제 | `point_history` | 포인트 입출금 이력 |
-| 결제 | `point_request` | 출금 신청 |
-| 커뮤니티 | `community_post` | 커뮤니티 게시글 |
-| 커뮤니티 | `reply` | 댓글·대댓글 |
-| 커뮤니티 | `community_like` | 게시글 좋아요 |
-| 커뮤니티 | `reply_like` | 댓글 좋아요 |
-| 기타 | `report` | 신고 |
-| 기타 | `notification` | 알림 |
-| AI | `risk_analysis_result` | AI 위험 탐지 결과 |
-
----
-
 ## 주요 기능
 
 ### 회원 및 인증
@@ -414,7 +198,7 @@ erDiagram
 | MID | 차별/비하, 폭력, 불법 | 관리자 검토 대상 |
 | LOW | 성적 콘텐츠 | riskLevel 업데이트 |
 
-### AI 개인화 추천
+- AI 개인화 추천
 
 > 기존 파일 수정 없이 신규 파일 12개 추가만으로 구현 (AOP 활용)
 
