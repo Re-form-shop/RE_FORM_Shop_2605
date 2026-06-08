@@ -27,11 +27,11 @@
 
 ## 팀원 소개
 
-| 이름 | 기획 | 백엔드 | 비고  |
-|------|------|--------|-----|
-| 김민기 | 프로젝트 설계 리딩, 유스케이스 정의, ERD 구성 및 DB 설계 | JWT 인증/인가, OAuth2, 판매글 CRUD, 거래, Delivery API, Redis, Spring AOP 성능 모니터링, AI 위험 탐지 | 백엔드 |
-| 손민정 | 요구사항 정의서, 유스케이스, 테이블 정의서, 스토리보드 | Toss Payments 에스크로 결제, Spring Batch 정산 자동화, OpenAI Embedding + PGVector 의미 검색, AI 위험 탐지, 인기글 집계 | 백엔드 |
-| 진혜림 | 테이블 설계서, 기능 설명서 작성 | WebSocket + STOMP 실시간 채팅, 커뮤니티 CRUD, OpenAI GPT-4o Vision 판매글 이미지 자동 분석, OpenAI Moderation 유해성 검사 | 백엔드 |
+| 이름 | 기획 | 백엔드 | 비고 |
+|------|------|--------|------|
+| 김민기 | 프로젝트 설계 리딩, 유스케이스 정의, ERD 구성 및 DB 설계 | JWT 인증/인가, OAuth2, 판매글 CRUD, 거래, Delivery API, Redis, Spring AOP 성능 모니터링, AI 위험 탐지 | |
+| 손민정 | 요구사항 정의서, 유스케이스, 테이블 정의서, 스토리보드 | Toss Payments 에스크로 결제, Spring Batch 정산 자동화, OpenAI Embedding + PGVector 의미 검색, AI 위험 탐지, 인기글 집계 | |
+| 진혜림 | 테이블 설계서, 기능 설명서 작성 | WebSocket + STOMP 실시간 채팅, 커뮤니티 CRUD, OpenAI GPT-4o Vision 판매글 이미지 자동 분석, OpenAI Moderation 유해성 검사 | |
 | 최민종 | UI/UX 설계, 디자인 시스템 구축 | React + TypeScript 전체 뷰 개발 전담, Zustand 전역 상태 관리, TanStack Query, 반응형 + 다크모드 | 프론트엔드 |
 
 ---
@@ -137,6 +137,222 @@ graph TD
 
 ---
 
+## ERD
+
+```mermaid
+erDiagram
+    member {
+        bigint member_id PK
+        varchar email UK
+        varchar nickname UK
+        string role
+        string status
+        decimal manner_score
+    }
+    social_member {
+        bigint social_id PK
+        bigint member_id FK
+        string provider
+        varchar provider_id
+    }
+    interest_setting {
+        bigint member_id PK,FK
+        string sport
+        varchar team
+    }
+    interest_keyword {
+        bigint keyword_id PK
+        bigint member_id FK
+        varchar keyword
+    }
+    post {
+        bigint post_id PK
+        bigint seller_id FK
+        varchar title
+        string sport
+        varchar team
+        string grade
+        int price
+        string status
+        string risk_level
+    }
+    post_image {
+        bigint image_id PK
+        bigint post_id FK
+        varchar image_url
+        int sort_order
+    }
+    wish {
+        bigint wish_id PK
+        bigint member_id FK
+        bigint post_id FK
+    }
+    trade {
+        bigint trade_id PK
+        bigint post_id FK
+        bigint buyer_id FK
+        bigint seller_id FK
+        string status
+        varchar tracking_number
+        int trade_price
+    }
+    manner_review {
+        bigint manner_id PK
+        bigint trade_id FK
+        bigint buyer_id FK
+        bigint seller_id FK
+        double score
+    }
+    chat_room {
+        bigint chat_id PK
+        bigint post_id FK
+        bigint buyer_id FK
+        bigint trade_id FK
+    }
+    chat_message {
+        bigint message_id PK
+        bigint chat_id FK
+        bigint sender_id FK
+        string type
+        boolean is_read
+    }
+    payment {
+        bigint payment_id PK
+        bigint trade_id FK
+        varchar toss_order_id UK
+        int amount
+        string status
+    }
+    toss_log {
+        bigint log_id PK
+        bigint payment_id FK
+        string raw_response
+    }
+    point_wallet {
+        bigint wallet_id PK
+        bigint member_id FK
+        int balance
+        int withdrawable
+        int pending
+    }
+    point_history {
+        bigint point_id PK
+        bigint wallet_id FK
+        bigint trade_id FK
+        string type
+        int change_amount
+    }
+    point_request {
+        bigint withdraw_id PK
+        bigint member_id FK
+        int request_amount
+        string status
+    }
+    community_post {
+        bigint comm_id PK
+        bigint member_id FK
+        string sport_category
+        varchar comm_title
+        string status
+        int like_count
+        int comment_count
+    }
+    reply {
+        bigint reply_id PK
+        bigint post_id FK
+        bigint member_id FK
+        bigint parent_id FK
+        int like_count
+    }
+    community_like {
+        bigint like_id PK
+        bigint member_id FK
+        bigint comm_id FK
+    }
+    reply_like {
+        bigint like_id PK
+        bigint member_id FK
+        bigint reply_id FK
+    }
+    report {
+        bigint report_id PK
+        bigint reporter_id FK
+        string target_type
+        bigint target_id
+        string reason
+        string status
+    }
+    notification {
+        bigint noti_id PK
+        bigint member_id FK
+        string type
+        boolean is_read
+    }
+    risk_analysis_result {
+        bigint risk_id PK
+        string target_type
+        bigint target_id
+        string risk_level
+    }
+
+    member ||--o{ social_member : "소셜 로그인"
+    member ||--o| interest_setting : "관심 설정"
+    member ||--o{ interest_keyword : "관심 키워드"
+    member ||--o{ post : "판매"
+    member ||--o{ wish : "찜"
+    member ||--o{ trade : "구매"
+    member ||--o{ chat_room : "채팅"
+    member ||--o{ point_wallet : "포인트 지갑"
+    member ||--o{ point_request : "출금 신청"
+    member ||--o{ community_post : "커뮤니티"
+    member ||--o{ reply : "댓글"
+    member ||--o{ notification : "알림"
+    post ||--o{ post_image : "이미지"
+    post ||--o{ wish : "찜"
+    post ||--o| trade : "거래"
+    post ||--o{ chat_room : "채팅방"
+    trade ||--o| payment : "결제"
+    trade ||--o{ manner_review : "매너 평가"
+    trade ||--o{ point_history : "포인트 정산"
+    payment ||--o{ toss_log : "Toss 로그"
+    point_wallet ||--o{ point_history : "이력"
+    chat_room ||--o{ chat_message : "메시지"
+    community_post ||--o{ reply : "댓글"
+    community_post ||--o{ community_like : "좋아요"
+    reply ||--o{ reply : "대댓글"
+    reply ||--o{ reply_like : "좋아요"
+```
+
+### 테이블 목록 (총 23개)
+
+| 도메인 | 테이블 | 설명 |
+|--------|--------|------|
+| 회원 | `member` | 회원 기본 정보 |
+| 회원 | `social_member` | 카카오/구글 OAuth2 연동 |
+| 회원 | `interest_setting` | 관심 종목·구단 설정 |
+| 회원 | `interest_keyword` | 관심 키워드 목록 |
+| 거래 | `post` | 유니폼 판매글 |
+| 거래 | `post_image` | 판매글 이미지 |
+| 거래 | `wish` | 찜하기 |
+| 거래 | `trade` | 거래 상태 관리 |
+| 거래 | `manner_review` | 매너 평가 |
+| 채팅 | `chat_room` | 채팅방 |
+| 채팅 | `chat_message` | 채팅 메시지 |
+| 결제 | `payment` | Toss 결제 정보 |
+| 결제 | `toss_log` | Toss API 원문 응답 (append-only) |
+| 결제 | `point_wallet` | 포인트 지갑 |
+| 결제 | `point_history` | 포인트 입출금 이력 |
+| 결제 | `point_request` | 출금 신청 |
+| 커뮤니티 | `community_post` | 커뮤니티 게시글 |
+| 커뮤니티 | `reply` | 댓글·대댓글 |
+| 커뮤니티 | `community_like` | 게시글 좋아요 |
+| 커뮤니티 | `reply_like` | 댓글 좋아요 |
+| 기타 | `report` | 신고 |
+| 기타 | `notification` | 알림 |
+| AI | `risk_analysis_result` | AI 위험 탐지 결과 |
+
+---
+
 ## 주요 기능
 
 ### 회원 및 인증
@@ -189,16 +405,100 @@ graph TD
 
 ### AI 기능
 
-- 판매글 이미지 업로드 시 OpenAI GPT-4o Vision으로 제목·설명 자동 생성
-- OpenAI Moderation API + Spring Batch로 6시간 주기 위험 콘텐츠 분석
+#### GPT-4o Vision — 판매글 이미지 자동 분석 (`AiListingService`)
 
-| 등급 | 대상 카테고리 | 처리 |
-|------|--------------|------|
-| HIGH | 혐오+위협, 자해 안내, 미성년자 성적 콘텐츠 | 관리자 검토 대상 |
-| MID | 차별/비하, 폭력, 불법 | 관리자 검토 대상 |
-| LOW | 성적 콘텐츠 | riskLevel 업데이트 |
+판매글 작성 시 이미지를 업로드하면 GPT-4o Vision이 이미지를 분석하여 제목과 설명을 자동으로 제안합니다.
 
-- AI 개인화 추천
+**처리 흐름**
+
+```
+[이미지 업로드] contentType + byte[]
+        ↓
+  SystemMessage: "중고 스포츠 유니폼 판매 전문가" 역할 부여
+  + JSON 형식 지정 (title / description)
+        ↓
+  UserMessage: Media 객체(이미지 바이트) + 분석 요청 텍스트
+        ↓
+  Spring AI ChatClient → GPT-4o Vision 호출
+        ↓
+  응답 JSON 파싱 (마크다운 코드블록 자동 제거)
+        ↓
+  AiListingSuggestResponseDTO 반환 (실패 시 fallback)
+```
+
+**출력 규격**
+
+| 필드 | 규격 |
+|------|------|
+| `title` | 20자 이내, 종목·브랜드·사이즈 포함 |
+| `description` | 150자 이내, 상태·특징·사이즈 포함 |
+
+**API**
+
+```
+POST /api/ai/listing/suggest
+Content-Type: multipart/form-data
+Body: image (file)
+```
+
+---
+
+#### OpenAI Moderation API — 위험 콘텐츠 탐지 (`ModerationService`)
+
+채팅 메시지 및 게시글(POST / CHAT)을 2단계로 검사하고 결과를 `risk_analysis_result` 테이블에 저장합니다.
+
+**2-Tier 탐지 구조**
+
+```
+[콘텐츠 입력]
+        ↓
+  [Tier 1] ModerationKeyword (로컬 키워드 필터)
+    - NFKC 정규화 + 소문자 변환 + 특수문자 제거
+    - 9개 정규식 패턴 매칭 (욕설, 사기 유도, 위조품 등)
+    - 매칭 시 즉시 HIGH/MID 반환 (API 호출 없이 빠른 차단)
+        ↓ (미매칭 시)
+  [Tier 2] OpenAI Moderation API
+    - ModerationModel.call(ModerationPrompt)
+    - 위반 카테고리 분석 → ModerationCategory Enum 매핑
+    - 최고 RiskLevel 산출
+        ↓
+  ChatGPT로 개선 제안 생성 (한국어 1~2문장)
+        ↓
+  DB 저장 / 갱신 / 삭제 (flagged 여부에 따라)
+  API 장애 시 fallback → 정상(safe) 처리
+```
+
+**로컬 키워드 규칙 (총 9개)**
+
+| 패턴 예시 | 사유 | 등급 |
+|-----------|------|:----:|
+| `선불\|계좌이체` | 사기 위험 거래 유도 | MID |
+| `가품\|도용` | 위조품·권리 침해 의심 | HIGH |
+| `씨+발`, `병+신` 등 | 강한 욕설 / 공격적 표현 | HIGH |
+| `죽어\|뒤져` | 폭력적·위협적 표현 | HIGH |
+
+**위험 등급별 처리**
+
+| 등급 | OpenAI 카테고리 | 처리 |
+|------|----------------|------|
+| HIGH | 혐오+위협, 자해 안내, 미성년자 성적 콘텐츠 | DB 저장 → 관리자 검토 |
+| MID | 차별/비하, 폭력, 불법 | DB 저장 → 관리자 검토 |
+| LOW | 성적 콘텐츠 | DB 저장 → riskLevel 업데이트 |
+| 정상 | - | 기존 탐지 결과 DB에서 삭제 |
+
+**탐지 대상 분류**
+
+| TargetType | 탐지 시점 | DB 저장 |
+|-----------|-----------|:-------:|
+| `CHAT` | 채팅 메시지 전송 시 실시간 | ✅ |
+| `POST` | 게시글 작성/수정 시 즉시 + Spring Batch 6시간 주기 | ✅ |
+| 임시저장(`checkDraft`) | 저장 전 사전 검사 | ❌ (transient) |
+
+**Spring Batch 연동**
+
+`riskDetectionJob`이 6시간마다 전체 게시글을 순회하며 `ModerationService.checkAndSave()`를 호출합니다. 신규 게시글 작성 시 실시간 검사와 병행하여 누락 없이 커버합니다.
+
+### AI 개인화 추천
 
 > 기존 파일 수정 없이 신규 파일 12개 추가만으로 구현 (AOP 활용)
 
