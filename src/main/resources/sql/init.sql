@@ -387,3 +387,25 @@ CREATE TABLE IF NOT EXISTS risk_analysis_result (
     PRIMARY KEY (risk_id),
     KEY idx_risk_analysis_target (target_type, target_id)
 ) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS user_view_log(
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    member_id NOT NULL,
+    post_id NOT NULL,
+    sport ENUM ('BASEBALL', 'SOCCER', 'BASKETBALL', 'VOLLEYBALL', 'ESPORTS', 'ETC') NOT NULL COMMENT '종목',
+    team VARCHAR(100),
+    uniform_name VARCHAR(200),
+    viewed_at DATETIME NOT NULL,
+    PRIMARY KEY (id),
+    KEY idx_view_log_member_viewed (member_id, viewed_at),
+    KEY idx_view_log_member_post (member_id, post_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS user_view_log(
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    member_id NOT NULL,
+    keyword VARCHAR(200) NOT NULL,
+    searched_at DATETIME NOT NULL,
+    PRIMARY KEY (id),
+    KEY idx_search_log_member_searched (member_id, searched_at)
+    ) ENGINE=InnoDB;
