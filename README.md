@@ -281,9 +281,51 @@ GET /api/recommendations?size=10
 
 | 항목 | 기술 |
 |------|------|
-| Framework | React + TypeScript |
+| Framework | React + TypeScript (Vite) |
 | 상태 관리 | Zustand (전역), TanStack Query (서버) |
-| 스타일 | 반응형 레이아웃, 다크모드 |
+| HTTP | Axios |
+| 라우팅 | React Router DOM |
+| WebSocket | @stomp/stompjs |
+| 결제 | @tosspayments/payment-widget-sdk |
+| 아이콘 | lucide-react |
+| 스타일 | Tailwind CSS, 반응형, 다크모드 |
+
+**패키지 구조** ([re-form-view](https://github.com/Re-form-shop/reform-view))
+
+```
+src/
+├── features/          # 도메인별 API + Hook 묶음
+│   ├── auth/          # 로그인, 회원가입, OAuth2
+│   ├── listing/       # 판매글 목록/상세/작성
+│   ├── trade/         # 거래 흐름 (수락·배송·확정)
+│   ├── payment/       # Toss Payments 결제 위젯
+│   ├── chat/          # WebSocket 채팅
+│   ├── community/     # 게시글·댓글·좋아요
+│   ├── mypage/        # 프로필·관심·구매내역·포인트
+│   ├── notification/  # 알림 조회·읽음 처리
+│   ├── delivery/      # 배송 조회
+│   ├── draft/         # 게시글 임시저장
+│   ├── report/        # 신고
+│   └── admin/         # 관리자 API
+├── pages/             # 라우트 단위 페이지 컴포넌트
+│   ├── auth/          # 로그인·회원가입 페이지
+│   ├── listing/       # 판매글 목록·상세·작성 페이지
+│   ├── trade/         # 거래 페이지
+│   ├── payment/       # 결제 페이지
+│   ├── chat/          # 채팅 페이지
+│   ├── community/     # 커뮤니티 페이지
+│   ├── mypage/        # 마이페이지
+│   ├── search/        # 검색 페이지
+│   └── admin/         # 관리자 페이지
+├── components/
+│   ├── layout/        # 공통 레이아웃 (헤더, 사이드바 등)
+│   └── ui/            # 공통 UI 컴포넌트
+├── store/             # Zustand 전역 상태 (authStore 등)
+├── hooks/             # 공통 커스텀 훅 (useTheme 등)
+├── lib/               # axios 인스턴스, queryClient 설정
+├── types/             # TypeScript 타입 정의
+└── utils/             # 포맷·이미지·유해성 검사 유틸
+```
 
 ### 외부 서비스
 
@@ -399,7 +441,8 @@ GET /api/recommendations?size=10
 
 | 문서 | 링크 |
 |------|------|
-| GitHub | [RE_FORM_Shop_2605](https://github.com/ppaapp220022-blip/RE_FORM_Shop_2605) |
+| GitHub (백엔드) | [RE_FORM_Shop_2605](https://github.com/ppaapp220022-blip/RE_FORM_Shop_2605) |
+| GitHub (프론트엔드) | [re-form-view](https://github.com/Re-form-shop/reform-view) |
 | 기능 설명서 | [링크](https://docs.google.com/document/d/1ukrJWKiln8S7c8DKtVikZsBr_q3ASmVXz82ckvJ97nM/edit?usp=sharing) |
 | 공유 문서 | [Google Drive](https://drive.google.com/drive/folders/10NKAT0QEIhI-7s5L8K2ksBh4RQkTJEBX?usp=drive_link) |
 | Swagger | http://localhost:8080/swagger-ui/index.html?urls.primaryName=REST+API |
